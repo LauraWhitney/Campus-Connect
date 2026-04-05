@@ -1,0 +1,20 @@
+{
+  "name": "campus-connect",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Campus Connect — CUEA Student Engagement Platform (Monorepo)",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names \"BACKEND,STUDENT,ADMIN\" --prefix-colors \"blue,green,yellow\" \"npm run dev:backend\" \"npm run dev:student\" \"npm run dev:admin\"",
+    "dev:student":  "cd src/student  && npm run dev",
+    "dev:admin":    "cd src/admin    && npm run dev",
+    "dev:backend":  "cd src/backend  && python run.py",
+    "install:student": "cd src/student && npm install",
+    "install:admin":   "cd src/admin   && npm install",
+    "install:all":     "npm run install:student && npm run install:admin",
+    "build:student": "cd src/student && npm run build",
+    "build:admin":   "cd src/admin   && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
