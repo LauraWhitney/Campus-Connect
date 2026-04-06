@@ -103,3 +103,36 @@ def delete_user(
 
     db.delete(user)
     db.commit()
+
+# ── Seed first admin (disabled once any admin exists) ─
+@router.post("/seed-admin", status_code=201)
+def seed_admin(payload: dict, db: Session = Depends(get_db)):
+    """Create the very first admin account. Auto-disables once one admin exists."""
+    from app.core.security import hash_password
+
+    existing_admin = db.query(User).filter(User.role == UserRole.admin).first()
+    if existing_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="An admin account already exists. Use the admin panel to manage roles.",
+        )
+
+    email    = payload.get("email", "").strip().lower()
+    password = payload.get("password", "")
+    name     = payload.get("name", "Admin").strip()
+
+    if not email or not password:
+        raise HTTPException(status_code=422, detail="Email and password are required")
+    if len(password) < 8:
+        raise HTTPException(status_code=422, detail="Password must be at least 8 characters")
+
+    admin = User(
+        name=name,
+        email=email,
+        password_hash=hash_password(password),
+        role=UserRole.admin,
+    )
+    db.add(admin)
+    db.commit()
+    db.refresh(admin)
+    return {"message": f"Admin account created for {email}. You can now log in at http://localhost:5174"}
