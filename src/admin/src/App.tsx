@@ -10,6 +10,7 @@ import MarketplacePage from './pages/marketplace/MarketplacePage'
 import ClubsPage from './pages/clubs/ClubsPage'
 import LostFoundPage from './pages/lostfound/LostFoundPage'
 import FeedbackPage from './pages/feedback/FeedbackPage'
+import ActivityPage from './pages/activity/ActivityPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAdminAuth()
@@ -28,10 +29,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function FullScreenLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center"
-      style={{ background: 'linear-gradient(160deg,#060e1a 0%,#0d1f3c 45%,#1a2f5a 100%)' }}>
+      style={{ background: '#f8fafc' }}>
       <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 rounded-full border-2 border-navy-600 border-t-gold-400 animate-spin" />
-        <p className="text-navy-400 text-sm">Loading Admin Panel…</p>
+        <div className="w-10 h-10 rounded-full border-2 border-slate-300 border-t-primary-500 animate-spin" />
+        <p className="text-slate-500 text-sm">Loading Admin Panel…</p>
       </div>
     </div>
   )
@@ -50,6 +51,7 @@ function AppRoutes() {
         <Route path="clubs"       element={<ClubsPage />} />
         <Route path="lost-found"  element={<LostFoundPage />} />
         <Route path="feedback"    element={<FeedbackPage />} />
+        <Route path="activity"    element={<ActivityPage />} />
       </Route>
     </Routes>
   )
@@ -58,20 +60,20 @@ function AppRoutes() {
 export default function App() {
   return (
     <AdminAuthProvider>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AppRoutes />
         <Toaster
           position="top-right"
           toastOptions={{
             style: {
-              background: '#0d1f3c',
+              background: '#1e1b4b',
               color: '#fff',
-              border: '1px solid rgba(212,175,55,0.25)',
-              fontFamily: '"DM Sans", sans-serif',
+              border: '1px solid rgba(99,102,241,0.3)',
+              fontFamily: '"Inter", sans-serif',
               fontSize: '14px',
             },
-            success: { iconTheme: { primary: '#d4af37', secondary: '#0d1f3c' } },
-            error:   { iconTheme: { primary: '#f87171', secondary: '#0d1f3c' } },
+            success: { iconTheme: { primary: '#6366f1', secondary: '#fff' } },
+            error:   { iconTheme: { primary: '#f87171', secondary: '#1e1b4b' } },
           }}
         />
       </BrowserRouter>

@@ -12,8 +12,8 @@ const CONDITIONS: ItemCondition[] = ['New', 'Like New', 'Good', 'Fair']
 const CONDITION_COLOR: Record<string, string> = {
   New: 'badge-green',
   'Like New': 'badge-green',
-  Good: 'badge-gold',
-  Fair: 'badge-navy'
+  Good: 'badge-brand',
+  Fair: 'badge-surface'
 }
 
 function ItemCard({ item }: { item: MarketplaceItem }) {
@@ -24,32 +24,32 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
           <h3 className="font-display font-semibold text-white text-sm leading-snug line-clamp-2">
             {item.title}
           </h3>
-          <p className="text-navy-400 text-xs mt-0.5">{item.seller.name}</p>
+          <p className="text-surface-400 text-xs mt-0.5">{item.seller.name}</p>
         </div>
 
-        <span className={`${CONDITION_COLOR[item.condition] || 'badge-navy'} shrink-0`}>
+        <span className={`${CONDITION_COLOR[item.condition] || 'badge-surface'} shrink-0`}>
           {item.condition}
         </span>
       </div>
 
-      <p className="text-navy-300 text-xs line-clamp-2 leading-relaxed">
+      <p className="text-surface-300 text-xs line-clamp-2 leading-relaxed">
         {item.description}
       </p>
 
       <div className="flex items-center gap-2">
-        <span className="badge-navy">
+        <span className="badge-surface">
           <Tag className="w-3 h-3" />{item.category}
         </span>
       </div>
 
-      <div className="flex items-center justify-between pt-1 border-t border-navy-700/40">
-        <span className="font-display text-xl font-semibold text-gold-400">
+      <div className="flex items-center justify-between pt-1 border-t border-surface-700/40">
+        <span className="font-display text-xl font-semibold text-primary-400">
           KES {Number(item.price).toLocaleString()}
         </span>
 
         <a
           href={`mailto:${item.seller.email}?subject=Re: ${item.title} on Campus Connect`}
-          className="flex items-center gap-1.5 text-xs text-navy-300 hover:text-gold-400 transition-colors"
+          className="flex items-center gap-1.5 text-xs text-surface-300 hover:text-primary-400 transition-colors"
         >
           <Mail className="w-3.5 h-3.5" /> Contact
         </a>
@@ -103,10 +103,10 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
   return (
     <Modal open={open} onClose={onClose} title="List an Item">
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4  bg-blue-700 p-5 rounded-xl">
 
         <div>
-          <label htmlFor="item-title" className="block text-xs text-navy-300 mb-1.5">
+          <label htmlFor="item-title" className="block text-xs text-surface-300 mb-1.5">
             Item Title
           </label>
           <input
@@ -120,7 +120,7 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
         </div>
 
         <div>
-          <label htmlFor="item-description" className="block text-xs text-navy-300 mb-1.5">
+          <label htmlFor="item-description" className="block text-xs text-surface-300 mb-1.5">
             Description
           </label>
           <textarea
@@ -136,7 +136,7 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
         <div className="grid grid-cols-2 gap-3">
 
           <div>
-            <label htmlFor="item-price" className="block text-xs text-navy-300 mb-1.5">
+            <label htmlFor="item-price" className="block text-xs text-surface-300 mb-1.5">
               Price (KES)
             </label>
 
@@ -153,7 +153,7 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
           </div>
 
           <div>
-            <label htmlFor="item-condition" className="block text-xs text-navy-300 mb-1.5">
+            <label htmlFor="item-condition" className="block text-xs text-surface-300 mb-1.5">
               Condition
             </label>
 
@@ -172,7 +172,7 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
         </div>
 
         <div>
-          <label htmlFor="item-category" className="block text-xs text-navy-300 mb-1.5">
+          <label htmlFor="item-category" className="block text-xs text-surface-300 mb-1.5">
             Category
           </label>
 
@@ -193,7 +193,7 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
           <button
             type="button"
             onClick={onClose}
-            className="btn-secondary flex-1"
+            className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-white text-slate-800 border border-slate-300 hover:bg-slate-100 transition-all"
           >
             Cancel
           </button>
@@ -271,7 +271,7 @@ export default function MarketplacePage() {
             <button
               onClick={() => setShowModal(true)}
               className="btn-primary"
-              style={{ background: 'linear-gradient(90deg,#c9a84c,#f0c040)' }}
+              style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }}
             >
               List an Item
             </button>

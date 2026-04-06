@@ -20,31 +20,31 @@ function ClubCard({ club, onJoin }: { club: Club; onJoin: (id: string) => void }
   return (
     <div className="card p-5 flex flex-col gap-3 animate-fade-in">
       <div className="flex items-start gap-3">
-        <div className="w-12 h-12 rounded-xl bg-navy-700/60 border border-navy-600/40 flex items-center justify-center shrink-0 text-2xl">
+        <div className="w-12 h-12 rounded-xl bg-surface-700/60 border border-surface-600/40 flex items-center justify-center shrink-0 text-2xl">
           {CATEGORY_EMOJI[club.category] || '🏫'}
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="font-display font-semibold text-white text-sm leading-snug">{club.name}</h3>
-          <span className="badge-gold mt-1">{club.category}</span>
+          <span className="badge-brand mt-1">{club.category}</span>
         </div>
       </div>
 
-      <p className="text-navy-300 text-xs line-clamp-2 leading-relaxed">{club.description}</p>
+      <p className="text-surface-300 text-xs line-clamp-2 leading-relaxed">{club.description}</p>
 
       <div className="space-y-1.5">
-        <div className="flex items-center gap-2 text-navy-400 text-xs">
+        <div className="flex items-center gap-2 text-surface-400 text-xs">
           <Users className="w-3.5 h-3.5 shrink-0" />
           <span>{club.memberCount} members · Led by {club.president}</span>
         </div>
         {club.meetingSchedule && (
-          <div className="flex items-center gap-2 text-navy-400 text-xs">
+          <div className="flex items-center gap-2 text-surface-400 text-xs">
             <CalendarDays className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{club.meetingSchedule}</span>
           </div>
         )}
-        <div className="flex items-center gap-2 text-navy-400 text-xs">
+        <div className="flex items-center gap-2 text-surface-400 text-xs">
           <Mail className="w-3.5 h-3.5 shrink-0" />
-          <a href={`mailto:${club.email}`} className="hover:text-gold-400 transition-colors truncate">{club.email}</a>
+          <a href={`mailto:${club.email}`} className="hover:text-primary-400 transition-colors truncate">{club.email}</a>
         </div>
       </div>
 
@@ -54,7 +54,7 @@ function ClubCard({ club, onJoin }: { club: Club; onJoin: (id: string) => void }
         disabled={loading}
         className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200
           ${club.isMember
-            ? 'bg-gold-500/20 text-gold-300 border border-gold-500/40 hover:bg-gold-500/30'
+            ? 'bg-primary-500/20 text-primary-300 border border-primary-500/40 hover:bg-primary-500/30'
             : 'btn-primary'
           }`}
         style={!club.isMember ? { background: 'linear-gradient(90deg,#c9a84c,#f0c040,#d4af37)' } : {}}
@@ -86,21 +86,21 @@ function CreateClubModal({ open, onClose, onCreated }: { open: boolean; onClose:
 
   return (
     <Modal open={open} onClose={onClose} title="Create a Club">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 bg-blue-700 p-5 rounded-xl">
         <div>
-          <label className="block text-xs text-navy-300 mb-1.5">Club Name</label>
-          <input className="input" value={form.name} onChange={set('name')} required placeholder="e.g. CUEA Robotics Club" />
+          <label className="block text-xs text-surface-300 mb-1.5">Club Name</label>
+          <input className="input" value={form.name} onChange={set('name')} required placeholder="e.g. e.g. Tech Innovation Club" />
         </div>
 
         <div>
-          <label className="block text-xs text-navy-300 mb-1.5">Description</label>
+          <label className="block text-xs text-surface-300 mb-1.5">Description</label>
           <textarea className="input min-h-[80px] resize-none" value={form.description} onChange={set('description')} required placeholder="What does this club do?" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             {/* ✅ FIXED */}
-            <label htmlFor="category" className="block text-xs text-navy-300 mb-1.5">Category</label>
+            <label htmlFor="category" className="block text-xs text-surface-300 mb-1.5">Category</label>
             <select
               id="category"
               className="input"
@@ -114,25 +114,27 @@ function CreateClubModal({ open, onClose, onCreated }: { open: boolean; onClose:
           </div>
 
           <div>
-            <label className="block text-xs text-navy-300 mb-1.5">President</label>
+            <label className="block text-xs text-surface-300 mb-1.5">President</label>
             <input className="input" value={form.president} onChange={set('president')} required placeholder="Full name" />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-navy-300 mb-1.5">Contact Email</label>
-          <input className="input" type="email" value={form.email} onChange={set('email')} required placeholder="club@cuea.edu" />
+          <label className="block text-xs text-surface-300 mb-1.5">Contact Email</label>
+          <input className="input" type="email" value={form.email} onChange={set('email')} required placeholder="club@university.edu" />
         </div>
 
         <div>
-          <label className="block text-xs text-navy-300 mb-1.5">
-            Meeting Schedule <span className="text-navy-500">(optional)</span>
+          <label className="block text-xs text-surface-300 mb-1.5">
+            Meeting Schedule <span className="text-surface-500">(optional)</span>
           </label>
           <input className="input" value={form.meeting_schedule} onChange={set('meeting_schedule')} placeholder="e.g. Every Friday 4pm, Room 205" />
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+          <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-white text-slate-800 border border-slate-300 hover:bg-slate-100 transition-all">
+            Cancel
+            </button>
           <button type="submit" disabled={loading} className="btn-primary flex-1 flex items-center justify-center gap-2" style={{ background: 'linear-gradient(90deg,#c9a84c,#f0c040,#d4af37)' }}>
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Create Club
           </button>
@@ -196,7 +198,7 @@ export default function ClubsPage() {
               type="button"
               onClick={() => setShowModal(true)}
               className="btn-primary"
-              style={{ background: 'linear-gradient(90deg,#c9a84c,#f0c040)' }}
+              style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }}
             >
               Create Club
             </button>

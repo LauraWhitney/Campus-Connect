@@ -5,7 +5,7 @@ import type { LostFoundItem } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, ConfirmDialog } from '../../components/ui/index'
 import toast from 'react-hot-toast'
 
-const STATUS_BADGE: Record<string, string> = { Lost: 'badge-red', Found: 'badge-green', Claimed: 'badge-navy' }
+const STATUS_BADGE: Record<string, string> = { Lost: 'badge-red', Found: 'badge-green', Claimed: 'badge-surface' }
 
 export default function LostFoundPage() {
   const [items, setItems] = useState<LostFoundItem[]>([])
@@ -41,7 +41,7 @@ export default function LostFoundPage() {
         <>
           <Table>
             <thead>
-              <tr className="border-b border-navy-700/40">
+              <tr className="border-b border-surface-700/40">
                 <th className="th">Item</th>
                 <th className="th">Status</th>
                 <th className="th hidden sm:table-cell">Location</th>
@@ -55,17 +55,17 @@ export default function LostFoundPage() {
               {items.map(item => (
                 <tr key={item.id} className="table-row">
                   <td className="td font-medium text-white max-w-[160px] truncate">{item.title}</td>
-                  <td className="td"><span className={STATUS_BADGE[item.status] ?? 'badge-navy'}>{item.status}</span></td>
-                  <td className="td text-navy-400 hidden sm:table-cell max-w-[140px] truncate">{item.location}</td>
-                  <td className="td text-navy-400 hidden md:table-cell">
+                  <td className="td"><span className={STATUS_BADGE[item.status] ?? 'badge-surface'}>{item.status}</span></td>
+                  <td className="td text-surface-400 hidden sm:table-cell max-w-[140px] truncate">{item.location}</td>
+                  <td className="td text-surface-400 hidden md:table-cell">
                     {new Date(item.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
                   </td>
-                  <td className="td text-navy-400 hidden md:table-cell">{item.reporter?.name ?? 'Anonymous'}</td>
-                  <td className="td text-navy-400 hidden lg:table-cell max-w-[140px] truncate">{item.contact}</td>
+                  <td className="td text-surface-400 hidden md:table-cell">{item.reporter?.name ?? 'Anonymous'}</td>
+                  <td className="td text-surface-400 hidden lg:table-cell max-w-[140px] truncate">{item.contact}</td>
                   <td className="td text-right">
                     {!item.is_claimed && (
                       <button onClick={() => setClaimTarget(item)}
-                        className="p-1.5 rounded-lg text-navy-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="Mark claimed">
+                        className="p-1.5 rounded-lg text-surface-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="Mark claimed">
                         <CheckCircle className="w-3.5 h-3.5" />
                       </button>
                     )}

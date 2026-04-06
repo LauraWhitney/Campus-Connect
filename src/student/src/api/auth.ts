@@ -14,7 +14,15 @@ export const authAPI = {
     faculty?: string
     yearOfStudy?: number
   }): Promise<{ user: User; token: string }> => {
-    const { data } = await api.post('/auth/register', userData)
+    // Backend expects snake_case field names
+    const payload = {
+      name: userData.name,
+      email: userData.email,
+      password: userData.password,
+      faculty: userData.faculty,
+      year_of_study: userData.yearOfStudy,
+    }
+    const { data } = await api.post('/auth/register', payload)
     return data
   },
 
@@ -22,6 +30,7 @@ export const authAPI = {
     const { data } = await api.get('/auth/me', {
       headers: { Authorization: `Bearer ${token}` },
     })
-    return data.user
+    // /auth/me returns the User object directly (not wrapped in {user})
+    return data
   },
 }

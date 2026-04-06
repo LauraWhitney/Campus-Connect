@@ -7,12 +7,12 @@ import { useAuth } from '../../context/AuthContext'
 import clsx from 'clsx'
 
 const NAV = [
-  { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/events',      icon: Calendar,        label: 'Events' },
-  { to: '/marketplace', icon: ShoppingBag,     label: 'Marketplace' },
-  { to: '/clubs',       icon: Users,           label: 'Clubs' },
+  { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard'   },
+  { to: '/events',      icon: Calendar,        label: 'Events'       },
+  { to: '/marketplace', icon: ShoppingBag,     label: 'Marketplace'  },
+  { to: '/clubs',       icon: Users,           label: 'Clubs'        },
   { to: '/lost-found',  icon: Search,          label: 'Lost & Found' },
-  { to: '/feedback',    icon: MessageSquare,   label: 'Feedback' },
+  { to: '/feedback',    icon: MessageSquare,   label: 'Feedback'     },
 ]
 
 interface SidebarProps {
@@ -22,7 +22,8 @@ interface SidebarProps {
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const { user, logout } = useAuth()
-  const location = useLocation()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _location = useLocation()
 
   return (
     <>
@@ -37,43 +38,40 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       <aside
         className={clsx(
           'fixed top-0 left-0 h-full z-40 flex flex-col',
-          'w-64 bg-navy-950 border-r border-navy-700/50',
+          'w-64 bg-surface-950 border-r border-surface-700/50',
           'transition-transform duration-300 ease-in-out',
           open ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0 lg:static lg:z-auto',
         )}
+        style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%)' }}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-6 border-b border-navy-700/50">
+        <div className="flex items-center justify-between px-5 py-6 border-b border-surface-700/40">
           <div className="flex items-center gap-3">
             <div
-              className="w-9 h-9 rounded-xl bg-gold-gradient flex items-center justify-center shadow-gold"
-              style={{ background: 'linear-gradient(135deg,#c9a84c,#f0c040)' }}
+              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-brand"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
             >
-              <GraduationCap className="w-5 h-5 text-navy-900" />
+              <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-display font-semibold text-white text-sm leading-tight">Campus</p>
-              <p
-                className="font-display font-semibold text-gold-gradient text-sm leading-tight"
+              <p className="font-display font-bold text-white text-sm leading-tight">Campus</p>
+              <p className="font-display font-bold text-sm leading-tight text-brand-gradient"
                 style={{
-                  background: 'linear-gradient(90deg,#c9a84c,#f0c040)',
+                  background: 'linear-gradient(90deg,#6366f1,#8b5cf6)',
                   WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}
-              >
+                  WebkitTextFillColor: 'transparent',
+                }}>
                 Connect
               </p>
             </div>
           </div>
 
-          {/* ✅ FIXED */}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close sidebar"
-            title="Close sidebar"
-            className="lg:hidden text-navy-400 hover:text-white transition-colors"
+            className="lg:hidden text-surface-400 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -86,34 +84,28 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               key={to}
               to={to}
               onClick={onClose}
-              className={({ isActive }) =>
-                clsx('nav-link', isActive && 'active')
-              }
+              className={({ isActive }) => clsx('nav-link', isActive && 'active')}
             >
-              <Icon
-                className="w-4.5 h-4.5 shrink-0"
-                style={{ width: '1.1rem', height: '1.1rem' }}
-              />
+              <Icon style={{ width: '1.1rem', height: '1.1rem' }} className="shrink-0" />
               {label}
             </NavLink>
           ))}
         </nav>
 
         {/* User + logout */}
-        <div className="px-3 py-4 border-t border-navy-700/50">
+        <div className="px-3 py-4 border-t border-surface-700/40">
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shrink-0">
-              <span className="text-gold-400 text-xs font-semibold">
+            <div className="w-8 h-8 rounded-full bg-primary-500/20 border border-primary-500/40 flex items-center justify-center shrink-0">
+              <span className="text-primary-300 text-xs font-semibold">
                 {user?.name?.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="min-w-0">
               <p className="text-white text-xs font-medium truncate">{user?.name}</p>
-              <p className="text-navy-400 text-xs truncate">{user?.role}</p>
+              <p className="text-surface-400 text-xs truncate capitalize">{user?.role}</p>
             </div>
           </div>
 
-          {/* ✅ FIXED */}
           <button
             type="button"
             onClick={logout}

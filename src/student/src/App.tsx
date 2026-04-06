@@ -27,10 +27,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 function FullScreenLoader() {
   return (
-    <div className="min-h-screen bg-navy-gradient flex items-center justify-center">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 rounded-full border-2 border-navy-600 border-t-gold-400 animate-spin" />
-        <p className="text-navy-300 text-sm font-body">Loading Campus Connect…</p>
+        <div className="w-12 h-12 rounded-full border-2 border-slate-300 border-t-primary-500 animate-spin" />
+        <p className="text-slate-500 text-sm font-body">Loading Campus Connect…</p>
       </div>
     </div>
   )
@@ -40,15 +40,15 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+      <Route path="/login"    element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="events" element={<EventsPage />} />
+        <Route path="dashboard"   element={<DashboardPage />} />
+        <Route path="events"      element={<EventsPage />} />
         <Route path="marketplace" element={<MarketplacePage />} />
-        <Route path="clubs" element={<ClubsPage />} />
-        <Route path="lost-found" element={<LostFoundPage />} />
-        <Route path="feedback" element={<FeedbackPage />} />
+        <Route path="clubs"       element={<ClubsPage />} />
+        <Route path="lost-found"  element={<LostFoundPage />} />
+        <Route path="feedback"    element={<FeedbackPage />} />
       </Route>
     </Routes>
   )
@@ -57,20 +57,20 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AppRoutes />
         <Toaster
           position="top-right"
           toastOptions={{
             style: {
-              background: '#0d1f3c',
+              background: '#1e1b4b',
               color: '#fff',
-              border: '1px solid rgba(212,175,55,0.25)',
-              fontFamily: '"DM Sans", sans-serif',
+              border: '1px solid rgba(99,102,241,0.3)',
+              fontFamily: '"Inter", sans-serif',
               fontSize: '14px',
             },
-            success: { iconTheme: { primary: '#d4af37', secondary: '#0d1f3c' } },
-            error: { iconTheme: { primary: '#f87171', secondary: '#0d1f3c' } },
+            success: { iconTheme: { primary: '#6366f1', secondary: '#fff' } },
+            error:   { iconTheme: { primary: '#f87171', secondary: '#1e1b4b' } },
           }}
         />
       </BrowserRouter>

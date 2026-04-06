@@ -47,7 +47,7 @@ export default function FeedbackPage() {
         <>
           <Table>
             <thead>
-              <tr className="border-b border-navy-700/40">
+              <tr className="border-b border-surface-700/40">
                 <th className="th">Title</th>
                 <th className="th hidden sm:table-cell">Category</th>
                 <th className="th hidden md:table-cell">Department</th>
@@ -61,23 +61,23 @@ export default function FeedbackPage() {
               {items.map(fb => (
                 <tr key={fb.id} className="table-row">
                   <td className="td font-medium text-white max-w-[180px] truncate">{fb.title}</td>
-                  <td className="td hidden sm:table-cell"><span className="badge-navy">{fb.category}</span></td>
-                  <td className="td text-navy-400 hidden md:table-cell max-w-[140px] truncate">{fb.department}</td>
-                  <td className="td"><span className={STATUS_BADGE[fb.status] ?? 'badge-navy'}>{fb.status}</span></td>
-                  <td className="td text-navy-400 hidden lg:table-cell">
-                    {fb.is_anonymous ? <span className="text-navy-500 italic">Anonymous</span> : fb.submitted_by?.name ?? '—'}
+                  <td className="td hidden sm:table-cell"><span className="badge-surface">{fb.category}</span></td>
+                  <td className="td text-surface-400 hidden md:table-cell max-w-[140px] truncate">{fb.department}</td>
+                  <td className="td"><span className={STATUS_BADGE[fb.status] ?? 'badge-surface'}>{fb.status}</span></td>
+                  <td className="td text-surface-400 hidden lg:table-cell">
+                    {fb.is_anonymous ? <span className="text-surface-500 italic">Anonymous</span> : fb.submitted_by?.name ?? '—'}
                   </td>
-                  <td className="td text-navy-500 hidden lg:table-cell">
+                  <td className="td text-surface-500 hidden lg:table-cell">
                     {new Date(fb.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="td">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setViewTarget(fb)}
-                        className="px-2.5 py-1 rounded-lg text-xs text-navy-300 border border-navy-600/40 hover:border-gold-500/40 hover:text-gold-400 transition-colors">
+                        className="px-2.5 py-1 rounded-lg text-xs text-surface-300 border border-surface-600/40 hover:border-primary-500/40 hover:text-primary-400 transition-colors">
                         View
                       </button>
                       <button onClick={() => { setStatusTarget(fb); setNewStatus(fb.status) }}
-                        className="p-1.5 rounded-lg text-navy-400 hover:text-gold-400 hover:bg-gold-500/10 transition-colors" title="Update status">
+                        className="p-1.5 rounded-lg text-surface-400 hover:text-primary-400 hover:bg-primary-500/10 transition-colors" title="Update status">
                         <ChevronDown className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -95,30 +95,30 @@ export default function FeedbackPage() {
         {viewTarget && (
           <div className="space-y-4">
             <div>
-              <p className="text-xs text-navy-400 mb-1">Title</p>
+              <p className="text-xs text-surface-400 mb-1">Title</p>
               <p className="text-white font-medium">{viewTarget.title}</p>
             </div>
             <div>
-              <p className="text-xs text-navy-400 mb-1">Description</p>
-              <p className="text-navy-200 text-sm leading-relaxed whitespace-pre-wrap">{viewTarget.description}</p>
+              <p className="text-xs text-surface-400 mb-1">Description</p>
+              <p className="text-surface-200 text-sm leading-relaxed whitespace-pre-wrap">{viewTarget.description}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-navy-400 mb-1">Category</p>
-                <span className="badge-navy">{viewTarget.category}</span>
+                <p className="text-xs text-surface-400 mb-1">Category</p>
+                <span className="badge-surface">{viewTarget.category}</span>
               </div>
               <div>
-                <p className="text-xs text-navy-400 mb-1">Department</p>
-                <p className="text-navy-200 text-sm">{viewTarget.department}</p>
+                <p className="text-xs text-surface-400 mb-1">Department</p>
+                <p className="text-surface-200 text-sm">{viewTarget.department}</p>
               </div>
               <div>
-                <p className="text-xs text-navy-400 mb-1">Status</p>
+                <p className="text-xs text-surface-400 mb-1">Status</p>
                 <span className={STATUS_BADGE[viewTarget.status]}>{viewTarget.status}</span>
               </div>
               <div>
-                <p className="text-xs text-navy-400 mb-1">From</p>
-                <p className="text-navy-200 text-sm">
-                  {viewTarget.is_anonymous ? <span className="italic text-navy-500">Anonymous</span> : viewTarget.submitted_by?.name ?? '—'}
+                <p className="text-xs text-surface-400 mb-1">From</p>
+                <p className="text-surface-200 text-sm">
+                  {viewTarget.is_anonymous ? <span className="italic text-surface-500">Anonymous</span> : viewTarget.submitted_by?.name ?? '—'}
                 </p>
               </div>
             </div>
@@ -132,7 +132,7 @@ export default function FeedbackPage() {
 
       {/* Status change modal */}
       <Modal open={!!statusTarget} onClose={() => setStatusTarget(null)} title="Update Feedback Status" size="sm">
-        <p className="text-navy-300 text-sm mb-4">Update status for: <span className="text-white font-medium">{statusTarget?.title}</span></p>
+        <p className="text-surface-300 text-sm mb-4">Update status for: <span className="text-white font-medium">{statusTarget?.title}</span></p>
         <select
           className="input mb-5"
           value={newStatus}
