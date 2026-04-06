@@ -23,15 +23,15 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div className={clsx(
-        'relative w-full bg-navy-800 border border-navy-600/60 rounded-2xl shadow-navy',
+        'relative w-full bg-surface-800 border border-surface-600/60 rounded-2xl shadow-card',
         'animate-slide-up max-h-[90vh] overflow-y-auto scrollbar-hidden', SIZES[size],
       )}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-navy-700/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-700/50">
           <h2 className="font-display text-lg font-semibold text-white">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-navy-400 hover:text-white hover:bg-navy-700/50 transition-colors"
+            className="p-1.5 rounded-lg text-surface-400 hover:text-white hover:bg-surface-700/50 transition-colors"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -55,7 +55,7 @@ interface ConfirmProps {
 export function ConfirmDialog({ open, onClose, onConfirm, title, message, danger }: ConfirmProps) {
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm">
-      <p className="text-navy-300 text-sm mb-5">{message}</p>
+      <p className="text-surface-300 text-sm mb-5">{message}</p>
       <div className="flex gap-3">
         <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
         <button
@@ -77,11 +77,11 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, message, danger
 export function EmptyState({ icon: Icon = Inbox, title, subtitle }: { icon?: LucideIcon; title: string; subtitle?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-navy-700/60 border border-navy-600/40 flex items-center justify-center mb-4">
-        <Icon className="w-6 h-6 text-navy-400" />
+      <div className="w-14 h-14 rounded-2xl bg-surface-700/60 border border-surface-600/40 flex items-center justify-center mb-4">
+        <Icon className="w-6 h-6 text-surface-400" />
       </div>
       <p className="font-display text-base font-semibold text-white mb-1">{title}</p>
-      {subtitle && <p className="text-navy-400 text-sm max-w-xs">{subtitle}</p>}
+      {subtitle && <p className="text-surface-400 text-sm max-w-xs">{subtitle}</p>}
     </div>
   )
 }
@@ -92,7 +92,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
         <h2 className="font-display text-xl font-semibold text-white">{title}</h2>
-        {subtitle && <p className="text-navy-400 text-sm mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-surface-400 text-sm mt-0.5">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -115,16 +115,16 @@ export function TableSkeleton({ cols = 5, rows = 6 }: { cols?: number; rows?: nu
   return (
     <div className="card overflow-hidden">
       <table className="w-full">
-        <thead><tr className="border-b border-navy-700/40">
+        <thead><tr className="border-b border-surface-700/40">
           {Array.from({ length: cols }).map((_, i) => (
-            <th key={i} className="th"><div className="h-3 bg-navy-700 rounded w-20 animate-pulse" /></th>
+            <th key={i} className="th"><div className="h-3 bg-surface-700 rounded w-20 animate-pulse" /></th>
           ))}
         </tr></thead>
         <tbody>
           {Array.from({ length: rows }).map((_, r) => (
             <tr key={r} className="table-row">
               {Array.from({ length: cols }).map((_, c) => (
-                <td key={c} className="td"><div className="h-3 bg-navy-700/60 rounded animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} /></td>
+                <td key={c} className="td"><div className="h-3 bg-surface-700/60 rounded animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} /></td>
               ))}
             </tr>
           ))}
@@ -147,7 +147,7 @@ export function StatCard({ icon, label, value, delta, color }: StatCardProps) {
     <div className="stat-card animate-fade-in">
       <div className={clsx('w-11 h-11 rounded-xl flex items-center justify-center shrink-0', color)}>{icon}</div>
       <div>
-        <p className="text-navy-400 text-xs font-medium">{label}</p>
+        <p className="text-surface-400 text-xs font-medium">{label}</p>
         <p className="font-display text-2xl font-semibold text-white mt-0.5">{value}</p>
         {delta && <p className="text-xs text-emerald-400 mt-0.5">{delta}</p>}
       </div>
@@ -164,7 +164,7 @@ export function Pagination({ page, pages, onChange }: { page: number; pages: num
         type="button"
         disabled={page === 1}
         onClick={() => onChange(page - 1)}
-        className="px-3 py-1.5 rounded-lg text-xs text-navy-300 border border-navy-600/40 hover:border-gold-500/40 hover:text-gold-400 disabled:opacity-30 transition-all"
+        className="px-3 py-1.5 rounded-lg text-xs text-surface-300 border border-surface-600/40 hover:border-primary-500/40 hover:text-primary-400 disabled:opacity-30 transition-all"
         aria-label="Previous page"
       >
         ← Prev
@@ -176,7 +176,7 @@ export function Pagination({ page, pages, onChange }: { page: number; pages: num
           key={p}
           onClick={() => onChange(p)}
           className={clsx('w-8 h-8 rounded-lg text-xs font-medium transition-all',
-            p === page ? 'text-navy-900 font-semibold' : 'text-navy-300 border border-navy-600/40 hover:border-gold-500/40 hover:text-gold-400')}
+            p === page ? 'text-white font-semibold' : 'text-surface-300 border border-surface-600/40 hover:border-primary-500/40 hover:text-primary-400')}
           style={p === page ? { background: 'linear-gradient(90deg,#c9a84c,#f0c040)' } : {}}
           aria-label={`Go to page ${p}`}
         >
@@ -188,7 +188,7 @@ export function Pagination({ page, pages, onChange }: { page: number; pages: num
         type="button"
         disabled={page === pages}
         onClick={() => onChange(page + 1)}
-        className="px-3 py-1.5 rounded-lg text-xs text-navy-300 border border-navy-600/40 hover:border-gold-500/40 hover:text-gold-400 disabled:opacity-30 transition-all"
+        className="px-3 py-1.5 rounded-lg text-xs text-surface-300 border border-surface-600/40 hover:border-primary-500/40 hover:text-primary-400 disabled:opacity-30 transition-all"
         aria-label="Next page"
       >
         Next →

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+import re
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -10,7 +11,13 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# bcrypt__rounds=10 is fast enough and safe — passlib default is 12 which
+# causes multi-second hangs on Windows Python 3.12.
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__rounds=10,
+)
 bearer_scheme = HTTPBearer()
 
 
@@ -21,6 +28,27 @@ def hash_password(plain: str) -> str:
 
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
+
+
+# ── Password strength validation ───────────────────────
+def validate_password_strength(password: str) -> list[str]:
+    """Returns a list of unmet requirements. Empty list = password is strong."""
+    errors = []
+    if len(password) < 8:
+        errors.append("At least 8 characters")
+    if not re.search(r"[A-Z]", password):
+        errors.append("At least one uppercase letter")
+    if not re.search(r"[a-z]", password):
+        errors.append("At least one lowercase letter")
+    if not re.search(r"\d", password):
+        errors.append("At least one number")
+    return errors
+
+
+# ── Input sanitization ─────────────────────────────────
+def sanitize_string(value: str, max_length: int = 500) -> str:
+    """Strip leading/trailing whitespace and enforce max length."""
+    return value.strip()[:max_length]
 
 
 # ── JWT helpers ────────────────────────────────────────
@@ -49,7 +77,7 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ):
-    from app.models.user import User  # avoid circular imports
+    from app.models.user import User
 
     payload = decode_token(credentials.credentials)
     user_id: str = payload.get("sub")
@@ -62,7 +90,14 @@ def get_current_user(
     return user
 
 
+# ── Role-based access control ──────────────────────────
 def require_admin(current_user=Depends(get_current_user)):
-    if current_user.role != "admin":
+    if current_user.role.value != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+
+def require_staff_or_admin(current_user=Depends(get_current_user)):
+    if current_user.role.value not in ("admin", "lecturer"):
+        raise HTTPException(status_code=403, detail="Staff access required")
     return current_user

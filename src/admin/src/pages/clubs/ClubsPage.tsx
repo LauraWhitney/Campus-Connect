@@ -39,7 +39,7 @@ export default function ClubsPage() {
         <>
           <Table>
             <thead>
-              <tr className="border-b border-navy-700/40">
+              <tr className="border-b border-surface-700/40">
                 <th className="th">Club Name</th>
                 <th className="th hidden sm:table-cell">Category</th>
                 <th className="th hidden md:table-cell">President</th>
@@ -52,15 +52,15 @@ export default function ClubsPage() {
               {clubs.map(club => (
                 <tr key={club.id} className="table-row">
                   <td className="td font-medium text-white max-w-[180px] truncate">{club.name}</td>
-                  <td className="td hidden sm:table-cell"><span className="badge-gold">{club.category}</span></td>
-                  <td className="td text-navy-400 hidden md:table-cell">{club.president}</td>
-                  <td className="td text-navy-300 hidden md:table-cell">{club.member_count}</td>
-                  <td className="td text-navy-400 hidden lg:table-cell max-w-[160px] truncate">{club.email}</td>
+                  <td className="td hidden sm:table-cell"><span className="badge-brand">{club.category}</span></td>
+                  <td className="td text-surface-400 hidden md:table-cell">{club.president}</td>
+                  <td className="td text-surface-300 hidden md:table-cell">{club.member_count}</td>
+                  <td className="td text-surface-400 hidden lg:table-cell max-w-[160px] truncate">{club.email}</td>
                   <td className="td text-right">
                     <button
                       type="button" // <-- Prevent default form behavior
                       onClick={() => setDeleteTarget(club)}
-                      className="p-1.5 rounded-lg text-navy-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-surface-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       aria-label={`Delete club: ${club.name}`} // <-- Accessibility fix
                     >
                       <Trash2 className="w-3.5 h-3.5" />

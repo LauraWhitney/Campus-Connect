@@ -5,7 +5,7 @@ import type { MarketplaceItem } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, ConfirmDialog } from '../../components/ui/index'
 import toast from 'react-hot-toast'
 
-const COND_BADGE: Record<string, string> = { New: 'badge-green', 'Like New': 'badge-green', Good: 'badge-gold', Fair: 'badge-navy' }
+const COND_BADGE: Record<string, string> = { New: 'badge-green', 'Like New': 'badge-green', Good: 'badge-brand', Fair: 'badge-surface' }
 
 export default function MarketplacePage() {
   const [items, setItems] = useState<MarketplaceItem[]>([])
@@ -41,7 +41,7 @@ export default function MarketplacePage() {
         <>
           <Table>
             <thead>
-              <tr className="border-b border-navy-700/40">
+              <tr className="border-b border-surface-700/40">
                 <th className="th">Item</th>
                 <th className="th hidden sm:table-cell">Category</th>
                 <th className="th">Price</th>
@@ -55,20 +55,20 @@ export default function MarketplacePage() {
               {items.map(item => (
                 <tr key={item.id} className="table-row">
                   <td className="td font-medium text-white max-w-[180px] truncate">{item.title}</td>
-                  <td className="td hidden sm:table-cell"><span className="badge-navy">{item.category}</span></td>
-                  <td className="td text-gold-400 font-semibold">KES {Number(item.price).toLocaleString()}</td>
-                  <td className="td hidden md:table-cell"><span className={COND_BADGE[item.condition] ?? 'badge-navy'}>{item.condition}</span></td>
-                  <td className="td text-navy-400 hidden md:table-cell max-w-[120px] truncate">{item.seller.name}</td>
+                  <td className="td hidden sm:table-cell"><span className="badge-surface">{item.category}</span></td>
+                  <td className="td text-primary-400 font-semibold">KES {Number(item.price).toLocaleString()}</td>
+                  <td className="td hidden md:table-cell"><span className={COND_BADGE[item.condition] ?? 'badge-surface'}>{item.condition}</span></td>
+                  <td className="td text-surface-400 hidden md:table-cell max-w-[120px] truncate">{item.seller.name}</td>
                   <td className="td hidden lg:table-cell">
                     {item.is_sold
-                      ? <span className="badge-navy">Sold</span>
+                      ? <span className="badge-surface">Sold</span>
                       : <span className="badge-green">Available</span>}
                   </td>
                   <td className="td text-right">
                     <button
                       type="button" // Added type to fix warning
                       onClick={() => setDeleteTarget(item)}
-                      className="p-1.5 rounded-lg text-navy-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-surface-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       aria-label={`Remove ${item.title}`} // Added accessible name
                     >
                       <Trash2 className="w-3.5 h-3.5" />

@@ -102,3 +102,14 @@ export interface PaginatedResponse<T> {
   pages: number
   page_size: number
 }
+
+// ── Activity Log ──────────────────────────────────────
+export interface ActivityLog {
+  id: number
+  user_id?: number
+  user_email?: string
+  action: string
+  detail?: string
+  ip_address?: string
+  created_at: string
+}

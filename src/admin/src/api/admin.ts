@@ -1,18 +1,23 @@
 import api from './index'
 import type {
   User, Event, MarketplaceItem, Club,
-  LostFoundItem, Feedback, DashboardStats, PaginatedResponse
+  LostFoundItem, Feedback, DashboardStats, PaginatedResponse, ActivityLog,
 } from '../types'
 
 // ── Auth ──────────────────────────────────────────────
 export const authAPI = {
   login: async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password })
+    const { data } = await api.post('/auth/login', {
+      email: email.trim().toLowerCase(),
+      password,
+    })
     if (data.user.role !== 'admin') throw new Error('Admin access required')
     return data as { user: User; token: string }
   },
   me: async (token: string) => {
-    const { data } = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+    const { data } = await api.get('/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
     return data as User
   },
 }
@@ -27,8 +32,8 @@ export const statsAPI = {
 
 // ── Users ─────────────────────────────────────────────
 export const usersAPI = {
-  getAll: async (page = 1): Promise<PaginatedResponse<User>> => {
-    const { data } = await api.get('/admin/users', { params: { page } })
+  getAll: async (page = 1, search = ''): Promise<PaginatedResponse<User>> => {
+    const { data } = await api.get('/admin/users', { params: { page, search: search || undefined } })
     return data
   },
   updateRole: async (id: number, role: string) => {
@@ -91,5 +96,15 @@ export const feedbackAPI = {
   },
   updateStatus: async (id: number, status: string) => {
     await api.patch(`/feedback/${id}/status`, null, { params: { status } })
+  },
+}
+
+// ── Activity Logs ─────────────────────────────────────
+export const activityAPI = {
+  getAll: async (page = 1, action = ''): Promise<PaginatedResponse<ActivityLog>> => {
+    const { data } = await api.get('/admin/activity', {
+      params: { page, action: action || undefined },
+    })
+    return data
   },
 }

@@ -21,19 +21,19 @@ function FeedbackCard({ item }: { item: Feedback }) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="font-display font-semibold text-white text-sm leading-snug">{item.title}</h3>
-          <p className="text-navy-400 text-xs mt-0.5">{item.department}</p>
+          <p className="text-surface-400 text-xs mt-0.5">{item.department}</p>
         </div>
 
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <span className={`badge border ${STATUS_STYLES[item.status]}`}>{item.status}</span>
-          <span className="badge-navy">{item.category}</span>
+          <span className="badge-surface">{item.category}</span>
         </div>
       </div>
 
-      <p className="text-navy-300 text-xs line-clamp-3 leading-relaxed">{item.description}</p>
+      <p className="text-surface-300 text-xs line-clamp-3 leading-relaxed">{item.description}</p>
 
-      <div className="flex items-center justify-between pt-1 border-t border-navy-700/40">
-        <div className="flex items-center gap-1.5 text-navy-500 text-xs">
+      <div className="flex items-center justify-between pt-1 border-t border-surface-700/40">
+        <div className="flex items-center gap-1.5 text-surface-500 text-xs">
           {item.isAnonymous ? (
             <>
               <Shield className="w-3 h-3" /> Anonymous
@@ -43,7 +43,7 @@ function FeedbackCard({ item }: { item: Feedback }) {
           )}
         </div>
 
-        <span className="text-navy-500 text-xs">
+        <span className="text-surface-500 text-xs">
           {new Date(item.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
         </span>
       </div>
@@ -84,10 +84,10 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
 
   return (
     <Modal open={open} onClose={onClose} title="Submit Feedback">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 bg-blue-700 p-5 rounded-xl">
 
         <div>
-          <label htmlFor="feedback-title" className="block text-xs text-navy-300 mb-1.5">
+          <label htmlFor="feedback-title" className="block text-xs text-surface-300 mb-1.5">
             Title
           </label>
           <input
@@ -101,7 +101,7 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
         </div>
 
         <div>
-          <label htmlFor="feedback-description" className="block text-xs text-navy-300 mb-1.5">
+          <label htmlFor="feedback-description" className="block text-xs text-surface-300 mb-1.5">
             Feedback
           </label>
           <textarea
@@ -117,7 +117,7 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
         <div className="grid grid-cols-2 gap-3">
 
           <div>
-            <label htmlFor="feedback-category" className="block text-xs text-navy-300 mb-1.5">
+            <label htmlFor="feedback-category" className="block text-xs text-surface-300 mb-1.5">
               Category
             </label>
 
@@ -134,7 +134,7 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
           </div>
 
           <div>
-            <label htmlFor="feedback-department" className="block text-xs text-navy-300 mb-1.5">
+            <label htmlFor="feedback-department" className="block text-xs text-surface-300 mb-1.5">
               Department
             </label>
 
@@ -152,24 +152,24 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
 
         </div>
 
-        <label className="flex items-center gap-3 p-3 rounded-xl border border-navy-600/40 bg-navy-800/40 cursor-pointer hover:bg-navy-700/30 transition-colors">
+        <label className="flex items-center gap-3 p-3 rounded-xl border border-surface-600/40 bg-surface-800/40 cursor-pointer hover:bg-surface-700/30 transition-colors">
           <input
             type="checkbox"
             checked={form.is_anonymous}
             onChange={e => setForm(f => ({ ...f, is_anonymous: e.target.checked }))}
-            className="w-4 h-4 accent-gold-400"
+            className="w-4 h-4 accent-primary-400"
           />
 
           <div>
             <p className="text-white text-xs font-medium">Submit anonymously</p>
-            <p className="text-navy-400 text-xs">Your name won't be visible to administrators</p>
+            <p className="text-surface-400 text-xs">Your name won't be visible to administrators</p>
           </div>
 
-          <Shield className="w-4 h-4 text-navy-400 ml-auto shrink-0" />
+          <Shield className="w-4 h-4 text-surface-400 ml-auto shrink-0" />
         </label>
 
         <div className="flex gap-3 pt-1">
-          <button type="button" onClick={onClose} className="btn-secondary flex-1">
+          <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-white text-slate-800 border border-slate-300 hover:bg-slate-100 transition-all">
             Cancel
           </button>
 
@@ -223,9 +223,9 @@ export default function FeedbackPage() {
         }
       />
 
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-navy-800/40 border border-navy-600/30 mb-6">
-        <Shield className="w-4 h-4 text-gold-400 mt-0.5 shrink-0" />
-        <p className="text-navy-300 text-xs leading-relaxed">
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-surface-800/40 border border-surface-600/30 mb-6">
+        <Shield className="w-4 h-4 text-primary-400 mt-0.5 shrink-0" />
+        <p className="text-surface-300 text-xs leading-relaxed">
           Your feedback is reviewed by university administrators. You may submit anonymously. All feedback is treated with confidentiality.
         </p>
       </div>
@@ -241,7 +241,7 @@ export default function FeedbackPage() {
             <button
               onClick={() => setShowModal(true)}
               className="btn-primary"
-              style={{ background: 'linear-gradient(90deg,#c9a84c,#f0c040)' }}
+              style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }}
             >
               Give Feedback
             </button>

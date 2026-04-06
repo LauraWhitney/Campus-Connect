@@ -12,11 +12,11 @@ interface EmptyStateProps {
 export function EmptyState({ icon: Icon = Inbox, title, subtitle, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-navy-700/60 border border-navy-600/40 flex items-center justify-center mb-4">
-        <Icon className="w-6 h-6 text-navy-400" />
+      <div className="w-14 h-14 rounded-2xl bg-surface-700/60 border border-surface-600/40 flex items-center justify-center mb-4">
+        <Icon className="w-6 h-6 text-surface-400" />
       </div>
       <h3 className="font-display text-base font-semibold text-white mb-1">{title}</h3>
-      {subtitle && <p className="text-navy-400 text-sm max-w-xs">{subtitle}</p>}
+      {subtitle && <p className="text-surface-400 text-sm max-w-xs">{subtitle}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   )
@@ -26,13 +26,13 @@ export function EmptyState({ icon: Icon = Inbox, title, subtitle, action }: Empt
 function SkeletonCard() {
   return (
     <div className="card p-5 space-y-3 animate-pulse">
-      <div className="h-4 bg-navy-700 rounded-lg w-3/4" />
-      <div className="h-3 bg-navy-700 rounded w-1/2" />
-      <div className="h-3 bg-navy-700 rounded w-full" />
-      <div className="h-3 bg-navy-700 rounded w-5/6" />
+      <div className="h-4 bg-surface-700 rounded-lg w-3/4" />
+      <div className="h-3 bg-surface-700 rounded w-1/2" />
+      <div className="h-3 bg-surface-700 rounded w-full" />
+      <div className="h-3 bg-surface-700 rounded w-5/6" />
       <div className="flex gap-2 pt-1">
-        <div className="h-6 w-16 bg-navy-700 rounded-full" />
-        <div className="h-6 w-20 bg-navy-700 rounded-full" />
+        <div className="h-6 w-16 bg-surface-700 rounded-full" />
+        <div className="h-6 w-20 bg-surface-700 rounded-full" />
       </div>
     </div>
   )
@@ -81,8 +81,8 @@ export function FilterBar({ options, active, onChange }: FilterBarProps) {
           onClick={() => onChange(opt)}
           className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border
             ${active === opt
-              ? 'bg-gold-500/20 text-gold-300 border-gold-500/40'
-              : 'bg-navy-800/60 text-navy-300 border-navy-600/40 hover:text-white hover:border-navy-500'
+              ? 'bg-primary-500/20 text-primary-300 border-primary-500/40'
+              : 'bg-surface-800/60 text-surface-300 border-surface-600/40 hover:text-white hover:border-surface-500'
             }`}
         >
           {opt}

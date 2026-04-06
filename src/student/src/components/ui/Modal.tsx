@@ -32,13 +32,13 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
       {/* Panel */}
       <div
         className={clsx(
-          'relative w-full bg-navy-800 border border-navy-600/60 rounded-2xl shadow-navy',
+          'relative w-full bg-surface-800 border border-surface-600/60 rounded-2xl shadow-card',
           'animate-slide-up max-h-[90vh] overflow-y-auto scrollbar-hidden',
           sizes[size],
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-navy-700/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-700/50">
           <h2 className="font-display text-lg font-semibold text-white">{title}</h2>
 
           {/* ✅ FIXED */}
@@ -47,7 +47,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
             onClick={onClose}
             aria-label="Close modal"
             title="Close modal"
-            className="p-1.5 rounded-lg text-navy-400 hover:text-white hover:bg-navy-700/50 transition-colors"
+            className="p-1.5 rounded-lg text-surface-400 hover:text-white hover:bg-surface-700/50 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

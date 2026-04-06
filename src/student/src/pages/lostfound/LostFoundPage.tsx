@@ -11,7 +11,7 @@ const FILTERS = ['All', 'Lost', 'Found']
 const STATUS_STYLES: Record<string, string> = {
   Lost: 'bg-red-500/20 text-red-300 border-red-500/30',
   Found: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-  Claimed: 'bg-navy-600/60 text-navy-300 border-navy-500/40',
+  Claimed: 'bg-surface-600/60 text-surface-300 border-surface-500/40',
 }
 
 function LostFoundCard({ item, onClaim }: { item: LostFoundItem; onClaim: (id: string) => void }) {
@@ -22,20 +22,20 @@ function LostFoundCard({ item, onClaim }: { item: LostFoundItem; onClaim: (id: s
         <span className={`badge border shrink-0 ${STATUS_STYLES[item.status]}`}>{item.status}</span>
       </div>
 
-      <p className="text-navy-300 text-xs line-clamp-2 leading-relaxed">{item.description}</p>
+      <p className="text-surface-300 text-xs line-clamp-2 leading-relaxed">{item.description}</p>
 
       <div className="space-y-1.5">
-        <div className="flex items-center gap-2 text-navy-400 text-xs">
+        <div className="flex items-center gap-2 text-surface-400 text-xs">
           <MapPin className="w-3.5 h-3.5 shrink-0" />
           <span className="truncate">{item.location}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-navy-400 text-xs">
+        <div className="flex items-center gap-2 text-surface-400 text-xs">
           <CalendarDays className="w-3.5 h-3.5 shrink-0" />
           <span>{new Date(item.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-navy-400 text-xs">
+        <div className="flex items-center gap-2 text-surface-400 text-xs">
           <Phone className="w-3.5 h-3.5 shrink-0" />
           <span className="truncate">{item.contact}</span>
         </div>
@@ -44,7 +44,7 @@ function LostFoundCard({ item, onClaim }: { item: LostFoundItem; onClaim: (id: s
       {!item.isClaimed && (
         <button
           onClick={() => onClaim(item._id)}
-          className="w-full py-2.5 rounded-xl text-xs font-semibold border border-gold-500/40 text-gold-300 bg-gold-500/10 hover:bg-gold-500/20 transition-all"
+          className="w-full py-2.5 rounded-xl text-xs font-semibold border border-primary-500/40 text-primary-300 bg-primary-500/10 hover:bg-primary-500/20 transition-all"
         >
           Mark as Claimed / Resolved
         </button>
@@ -87,10 +87,10 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
 
   return (
     <Modal open={open} onClose={onClose} title="Report Lost / Found Item">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4  bg-blue-700 p-5 rounded-xl">
 
         <div>
-          <label htmlFor="item-title" className="block text-xs text-navy-300 mb-1.5">
+          <label htmlFor="item-title" className="block text-xs text-surface-300 mb-1.5">
             Item Name
           </label>
           <input
@@ -104,7 +104,7 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
         </div>
 
         <div>
-          <label htmlFor="item-description" className="block text-xs text-navy-300 mb-1.5">
+          <label htmlFor="item-description" className="block text-xs text-surface-300 mb-1.5">
             Description
           </label>
           <textarea
@@ -120,7 +120,7 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
         <div className="grid grid-cols-2 gap-3">
 
           <div>
-            <label htmlFor="item-status" className="block text-xs text-navy-300 mb-1.5">
+            <label htmlFor="item-status" className="block text-xs text-surface-300 mb-1.5">
               Status
             </label>
             <select
@@ -135,7 +135,7 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
           </div>
 
           <div>
-            <label htmlFor="item-date" className="block text-xs text-navy-300 mb-1.5">
+            <label htmlFor="item-date" className="block text-xs text-surface-300 mb-1.5">
               Date
             </label>
             <input
@@ -151,7 +151,7 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
         </div>
 
         <div>
-          <label htmlFor="item-location" className="block text-xs text-navy-300 mb-1.5">
+          <label htmlFor="item-location" className="block text-xs text-surface-300 mb-1.5">
             Location
           </label>
           <input
@@ -165,7 +165,7 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
         </div>
 
         <div>
-          <label htmlFor="item-contact" className="block text-xs text-navy-300 mb-1.5">
+          <label htmlFor="item-contact" className="block text-xs text-surface-300 mb-1.5">
             Contact Info
           </label>
           <input
@@ -179,7 +179,7 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button type="button" onClick={onClose} className="btn-secondary flex-1">
+          <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-white text-slate-800 border border-slate-300 hover:bg-slate-100 transition-all">
             Cancel
           </button>
 
@@ -257,7 +257,7 @@ export default function LostFoundPage() {
             <button
               onClick={() => setShowModal(true)}
               className="btn-primary"
-              style={{ background: 'linear-gradient(90deg,#c9a84c,#f0c040)' }}
+              style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }}
             >
               Report an Item
             </button>
