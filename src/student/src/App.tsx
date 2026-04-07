@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import AppLayout from './components/layout/AppLayout'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import EventsPage from './pages/events/EventsPage'
 import MarketplacePage from './pages/marketplace/MarketplacePage'
@@ -40,8 +41,9 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/login"    element={<PublicRoute><LoginPage /></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+      <Route path="/login"            element={<PublicRoute><LoginPage /></PublicRoute>} />
+      <Route path="/register"         element={<PublicRoute><RegisterPage /></PublicRoute>} />
+      <Route path="/forgot-password"  element={<ForgotPasswordPage />} />
       <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route path="dashboard"   element={<DashboardPage />} />
         <Route path="events"      element={<EventsPage />} />
