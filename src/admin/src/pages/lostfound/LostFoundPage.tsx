@@ -5,14 +5,23 @@ import type { LostFoundItem } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, ConfirmDialog } from '../../components/ui/index'
 import toast from 'react-hot-toast'
 
-const STATUS_BADGE: Record<string, string> = { Lost: 'badge-red', Found: 'badge-green', Claimed: 'badge-surface' }
+const STATUS_BADGE: Record<string, string> = {
+  Lost: 'badge-red', Found: 'badge-green', Claimed: 'badge-surface',
+}
+
+// Status gets a left-border colour strip — borrows student palette
+const STATUS_STRIPE: Record<string, string> = {
+  Lost:    'border-l-4 border-l-red-400',
+  Found:   'border-l-4 border-l-emerald-400',
+  Claimed: 'border-l-4 border-l-slate-300',
+}
 
 export default function LostFoundPage() {
-  const [items, setItems] = useState<LostFoundItem[]>([])
+  const [items, setItems]     = useState<LostFoundItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
-  const [pages, setPages] = useState(1)
-  const [total, setTotal] = useState(0)
+  const [page, setPage]       = useState(1)
+  const [pages, setPages]     = useState(1)
+  const [total, setTotal]     = useState(0)
   const [claimTarget, setClaimTarget] = useState<LostFoundItem | null>(null)
 
   const load = async (p = page) => {
@@ -33,15 +42,16 @@ export default function LostFoundPage() {
 
   return (
     <div className="max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="Lost & Found Management" subtitle={`${total} active report${total !== 1 ? 's' : ''}`} />
+      <PageHeader title="Lost & Found Management"
+        subtitle={`${total} active report${total !== 1 ? 's' : ''}`} />
 
       {loading ? <TableSkeleton cols={6} rows={8} /> : items.length === 0 ? (
-        <EmptyState icon={Search} title="No reports yet" />
+        <EmptyState icon={Search} title="No reports yet" subtitle="Student reports will appear here." />
       ) : (
         <>
           <Table>
             <thead>
-              <tr className="border-b border-surface-700/40">
+              <tr className="border-b border-slate-100">
                 <th className="th">Item</th>
                 <th className="th">Status</th>
                 <th className="th hidden sm:table-cell">Location</th>
@@ -53,19 +63,22 @@ export default function LostFoundPage() {
             </thead>
             <tbody>
               {items.map(item => (
-                <tr key={item.id} className="table-row">
+                <tr key={item.id} className={`table-row ${STATUS_STRIPE[item.status] ?? ''}`}>
                   <td className="td font-medium text-white max-w-[160px] truncate">{item.title}</td>
-                  <td className="td"><span className={STATUS_BADGE[item.status] ?? 'badge-surface'}>{item.status}</span></td>
-                  <td className="td text-surface-400 hidden sm:table-cell max-w-[140px] truncate">{item.location}</td>
-                  <td className="td text-surface-400 hidden md:table-cell">
-                    {new Date(item.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
+                  <td className="td">
+                    <span className={STATUS_BADGE[item.status] ?? 'badge-surface'}>{item.status}</span>
                   </td>
-                  <td className="td text-surface-400 hidden md:table-cell">{item.reporter?.name ?? 'Anonymous'}</td>
-                  <td className="td text-surface-400 hidden lg:table-cell max-w-[140px] truncate">{item.contact}</td>
+                  <td className="td text-slate-500 hidden sm:table-cell max-w-[140px] truncate">{item.location}</td>
+                  <td className="td text-slate-500 hidden md:table-cell">
+                    {new Date(item.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                  </td>
+                  <td className="td text-slate-500 hidden md:table-cell">{item.reporter?.name ?? 'Anonymous'}</td>
+                  <td className="td text-slate-500 hidden lg:table-cell max-w-[140px] truncate">{item.contact}</td>
                   <td className="td text-right">
                     {!item.is_claimed && (
                       <button onClick={() => setClaimTarget(item)}
-                        className="p-1.5 rounded-lg text-surface-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="Mark claimed">
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                        title="Mark claimed">
                         <CheckCircle className="w-3.5 h-3.5" />
                       </button>
                     )}

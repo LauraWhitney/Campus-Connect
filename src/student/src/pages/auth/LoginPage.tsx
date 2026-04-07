@@ -21,10 +21,7 @@ export default function LoginPage() {
     } catch (err: any) {
       const detail = err?.response?.data?.detail || 'Invalid email or password'
       setErrorMsg(detail)
-      // If rate-limited, show toast too
-      if (err?.response?.status === 429) {
-        toast.error(detail)
-      }
+      if (err?.response?.status === 429) toast.error(detail)
     } finally {
       setLoading(false)
     }
@@ -65,9 +62,13 @@ export default function LoginPage() {
               <input type="email" className="input" placeholder="you@university.edu"
                 value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
-
             <div>
-              <label className="block text-xs text-surface-400 mb-1.5 font-medium">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs text-surface-400 font-medium">Password</label>
+                <Link to="/forgot-password" className="text-primary-400 hover:text-primary-300 text-xs transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <input type={showPw ? 'text' : 'password'} className="input pr-10"
                   placeholder="••••••••" value={password}
@@ -78,7 +79,6 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-
             <button type="submit" disabled={loading}
               className="btn-primary w-full flex items-center justify-center gap-2 mt-2">
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}

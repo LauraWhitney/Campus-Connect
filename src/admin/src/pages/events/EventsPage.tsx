@@ -5,18 +5,19 @@ import type { Event } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, ConfirmDialog } from '../../components/ui/index'
 import toast from 'react-hot-toast'
 
+// Borrow same category → gradient colour from student EventsPage
 const CAT_BADGE: Record<string, string> = {
   Academic: 'badge-blue', Sports: 'badge-green', Cultural: 'badge-brand',
-  Spiritual: 'badge-surface', Career: 'badge-yellow', Social: 'badge-surface',
+  Spiritual: 'badge-purple', Career: 'badge-yellow', Social: 'badge-surface',
 }
 
 export default function EventsPage() {
-  const [events, setEvents]         = useState<Event[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [page, setPage]             = useState(1)
-  const [pages, setPages]           = useState(1)
-  const [total, setTotal]           = useState(0)
-  const [query, setQuery]           = useState('')
+  const [events, setEvents]   = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage]       = useState(1)
+  const [pages, setPages]     = useState(1)
+  const [total, setTotal]     = useState(0)
+  const [query, setQuery]     = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Event | null>(null)
 
   const load = async (p = page) => {
@@ -24,9 +25,8 @@ export default function EventsPage() {
     try {
       const res = await eventsAPI.getAll(p)
       setEvents(res.data); setPages(res.pages); setTotal(res.total)
-    } catch {
-      toast.error('Unable to load events.')
-    } finally { setLoading(false) }
+    } catch { toast.error('Unable to load events.') }
+    finally { setLoading(false) }
   }
 
   useEffect(() => { load(page) }, [page])
@@ -35,32 +35,23 @@ export default function EventsPage() {
     if (!query.trim()) return events
     const q = query.toLowerCase()
     return events.filter(e =>
-      e.title.toLowerCase().includes(q) ||
-      e.venue.toLowerCase().includes(q) ||
-      e.organizer.toLowerCase().includes(q) ||
-      e.category.toLowerCase().includes(q)
+      e.title.toLowerCase().includes(q) || e.venue.toLowerCase().includes(q) ||
+      e.organizer.toLowerCase().includes(q) || e.category.toLowerCase().includes(q)
     )
   }, [events, query])
 
   const handleDelete = async () => {
     if (!deleteTarget) return
-    try {
-      await eventsAPI.delete(deleteTarget.id)
-      toast.success('Event deleted')
-      load(page)
-    } catch { toast.error('Failed to delete event') }
+    try { await eventsAPI.delete(deleteTarget.id); toast.success('Event deleted'); load(page) }
+    catch { toast.error('Failed to delete event') }
   }
 
   return (
     <div className="max-w-6xl mx-auto animate-fade-in">
-      <PageHeader
-        title="Events Management"
-        subtitle={`${total} event${total !== 1 ? 's' : ''} total`}
-      />
+      <PageHeader title="Events Management" subtitle={`${total} event${total !== 1 ? 's' : ''} total`} />
 
-      {/* Search */}
       <div className="relative mb-5">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500 pointer-events-none" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
         <input className="input pl-10" placeholder="Search by title, venue, organizer or category…"
           value={query} onChange={e => setQuery(e.target.value)} />
       </div>
@@ -73,14 +64,12 @@ export default function EventsPage() {
         <>
           <Table>
             <thead>
-              <tr className="border-b border-surface-700/40">
+              <tr className="border-b border-slate-100">
                 <th className="th">Title</th>
                 <th className="th hidden sm:table-cell">Category</th>
                 <th className="th hidden md:table-cell">Date</th>
                 <th className="th hidden md:table-cell">Venue</th>
-                <th className="th hidden lg:table-cell">
-                  <Users className="w-3.5 h-3.5 inline mr-1" />RSVPs
-                </th>
+                <th className="th hidden lg:table-cell"><Users className="w-3.5 h-3.5 inline mr-1" />RSVPs</th>
                 <th className="th text-right">Actions</th>
               </tr>
             </thead>
@@ -91,20 +80,16 @@ export default function EventsPage() {
                   <td className="td hidden sm:table-cell">
                     <span className={CAT_BADGE[ev.category] ?? 'badge-surface'}>{ev.category}</span>
                   </td>
-                  <td className="td text-surface-400 hidden md:table-cell">
-                    {new Date(ev.date).toLocaleDateString(undefined, {
-                      day: 'numeric', month: 'short',
-                    })} · {ev.time}
+                  <td className="td text-slate-500 hidden md:table-cell">
+                    {new Date(ev.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} · {ev.time}
                   </td>
-                  <td className="td text-surface-400 hidden md:table-cell max-w-[130px] truncate">
-                    {ev.venue}
-                  </td>
-                  <td className="td text-surface-300 hidden lg:table-cell">
+                  <td className="td text-slate-500 hidden md:table-cell max-w-[130px] truncate">{ev.venue}</td>
+                  <td className="td text-slate-700 hidden lg:table-cell font-medium">
                     {ev.rsvp_count}{ev.capacity ? ` / ${ev.capacity}` : ''}
                   </td>
                   <td className="td text-right">
                     <button onClick={() => setDeleteTarget(ev)}
-                      className="p-1.5 rounded-lg text-surface-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                       aria-label={`Delete event: ${ev.title}`}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -117,12 +102,9 @@ export default function EventsPage() {
         </>
       )}
 
-      <ConfirmDialog
-        open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete}
+      <ConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete}
         title="Delete Event"
-        message={`Delete "${deleteTarget?.title}"? Students who RSVPd will lose their registration.`}
-        danger
-      />
+        message={`Delete "${deleteTarget?.title}"? Students who RSVPd will lose their registration.`} danger />
     </div>
   )
 }
