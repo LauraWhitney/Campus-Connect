@@ -4,8 +4,8 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # App
-    app_name: str = "Campus Connect"
-    app_version: str = "1.0.0"
+    app_name: str = "CUEA Campus Connect"
+    app_version: str = "2.0.0"
     debug: bool = True
     allowed_origins: str = "http://localhost:5173,http://localhost:5174"
 

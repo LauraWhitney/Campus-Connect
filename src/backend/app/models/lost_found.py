@@ -5,24 +5,28 @@ import enum
 
 
 class ItemStatus(str, enum.Enum):
-    Lost = "Lost"
-    Found = "Found"
+    Lost    = "Lost"
+    Found   = "Found"
     Claimed = "Claimed"
 
 
 class LostFoundItem(Base):
     __tablename__ = "lost_found_items"
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(200), nullable=False)
+    id          = Column(Integer, primary_key=True, index=True)
+    title       = Column(String(200), nullable=False)
     description = Column(Text, nullable=False)
-    status = Column(PgEnum(ItemStatus), nullable=False)
-    location = Column(String(200), nullable=False)
-    date = Column(String(20), nullable=False)
-    image = Column(String(300), nullable=True)
-    contact = Column(String(150), nullable=False)
+    status      = Column(PgEnum(ItemStatus), nullable=False)
+    location    = Column(String(200), nullable=False)
+    date        = Column(String(20), nullable=False)
+    image       = Column(String(300), nullable=True)
+    contact     = Column(String(150), nullable=False)
     reported_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    is_claimed = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    # ── Transaction fields ─────────────────────────────
+    is_claimed  = Column(Boolean, default=False)
+    claimed_by  = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    claimed_at  = Column(DateTime(timezone=True), nullable=True)
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())
 
     reporter = relationship("User", foreign_keys=[reported_by])
+    claimer  = relationship("User", foreign_keys=[claimed_by])

@@ -10,7 +10,7 @@ from app.core.security import (
     hash_password, verify_password, create_access_token,
     get_current_user, validate_password_strength, sanitize_string,
 )
-from app.models.user import User
+from app.models.user import User, CUEA_EMAIL_DOMAINS, CUEA_FACULTIES
 from app.models.activity_log import ActivityLog
 from app.schemas.schemas import UserRegister, UserLogin, TokenResponse, UserOut
 
@@ -57,11 +57,24 @@ def _log(db, action, detail="", user_id=None, user_email=None, ip=None):
 def register(payload: UserRegister, request: Request, db: Session = Depends(get_db)):
     name  = sanitize_string(payload.name, 120)
     email = payload.email.lower().strip()
+    # ── CUEA domain enforcement (belt-and-suspenders) ──
+    domain = email.split('@')[-1]
+    if domain not in CUEA_EMAIL_DOMAINS:
+        raise HTTPException(
+            status_code=400,
+            detail="Only CUEA email addresses are allowed (@students.cuea.ac.ke or @cuea.ac.ke)"
+        )
     if not name:
         raise HTTPException(status_code=422, detail="Name cannot be blank")
     pw_errors = validate_password_strength(payload.password)
     if pw_errors:
         raise HTTPException(status_code=422, detail="Password too weak: " + ", ".join(pw_errors))
+    # ── CUEA faculty validation ──
+    if payload.faculty and payload.faculty.strip() not in CUEA_FACULTIES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid faculty. Must be one of: {', '.join(CUEA_FACULTIES)}"
+        )
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
     user = User(name=name, email=email, password_hash=hash_password(payload.password),

@@ -3,19 +3,23 @@ from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
 
+from app.models.user import CUEA_FACULTIES, CUEA_EMAIL_DOMAINS
+
 
 class PaginatedResponse(BaseModel):
-    total: int
-    page: int
-    pages: int
+    total:     int
+    page:      int
+    pages:     int
     page_size: int = 12
 
 
+# ── Auth ───────────────────────────────────────────────
+
 class UserRegister(BaseModel):
-    name: str
-    email: EmailStr
-    password: str
-    faculty: Optional[str] = None
+    name:          str
+    email:         EmailStr
+    password:      str
+    faculty:       Optional[str] = None
     year_of_study: Optional[int] = None
 
     @field_validator("name")
@@ -28,6 +32,18 @@ class UserRegister(BaseModel):
             raise ValueError("Name too long (max 120 chars)")
         return v
 
+    @field_validator("email")
+    @classmethod
+    def cuea_email_only(cls, v: str) -> str:
+        v = v.lower().strip()
+        domain = v.split("@")[-1]
+        if domain not in CUEA_EMAIL_DOMAINS:
+            raise ValueError(
+                f"Only CUEA email addresses are allowed "
+                f"(@students.cuea.ac.ke or @cuea.ac.ke)"
+            )
+        return v
+
     @field_validator("password")
     @classmethod
     def password_min_length(cls, v: str) -> str:
@@ -37,10 +53,15 @@ class UserRegister(BaseModel):
 
     @field_validator("faculty")
     @classmethod
-    def faculty_length(cls, v: Optional[str]) -> Optional[str]:
-        if v and len(v.strip()) > 120:
-            raise ValueError("Faculty name too long")
-        return v.strip() if v else v
+    def faculty_valid(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        v = v.strip()
+        if v and v not in CUEA_FACULTIES:
+            raise ValueError(
+                f"Invalid faculty. Choose one of: {', '.join(CUEA_FACULTIES)}"
+            )
+        return v
 
     @field_validator("year_of_study")
     @classmethod
@@ -51,38 +72,40 @@ class UserRegister(BaseModel):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email:    EmailStr
     password: str
 
 
 class UserOut(BaseModel):
-    id: int
-    name: str
-    email: str
-    role: str
-    faculty: Optional[str] = None
+    id:            int
+    name:          str
+    email:         str
+    role:          str
+    faculty:       Optional[str] = None
     year_of_study: Optional[int] = None
-    avatar: Optional[str] = None
-    created_at: datetime
+    avatar:        Optional[str] = None
+    created_at:    datetime
 
     model_config = {"from_attributes": True}
 
 
 class TokenResponse(BaseModel):
-    user: UserOut
+    user:  UserOut
     token: str
 
 
+# ── Events ─────────────────────────────────────────────
+
 class EventCreate(BaseModel):
-    title: str
+    title:       str
     description: str
-    category: str
-    date: str
-    time: str
-    venue: str
-    organizer: str
-    capacity: Optional[int] = None
-    image: Optional[str] = None
+    category:    str
+    date:        str
+    time:        str
+    venue:       str
+    organizer:   str
+    capacity:    Optional[int] = None
+    image:       Optional[str] = None
 
     @field_validator("title", "description", "venue", "organizer")
     @classmethod
@@ -100,20 +123,20 @@ class EventCreate(BaseModel):
 
 
 class EventOut(BaseModel):
-    id: int
-    title: str
+    id:          int
+    title:       str
     description: str
-    category: str
-    date: str
-    time: str
-    venue: str
-    organizer: str
-    image: Optional[str] = None
-    capacity: Optional[int] = None
-    rsvp_count: int = 0
-    has_rsvped: bool = False
-    created_by: Optional[int] = None
-    created_at: datetime
+    category:    str
+    date:        str
+    time:        str
+    venue:       str
+    organizer:   str
+    image:       Optional[str] = None
+    capacity:    Optional[int] = None
+    rsvp_count:  int  = 0
+    has_rsvped:  bool = False
+    created_by:  Optional[int] = None
+    created_at:  datetime
 
     model_config = {"from_attributes": True}
 
@@ -122,13 +145,26 @@ class EventListResponse(PaginatedResponse):
     data: List[EventOut]
 
 
+class AttendanceOut(BaseModel):
+    id:            int
+    event_id:      int
+    user_id:       int
+    checked_in:    bool
+    checked_in_at: Optional[datetime] = None
+    created_at:    datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ── Marketplace ────────────────────────────────────────
+
 class MarketplaceItemCreate(BaseModel):
-    title: str
+    title:       str
     description: str
-    price: Decimal
-    condition: str
-    category: str
-    images: Optional[List[str]] = []
+    price:       Decimal
+    condition:   str
+    category:    str
+    images:      Optional[List[str]] = []
 
     @field_validator("title", "description")
     @classmethod
@@ -146,23 +182,32 @@ class MarketplaceItemCreate(BaseModel):
 
 
 class SellerOut(BaseModel):
-    id: int
-    name: str
+    id:    int
+    name:  str
+    email: str
+    model_config = {"from_attributes": True}
+
+
+class BuyerOut(BaseModel):
+    id:    int
+    name:  str
     email: str
     model_config = {"from_attributes": True}
 
 
 class MarketplaceItemOut(BaseModel):
-    id: int
-    title: str
+    id:          int
+    title:       str
     description: str
-    price: Decimal
-    condition: str
-    category: str
-    images: List[str] = []
-    seller: SellerOut
-    is_sold: bool
-    created_at: datetime
+    price:       Decimal
+    condition:   str
+    category:    str
+    images:      List[str] = []
+    seller:      SellerOut
+    buyer:       Optional[BuyerOut] = None
+    is_sold:     bool
+    sold_at:     Optional[datetime] = None
+    created_at:  datetime
     model_config = {"from_attributes": True}
 
 
@@ -170,14 +215,16 @@ class MarketplaceListResponse(PaginatedResponse):
     data: List[MarketplaceItemOut]
 
 
+# ── Clubs ──────────────────────────────────────────────
+
 class ClubCreate(BaseModel):
-    name: str
-    description: str
-    category: str
-    president: str
-    email: EmailStr
+    name:             str
+    description:      str
+    category:         str
+    president:        str
+    email:            EmailStr
     meeting_schedule: Optional[str] = None
-    logo: Optional[str] = None
+    logo:             Optional[str] = None
 
     @field_validator("name", "description", "president")
     @classmethod
@@ -188,17 +235,17 @@ class ClubCreate(BaseModel):
 
 
 class ClubOut(BaseModel):
-    id: int
-    name: str
-    description: str
-    category: str
-    president: str
-    email: str
+    id:               int
+    name:             str
+    description:      str
+    category:         str
+    president:        str
+    email:            str
     meeting_schedule: Optional[str] = None
-    logo: Optional[str] = None
-    member_count: int = 0
-    is_member: bool = False
-    created_at: datetime
+    logo:             Optional[str] = None
+    member_count:     int  = 0
+    is_member:        bool = False
+    created_at:       datetime
     model_config = {"from_attributes": True}
 
 
@@ -206,14 +253,16 @@ class ClubListResponse(PaginatedResponse):
     data: List[ClubOut]
 
 
+# ── Lost & Found ───────────────────────────────────────
+
 class LostFoundCreate(BaseModel):
-    title: str
+    title:       str
     description: str
-    status: str
-    location: str
-    date: str
-    contact: str
-    image: Optional[str] = None
+    status:      str
+    location:    str
+    date:        str
+    contact:     str
+    image:       Optional[str] = None
 
     @field_validator("title", "description", "location", "contact")
     @classmethod
@@ -224,23 +273,32 @@ class LostFoundCreate(BaseModel):
 
 
 class ReporterOut(BaseModel):
-    id: int
+    id:   int
+    name: str
+    model_config = {"from_attributes": True}
+
+
+class ClaimerOut(BaseModel):
+    id:   int
     name: str
     model_config = {"from_attributes": True}
 
 
 class LostFoundOut(BaseModel):
-    id: int
-    title: str
+    id:          int
+    title:       str
     description: str
-    status: str
-    location: str
-    date: str
-    image: Optional[str] = None
-    contact: str
-    reporter: Optional[ReporterOut] = None
-    is_claimed: bool
-    created_at: datetime
+    status:      str
+    location:    str
+    date:        str
+    image:       Optional[str] = None
+    contact:     str
+    reporter:    Optional[ReporterOut] = None
+    is_claimed:  bool
+    claimed_by:  Optional[int]        = None
+    claimer:     Optional[ClaimerOut] = None
+    claimed_at:  Optional[datetime]   = None
+    created_at:  datetime
     model_config = {"from_attributes": True}
 
 
@@ -248,11 +306,13 @@ class LostFoundListResponse(PaginatedResponse):
     data: List[LostFoundOut]
 
 
+# ── Feedback ───────────────────────────────────────────
+
 class FeedbackCreate(BaseModel):
-    title: str
-    description: str
-    category: str
-    department: str
+    title:        str
+    description:  str
+    category:     str
+    department:   str
     is_anonymous: bool = False
 
     @field_validator("title", "description", "department")
@@ -264,15 +324,18 @@ class FeedbackCreate(BaseModel):
 
 
 class FeedbackOut(BaseModel):
-    id: int
-    title: str
-    description: str
-    category: str
-    department: str
+    id:           int
+    title:        str
+    description:  str
+    category:     str
+    department:   str
     is_anonymous: bool
-    status: str
+    status:       str
+    notified:     bool           = False
     submitted_by: Optional[ReporterOut] = None
-    created_at: datetime
+    resolved_by:  Optional[int]  = None
+    resolved_at:  Optional[datetime] = None
+    created_at:   datetime
     model_config = {"from_attributes": True}
 
 
