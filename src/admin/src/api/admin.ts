@@ -8,8 +8,7 @@ import type {
 export const authAPI = {
   login: async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', {
-      email: email.trim().toLowerCase(),
-      password,
+      email: email.trim().toLowerCase(), password,
     })
     if (data.user.role !== 'admin') throw new Error('Admin access required')
     return data as { user: User; token: string }
@@ -50,6 +49,10 @@ export const eventsAPI = {
     const { data } = await api.get('/events', { params: { page } })
     return data
   },
+  getAttendance: async (id: number) => {
+    const { data } = await api.get(`/events/${id}/attendance`)
+    return data
+  },
   delete: async (id: number) => {
     await api.delete(`/events/${id}`)
   },
@@ -59,6 +62,14 @@ export const eventsAPI = {
 export const marketplaceAPI = {
   getAll: async (page = 1): Promise<PaginatedResponse<MarketplaceItem>> => {
     const { data } = await api.get('/marketplace', { params: { page } })
+    return data
+  },
+  markSold: async (id: number, buyerId?: number): Promise<MarketplaceItem> => {
+    const { data } = await api.patch(`/marketplace/${id}/sold`, buyerId ? { buyer_id: buyerId } : {})
+    return data
+  },
+  markUnsold: async (id: number): Promise<MarketplaceItem> => {
+    const { data } = await api.patch(`/marketplace/${id}/unsold`)
     return data
   },
   delete: async (id: number) => {
@@ -83,8 +94,16 @@ export const lostFoundAPI = {
     const { data } = await api.get('/lost-found', { params: { page } })
     return data
   },
-  markClaimed: async (id: number) => {
-    await api.patch(`/lost-found/${id}/claimed`)
+  claim: async (id: number): Promise<LostFoundItem> => {
+    const { data } = await api.patch(`/lost-found/${id}/claim`)
+    return data
+  },
+  markFound: async (id: number): Promise<LostFoundItem> => {
+    const { data } = await api.patch(`/lost-found/${id}/found`)
+    return data
+  },
+  delete: async (id: number) => {
+    await api.delete(`/lost-found/${id}`)
   },
 }
 
@@ -94,8 +113,9 @@ export const feedbackAPI = {
     const { data } = await api.get('/feedback', { params: { page } })
     return data
   },
-  updateStatus: async (id: number, status: string) => {
-    await api.patch(`/feedback/${id}/status`, null, { params: { status } })
+  updateStatus: async (id: number, status: string): Promise<Feedback> => {
+    const { data } = await api.patch(`/feedback/${id}/status`, { status })
+    return data
   },
 }
 

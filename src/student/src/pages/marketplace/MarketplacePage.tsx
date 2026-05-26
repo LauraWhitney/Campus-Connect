@@ -1,48 +1,76 @@
 import { useEffect, useState, useMemo } from 'react'
-import { ShoppingBag, Plus, Tag, Loader2, Mail, Search } from 'lucide-react'
+import { ShoppingBag, Plus, Tag, Loader2, Mail, Search, CheckCircle2, RotateCcw } from 'lucide-react'
 import { marketplaceAPI } from '../../api/marketplace'
 import type { MarketplaceItem, ItemCategory, ItemCondition } from '../../types'
 import { EmptyState, LoadingGrid, PageHeader, FilterBar } from '../../components/ui/index'
 import Modal from '../../components/ui/Modal'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
-const CATEGORIES: string[] = ['All', 'Books', 'Electronics', 'Clothing', 'Stationery', 'Accommodation', 'Other']
+// ── CUEA item categories ──────────────────────────────
+const CATEGORIES: string[] = [
+  'All', 'Books', 'Electronics', 'Clothing', 'Stationery',
+  'Accommodation', 'Notes/Handouts', 'Lab Equipment', 'Hostel Items', 'Other',
+]
 const CONDITIONS: ItemCondition[] = ['New', 'Like New', 'Good', 'Fair']
 
 const COND_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-  New:       { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
-  'Like New':{ bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' },
-  Good:      { bg: '#e0e7ff', text: '#3730a3', border: '#c7d2fe' },
-  Fair:      { bg: '#f1f5f9', text: '#475569', border: '#e2e8f0' },
+  New:        { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
+  'Like New': { bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' },
+  Good:       { bg: '#e0e7ff', text: '#3730a3', border: '#c7d2fe' },
+  Fair:       { bg: '#f1f5f9', text: '#475569', border: '#e2e8f0' },
 }
-
 const CAT_GRADIENT: Record<string, string> = {
-  Books:         'linear-gradient(135deg,#3b82f6,#6366f1)',
-  Electronics:   'linear-gradient(135deg,#6366f1,#8b5cf6)',
-  Clothing:      'linear-gradient(135deg,#ec4899,#8b5cf6)',
-  Stationery:    'linear-gradient(135deg,#f59e0b,#ef4444)',
-  Accommodation: 'linear-gradient(135deg,#10b981,#06b6d4)',
-  Other:         'linear-gradient(135deg,#8b5cf6,#a855f7)',
+  Books:           'linear-gradient(135deg,#3b82f6,#6366f1)',
+  Electronics:     'linear-gradient(135deg,#6366f1,#8b5cf6)',
+  Clothing:        'linear-gradient(135deg,#ec4899,#8b5cf6)',
+  Stationery:      'linear-gradient(135deg,#f59e0b,#ef4444)',
+  Accommodation:   'linear-gradient(135deg,#10b981,#06b6d4)',
+  'Notes/Handouts':'linear-gradient(135deg,#0ea5e9,#6366f1)',
+  'Lab Equipment': 'linear-gradient(135deg,#14b8a6,#3b82f6)',
+  'Hostel Items':  'linear-gradient(135deg,#8b5cf6,#ec4899)',
+  Other:           'linear-gradient(135deg,#8b5cf6,#a855f7)',
 }
 
-function ItemCard({ item }: { item: MarketplaceItem }) {
+function ItemCard({
+  item, currentUserId, onMarkSold, onMarkUnsold,
+}: {
+  item: MarketplaceItem
+  currentUserId?: string
+  onMarkSold: (id: string) => void
+  onMarkUnsold: (id: string) => void
+}) {
+  const [loading, setLoading] = useState(false)
   const gradient = CAT_GRADIENT[item.category] ?? CAT_GRADIENT.Other
-  const cond = COND_STYLE[item.condition] ?? COND_STYLE.Fair
+  const cond     = COND_STYLE[item.condition] ?? COND_STYLE.Fair
+  const isMySelling = item.seller._id === currentUserId
 
   return (
-    <div className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in"
+    <div className={`rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in ${item.isSold ? 'opacity-60' : ''}`}
       style={{ background: '#1e1b4b' }}>
       <div className="h-1.5" style={{ background: gradient }} />
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <h3 className="font-display font-semibold text-white text-sm leading-snug line-clamp-2">{item.title}</h3>
-            <p className="text-indigo-300 text-xs mt-0.5">{item.seller.name}</p>
+            <p className="text-indigo-300 text-xs mt-0.5">
+              {item.seller.name}
+              {item.isSold && item.buyer && (
+                <span className="text-slate-500"> → sold to {item.buyer.name}</span>
+              )}
+            </p>
           </div>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0"
-            style={{ background: cond.bg, color: cond.text, borderColor: cond.border }}>
-            {item.condition}
-          </span>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border"
+              style={{ background: cond.bg, color: cond.text, borderColor: cond.border }}>
+              {item.condition}
+            </span>
+            {item.isSold && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-700 text-slate-300 border border-slate-600">
+                Sold
+              </span>
+            )}
+          </div>
         </div>
 
         <p className="text-slate-300 text-xs line-clamp-2 leading-relaxed">{item.description}</p>
@@ -52,17 +80,52 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
             <Tag className="w-2.5 h-2.5 text-white" />
           </div>
           <span className="text-indigo-300 text-xs">{item.category}</span>
+          {item.soldAt && (
+            <span className="text-slate-500 text-xs ml-auto">
+              Sold {new Date(item.soldAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-white/10">
           <span className="font-display text-xl font-bold text-white">
             KES {Number(item.price).toLocaleString()}
           </span>
-          <a href={`mailto:${item.seller.email}?subject=Re: ${item.title}`}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all"
-            style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.3)' }}>
-            <Mail className="w-3.5 h-3.5" /> Contact
-          </a>
+          {!item.isSold ? (
+            <div className="flex items-center gap-2">
+              {/* Seller: mark as sold */}
+              {isMySelling && (
+                <button
+                  onClick={() => { setLoading(true); onMarkSold(item._id) }}
+                  disabled={loading}
+                  className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all"
+                  style={{ background: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.3)' }}>
+                  {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                  Mark Sold
+                </button>
+              )}
+              {/* Buyer: contact seller */}
+              {!isMySelling && (
+                <a href={`mailto:${item.seller.email}?subject=Re: ${item.title}`}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all"
+                  style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.3)' }}>
+                  <Mail className="w-3.5 h-3.5" /> Contact
+                </a>
+              )}
+            </div>
+          ) : (
+            /* Seller can revert if deal fell through */
+            isMySelling && (
+              <button
+                onClick={() => { setLoading(true); onMarkUnsold(item._id) }}
+                disabled={loading}
+                className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all"
+                style={{ background: 'rgba(99,102,241,0.1)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.2)' }}>
+                {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+                Relist
+              </button>
+            )
+          )}
         </div>
       </div>
     </div>
@@ -71,9 +134,13 @@ function ItemCard({ item }: { item: MarketplaceItem }) {
 
 function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', price: '', condition: 'Good' as ItemCondition, category: 'Books' as ItemCategory })
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm(f => ({ ...f, [k]: e.target.value }))
+  const [form, setForm] = useState({
+    title: '', description: '', price: '',
+    condition: 'Good' as ItemCondition, category: 'Books' as ItemCategory,
+  })
+  const set = (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -121,15 +188,21 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
 }
 
 export default function MarketplacePage() {
-  const [items, setItems]       = useState<MarketplaceItem[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [filter, setFilter]     = useState('All')
-  const [showModal, setShowModal] = useState(false)
-  const [query, setQuery]       = useState('')
+  const { user }                    = useAuth()
+  const [items, setItems]           = useState<MarketplaceItem[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [filter, setFilter]         = useState('All')
+  const [showModal, setShowModal]   = useState(false)
+  const [query, setQuery]           = useState('')
 
   const results = useMemo(() => {
     let list = filter === 'All' ? items : items.filter(i => i.category === filter)
-    if (query.trim()) { const q = query.toLowerCase(); list = list.filter(i => i.title.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)) }
+    if (query.trim()) {
+      const q = query.toLowerCase()
+      list = list.filter(i =>
+        i.title.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)
+      )
+    }
     return list
   }, [items, filter, query])
 
@@ -141,10 +214,28 @@ export default function MarketplacePage() {
 
   useEffect(() => { load() }, [])
 
+  const handleMarkSold = async (id: string) => {
+    try {
+      const updated = await marketplaceAPI.markSold(id)
+      setItems(it => it.map(i => i._id === id ? updated : i))
+      toast.success('Item marked as sold!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to mark as sold')
+    }
+  }
+
+  const handleMarkUnsold = async (id: string) => {
+    try {
+      const updated = await marketplaceAPI.markUnsold(id)
+      setItems(it => it.map(i => i._id === id ? updated : i))
+      toast.success('Item relisted as available.')
+    } catch { toast.error('Failed to relist item') }
+  }
+
   return (
     <div className="page-wrapper max-w-5xl mx-auto">
       <PageHeader title="Student Marketplace"
-        subtitle={`${results.length} item${results.length !== 1 ? 's' : ''} available`}
+        subtitle={`${results.filter(i => !i.isSold).length} item${results.filter(i => !i.isSold).length !== 1 ? 's' : ''} available`}
         action={<button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" /> List Item</button>}
       />
       <div className="relative mb-4">
@@ -158,7 +249,14 @@ export default function MarketplacePage() {
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {results.map(i => <ItemCard key={i._id} item={i} />)}
+          {results.map(i => (
+            <ItemCard
+              key={i._id} item={i}
+              currentUserId={user?._id}
+              onMarkSold={handleMarkSold}
+              onMarkUnsold={handleMarkUnsold}
+            />
+          ))}
         </div>
       )}
       <CreateItemModal open={showModal} onClose={() => setShowModal(false)} onCreated={load} />

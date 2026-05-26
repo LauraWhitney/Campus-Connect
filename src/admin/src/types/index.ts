@@ -1,4 +1,3 @@
-// ── Shared base types ─────────────────────────────────
 export type UserRole = 'student' | 'admin' | 'lecturer'
 
 export interface User {
@@ -34,7 +33,9 @@ export interface MarketplaceItem {
   condition: string
   category: string
   seller: { id: number; name: string; email: string }
+  buyer?: { id: number; name: string; email: string } | null
   is_sold: boolean
+  sold_at?: string | null
   created_at: string
 }
 
@@ -58,8 +59,11 @@ export interface LostFoundItem {
   location: string
   date: string
   contact: string
-  reporter?: { id: number; name: string }
+  reporter?: { id: number; name: string } | null
   is_claimed: boolean
+  claimed_by?: number | null
+  claimer?: { id: number; name: string } | null
+  claimed_at?: string | null
   created_at: string
 }
 
@@ -71,18 +75,19 @@ export interface Feedback {
   department: string
   is_anonymous: boolean
   status: 'Pending' | 'Reviewed' | 'Resolved'
-  submitted_by?: { id: number; name: string }
+  notified: boolean
+  submitted_by?: { id: number; name: string } | null
+  resolved_by?: number | null
+  resolved_at?: string | null
   created_at: string
 }
 
-// ── Admin auth ────────────────────────────────────────
 export interface AdminAuthState {
   user: User | null
   token: string | null
   isAuthenticated: boolean
 }
 
-// ── Stats ─────────────────────────────────────────────
 export interface DashboardStats {
   total_users: number
   total_events: number
@@ -94,7 +99,6 @@ export interface DashboardStats {
   recent_users: User[]
 }
 
-// ── API ───────────────────────────────────────────────
 export interface PaginatedResponse<T> {
   data: T[]
   total: number
@@ -103,7 +107,6 @@ export interface PaginatedResponse<T> {
   page_size: number
 }
 
-// ── Activity Log ──────────────────────────────────────
 export interface ActivityLog {
   id: number
   user_id?: number

@@ -4,19 +4,24 @@ import { GraduationCap, Loader2, CheckCircle2, XCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
+// ── CUEA Faculties (must match backend) ───────────────
 const FACULTIES = [
-  'Faculty of Science', 'Faculty of Arts', 'Faculty of Commerce',
-  'Faculty of Education', 'Faculty of Law', 'Faculty of Theology',
-  'School of Nursing', 'School of Medicine', 'School of Engineering',
-  'Business School', 'School of Social Sciences',
+  'Faculty of Arts and Social Sciences',
+  'Faculty of Commerce',
+  'Faculty of Education',
+  'Faculty of Law',
+  'Faculty of Science',
+  'Institute of Philosophy and Religious Studies',
+  'School of Nursing',
+  'Faculty of Music and Performing Arts',
 ]
 
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
-    { label: 'At least 8 characters',    ok: password.length >= 8 },
-    { label: 'One uppercase letter',      ok: /[A-Z]/.test(password) },
-    { label: 'One lowercase letter',      ok: /[a-z]/.test(password) },
-    { label: 'One number',               ok: /\d/.test(password) },
+    { label: 'At least 8 characters', ok: password.length >= 8 },
+    { label: 'One uppercase letter',  ok: /[A-Z]/.test(password) },
+    { label: 'One lowercase letter',  ok: /[a-z]/.test(password) },
+    { label: 'One number',            ok: /\d/.test(password) },
   ]
   if (!password) return null
   const score = checks.filter(c => c.ok).length
@@ -49,11 +54,18 @@ export default function RegisterPage() {
     name: '', email: '', password: '', faculty: '', year_of_study: '',
   })
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm(f => ({ ...f, [k]: e.target.value }))
+  const set = (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    // ── CUEA email domain check (client-side fast-fail) ──
+    const domain = form.email.trim().toLowerCase().split('@')[1]
+    if (!['students.cuea.ac.ke', 'cuea.ac.ke'].includes(domain)) {
+      toast.error('Only CUEA email addresses are allowed (@students.cuea.ac.ke or @cuea.ac.ke)')
+      return
+    }
     const pwChecks = [
       form.password.length >= 8,
       /[A-Z]/.test(form.password),
@@ -74,7 +86,10 @@ export default function RegisterPage() {
         yearOfStudy: form.year_of_study ? Number(form.year_of_study) : undefined,
       })
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || 'Registration failed. Try a different email.'
+      const detail = err?.response?.data?.detail
+      const msg = Array.isArray(detail)
+        ? detail.map((d: any) => d.msg).join(', ')
+        : detail || 'Registration failed. Try a different email.'
       toast.error(msg)
     } finally {
       setLoading(false)
@@ -95,8 +110,9 @@ export default function RegisterPage() {
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
             <GraduationCap className="w-7 h-7 text-white" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-white">Campus Connect</h1>
+          <h1 className="font-display text-2xl font-bold text-white">CUEA Campus Connect</h1>
           <p className="text-surface-400 text-sm mt-1">Create your student account</p>
+          <p className="text-indigo-400 text-xs mt-1">Use your @students.cuea.ac.ke email</p>
         </div>
 
         <div className="bg-surface-800/70 backdrop-blur-md border border-surface-700/40 rounded-2xl p-7 shadow-card">
@@ -110,9 +126,15 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-xs text-surface-400 mb-1.5 font-medium">Email</label>
-              <input id="email" type="email" className="input" placeholder="you@university.edu"
+              <label htmlFor="email" className="block text-xs text-surface-400 mb-1.5 font-medium">
+                CUEA Email
+              </label>
+              <input id="email" type="email" className="input"
+                placeholder="s123456@students.cuea.ac.ke"
                 value={form.email} onChange={set('email')} required />
+              <p className="text-indigo-400/70 text-[11px] mt-1">
+                Must be @students.cuea.ac.ke or @cuea.ac.ke
+              </p>
             </div>
 
             <div>
@@ -127,7 +149,7 @@ export default function RegisterPage() {
                 Faculty <span className="text-surface-600">(optional)</span>
               </label>
               <select id="faculty" className="input" value={form.faculty} onChange={set('faculty')}>
-                <option value="">Select faculty…</option>
+                <option value="">Select CUEA faculty…</option>
                 {FACULTIES.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
@@ -138,7 +160,7 @@ export default function RegisterPage() {
               </label>
               <select id="year" className="input" value={form.year_of_study} onChange={set('year_of_study')}>
                 <option value="">Select year…</option>
-                {[1,2,3,4,5].map(y => <option key={y} value={y}>Year {y}</option>)}
+                {[1,2,3,4,5,6].map(y => <option key={y} value={y}>Year {y}</option>)}
               </select>
             </div>
 

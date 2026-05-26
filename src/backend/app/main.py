@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.database import engine, Base
 
 from app.models import user, event, marketplace, club, lost_found, feedback  # noqa: F401
+from app.models.event import EventAttendance  # noqa: F401 — registers attendance table
 from app.models import activity_log  # noqa: F401
 
 from app.routers import (

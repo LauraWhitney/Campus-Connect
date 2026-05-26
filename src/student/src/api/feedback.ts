@@ -6,7 +6,9 @@ function normalise(f: any): Feedback {
     ...f,
     _id: String(f.id),
     isAnonymous: f.is_anonymous,
-    submittedBy: f.submitted_by,
+    submittedBy: f.submitted_by ?? null,
+    notified: f.notified ?? false,
+    resolvedAt: f.resolved_at ?? null,
     createdAt: f.created_at,
   }
 }
@@ -22,7 +24,8 @@ export const feedbackAPI = {
     return normalise(data)
   },
 
-  updateStatus: async (id: string, status: string): Promise<void> => {
-    await api.patch(`/feedback/${id}/status`, null, { params: { status } })
+  updateStatus: async (id: string, status: string): Promise<Feedback> => {
+    const { data } = await api.patch(`/feedback/${id}/status`, { status })
+    return normalise(data)
   },
 }

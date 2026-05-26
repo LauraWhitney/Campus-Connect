@@ -19,7 +19,18 @@ export interface AuthState {
 }
 
 // ── Events ────────────────────────────────────────────
-export type EventCategory = 'Academic' | 'Sports' | 'Cultural' | 'Spiritual' | 'Career' | 'Social'
+export type EventCategory =
+  | 'Academic' | 'Sports' | 'Cultural' | 'Spiritual'
+  | 'Career' | 'Social' | 'Convocation' | 'Staff Development'
+
+export interface EventAttendance {
+  id: string
+  eventId: string
+  userId: string
+  checkedIn: boolean
+  checkedInAt?: string
+  createdAt: string
+}
 
 export interface Event {
   _id: string
@@ -40,7 +51,9 @@ export interface Event {
 
 // ── Marketplace ───────────────────────────────────────
 export type ItemCondition = 'New' | 'Like New' | 'Good' | 'Fair'
-export type ItemCategory = 'Books' | 'Electronics' | 'Clothing' | 'Stationery' | 'Accommodation' | 'Other'
+export type ItemCategory =
+  | 'Books' | 'Electronics' | 'Clothing' | 'Stationery'
+  | 'Accommodation' | 'Notes/Handouts' | 'Lab Equipment' | 'Hostel Items' | 'Other'
 
 export interface MarketplaceItem {
   _id: string
@@ -51,12 +64,17 @@ export interface MarketplaceItem {
   category: ItemCategory
   images: string[]
   seller: Pick<User, '_id' | 'name' | 'email'>
+  buyer?: Pick<User, '_id' | 'name' | 'email'> | null
   isSold: boolean
+  soldAt?: string | null
   createdAt: string
 }
 
 // ── Clubs ─────────────────────────────────────────────
-export type ClubCategory = 'Academic' | 'Sports' | 'Arts' | 'Religious' | 'Technology' | 'Community'
+export type ClubCategory =
+  | 'Academic' | 'Sports' | 'Arts' | 'Catholic Ministry'
+  | 'Technology' | 'Law Society' | 'Music & Performing Arts'
+  | 'Community Service' | 'Science'
 
 export interface Club {
   _id: string
@@ -84,13 +102,18 @@ export interface LostFoundItem {
   date: string
   image?: string
   contact: string
-  reportedBy: Pick<User, '_id' | 'name'>
+  reportedBy?: Pick<User, '_id' | 'name'> | null
   isClaimed: boolean
+  claimedBy?: number | null
+  claimer?: Pick<User, '_id' | 'name'> | null
+  claimedAt?: string | null
   createdAt: string
 }
 
 // ── Feedback ──────────────────────────────────────────
-export type FeedbackCategory = 'Academic' | 'Facilities' | 'Administration' | 'Clubs' | 'Events' | 'Other'
+export type FeedbackCategory =
+  | 'Academic' | 'Facilities' | 'Administration'
+  | 'Clubs' | 'Events' | 'Spiritual' | 'Hostel' | 'Other'
 
 export interface Feedback {
   _id: string
@@ -100,7 +123,9 @@ export interface Feedback {
   department: string
   isAnonymous: boolean
   status: 'Pending' | 'Reviewed' | 'Resolved'
-  submittedBy?: Pick<User, '_id' | 'name'>
+  notified: boolean
+  submittedBy?: Pick<User, '_id' | 'name'> | null
+  resolvedAt?: string | null
   createdAt: string
 }
 

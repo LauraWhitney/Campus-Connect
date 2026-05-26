@@ -25,7 +25,7 @@ def _club_out(club: Club, current_user: Optional[User]) -> dict:
     return {
         **{c.name: getattr(club, c.name) for c in club.__table__.columns},
         "member_count": len(club.members),
-        "is_member": current_user in club.members if current_user else False,
+        "is_member":    current_user in club.members if current_user else False,
     }
 
 
@@ -72,7 +72,7 @@ def create_club(
     club = Club(**payload.model_dump(), created_by=current_user.id)
     db.add(club)
     db.flush()
-    _log(db, "club.create", f"{current_user.email} created club: {club.name}", current_user)
+    _log(db, "club.create", f"Created club: {club.name}", current_user)
     db.commit()
     db.refresh(club)
     return _club_out(club, current_user)
@@ -97,8 +97,7 @@ def toggle_membership(
         action_label = "joined"
         action_key   = "club.join"
 
-    _log(db, action_key,
-         f"{current_user.email} {action_label} club: {club.name}", current_user)
+    _log(db, action_key, f"{current_user.email} {action_label} club: {club.name}", current_user)
     db.commit()
     return {"action": action_label, "member_count": len(club.members)}
 
@@ -114,6 +113,6 @@ def delete_club(
         raise HTTPException(status_code=404, detail="Club not found")
     if club.created_by != current_user.id and current_user.role.value != "admin":
         raise HTTPException(status_code=403, detail="Not authorised")
-    _log(db, "club.delete", f"{current_user.email} deleted club: {club.name}", current_user)
+    _log(db, "club.delete", f"Deleted club: {club.name}", current_user)
     db.delete(club)
     db.commit()

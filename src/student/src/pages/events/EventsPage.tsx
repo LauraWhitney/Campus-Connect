@@ -1,42 +1,50 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Search } from 'lucide-react'
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Search, CheckCircle2 } from 'lucide-react'
 import { eventsAPI } from '../../api/events'
 import type { Event, EventCategory } from '../../types'
 import { EmptyState, LoadingGrid, PageHeader, FilterBar } from '../../components/ui/index'
 import Modal from '../../components/ui/Modal'
 import toast from 'react-hot-toast'
 
-const CATEGORIES: string[] = ['All', 'Academic', 'Sports', 'Cultural', 'Spiritual', 'Career', 'Social']
+// ── CUEA event categories ─────────────────────────────
+const CATEGORIES: string[] = [
+  'All', 'Academic', 'Sports', 'Cultural', 'Spiritual',
+  'Career', 'Social', 'Convocation', 'Staff Development',
+]
 
-// Each category gets a distinct blue→purple gradient
 const CAT_GRADIENT: Record<string, { bg: string; badge: string }> = {
-  Academic:  { bg: 'linear-gradient(135deg,#3b82f6,#6366f1)', badge: 'bg-blue-100 text-blue-700 border-blue-200' },
-  Sports:    { bg: 'linear-gradient(135deg,#10b981,#06b6d4)', badge: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  Cultural:  { bg: 'linear-gradient(135deg,#8b5cf6,#a855f7)', badge: 'bg-violet-100 text-violet-700 border-violet-200' },
-  Spiritual: { bg: 'linear-gradient(135deg,#f59e0b,#ef4444)', badge: 'bg-amber-100 text-amber-700 border-amber-200' },
-  Career:    { bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
-  Social:    { bg: 'linear-gradient(135deg,#ec4899,#8b5cf6)', badge: 'bg-pink-100 text-pink-700 border-pink-200' },
+  Academic:         { bg: 'linear-gradient(135deg,#3b82f6,#6366f1)', badge: 'bg-blue-100 text-blue-700 border-blue-200' },
+  Sports:           { bg: 'linear-gradient(135deg,#10b981,#06b6d4)', badge: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+  Cultural:         { bg: 'linear-gradient(135deg,#8b5cf6,#a855f7)', badge: 'bg-violet-100 text-violet-700 border-violet-200' },
+  Spiritual:        { bg: 'linear-gradient(135deg,#f59e0b,#ef4444)', badge: 'bg-amber-100 text-amber-700 border-amber-200' },
+  Career:           { bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+  Social:           { bg: 'linear-gradient(135deg,#ec4899,#8b5cf6)', badge: 'bg-pink-100 text-pink-700 border-pink-200' },
+  Convocation:      { bg: 'linear-gradient(135deg,#0ea5e9,#6366f1)', badge: 'bg-sky-100 text-sky-700 border-sky-200' },
+  'Staff Development': { bg: 'linear-gradient(135deg,#14b8a6,#3b82f6)', badge: 'bg-teal-100 text-teal-700 border-teal-200' },
 }
 const DEFAULT_GRADIENT = { bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' }
 
-function EventCard({ event, onRsvp }: { event: Event; onRsvp: (id: string) => void }) {
-  const [loading, setLoading] = useState(false)
+function EventCard({ event, onRsvp, onCheckIn }: {
+  event: Event
+  onRsvp: (id: string) => void
+  onCheckIn: (id: string) => void
+}) {
+  const [rsvpLoading, setRsvpLoading]       = useState(false)
+  const [checkinLoading, setCheckinLoading] = useState(false)
+  const [checkedIn, setCheckedIn]           = useState(false)
   const date = new Date(event.date)
-  const g = CAT_GRADIENT[event.category] ?? DEFAULT_GRADIENT
+  const g    = CAT_GRADIENT[event.category] ?? DEFAULT_GRADIENT
   const isFull = !!(event.capacity && event.rsvpCount >= event.capacity && !event.hasRsvped)
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in"
       style={{ background: '#1e1b4b' }}>
-
-      {/* Coloured top strip */}
       <div className="h-1.5 w-full" style={{ background: g.bg }} />
 
       <div className="p-5 flex flex-col gap-3">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
-            {/* Date badge */}
             <div className="w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0"
               style={{ background: g.bg }}>
               <span className="text-white text-base font-bold leading-none">{date.getDate()}</span>
@@ -69,8 +77,10 @@ function EventCard({ event, onRsvp }: { event: Event; onRsvp: (id: string) => vo
           </div>
         </div>
 
-        <button onClick={() => { setLoading(true); onRsvp(event._id) }}
-          disabled={loading || isFull}
+        {/* RSVP button */}
+        <button
+          onClick={() => { setRsvpLoading(true); onRsvp(event._id) }}
+          disabled={rsvpLoading || isFull}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mt-1 disabled:opacity-50"
           style={event.hasRsvped
             ? { background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc' }
@@ -78,9 +88,37 @@ function EventCard({ event, onRsvp }: { event: Event; onRsvp: (id: string) => vo
               ? { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#64748b' }
               : { background: g.bg, color: '#fff' }
           }>
-          {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {rsvpLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
           {isFull ? 'Event Full' : event.hasRsvped ? "✓ RSVP'd — Cancel" : 'RSVP for this Event'}
         </button>
+
+        {/* Check-in button — only shown after RSVP */}
+        {event.hasRsvped && !checkedIn && (
+          <button
+            onClick={async () => {
+              setCheckinLoading(true)
+              try {
+                await onCheckIn(event._id)
+                setCheckedIn(true)
+              } finally {
+                setCheckinLoading(false)
+              }
+            }}
+            disabled={checkinLoading}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
+            style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', color: '#6ee7b7' }}>
+            {checkinLoading
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <CheckCircle2 className="w-3.5 h-3.5" />}
+            Check In at Event
+          </button>
+        )}
+        {checkedIn && (
+          <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-semibold"
+            style={{ background: 'rgba(16,185,129,0.1)', color: '#6ee7b7' }}>
+            <CheckCircle2 className="w-3.5 h-3.5" /> Checked In
+          </div>
+        )}
       </div>
     </div>
   )
@@ -145,7 +183,7 @@ function CreateEventModal({ open, onClose, onCreated }: { open: boolean; onClose
         </div>
         <div>
           <label htmlFor="ev-venue" className={labelCls}>Venue</label>
-          <input id="ev-venue" className="input" value={form.venue} onChange={set('venue')} required placeholder="e.g. Main Hall" maxLength={200} />
+          <input id="ev-venue" className="input" value={form.venue} onChange={set('venue')} required placeholder="e.g. CUEA Main Auditorium" maxLength={200} />
         </div>
         <div>
           <label htmlFor="ev-org" className={labelCls}>Organizer</label>
@@ -163,11 +201,11 @@ function CreateEventModal({ open, onClose, onCreated }: { open: boolean; onClose
 }
 
 export default function EventsPage() {
-  const [events, setEvents]     = useState<Event[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [filter, setFilter]     = useState('All')
+  const [events, setEvents]       = useState<Event[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [filter, setFilter]       = useState('All')
   const [showModal, setShowModal] = useState(false)
-  const [query, setQuery]       = useState('')
+  const [query, setQuery]         = useState('')
 
   const results = useMemo(() => {
     if (!query.trim()) return events
@@ -192,12 +230,22 @@ export default function EventsPage() {
   const handleRsvp = async (id: string) => {
     try {
       const res = await eventsAPI.rsvp(id)
-      // backend returns { action, rsvp_count }
       setEvents(ev => ev.map(e =>
         e._id === id ? { ...e, rsvpCount: res.rsvp_count, hasRsvped: !e.hasRsvped } : e
       ))
       toast.success('RSVP updated!')
     } catch { toast.error('Could not update RSVP. Please try again.') }
+  }
+
+  const handleCheckIn = async (id: string) => {
+    try {
+      await eventsAPI.checkIn(id)
+      toast.success('Checked in! Your attendance has been recorded.')
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || 'Check-in failed'
+      toast.error(msg)
+      throw err
+    }
   }
 
   return (
@@ -218,7 +266,9 @@ export default function EventsPage() {
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {results.map(e => <EventCard key={e._id} event={e} onRsvp={handleRsvp} />)}
+          {results.map(e => (
+            <EventCard key={e._id} event={e} onRsvp={handleRsvp} onCheckIn={handleCheckIn} />
+          ))}
         </div>
       )}
       <CreateEventModal open={showModal} onClose={() => setShowModal(false)} onCreated={load} />

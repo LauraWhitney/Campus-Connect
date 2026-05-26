@@ -1,15 +1,37 @@
 import { useEffect, useState } from 'react'
-import { MessageSquare, Plus, Loader2, Shield } from 'lucide-react'
+import { MessageSquare, Plus, Loader2, Shield, Bell } from 'lucide-react'
 import { feedbackAPI } from '../../api/feedback'
 import type { Feedback, FeedbackCategory } from '../../types'
 import { EmptyState, LoadingGrid, PageHeader } from '../../components/ui/index'
 import Modal from '../../components/ui/Modal'
 import toast from 'react-hot-toast'
 
-const CATEGORIES: FeedbackCategory[] = ['Academic', 'Facilities', 'Administration', 'Clubs', 'Events', 'Other']
+// ── CUEA feedback categories ──────────────────────────
+const CATEGORIES: FeedbackCategory[] = [
+  'Academic', 'Facilities', 'Administration',
+  'Clubs', 'Events', 'Spiritual', 'Hostel', 'Other',
+]
+
+// ── CUEA departments ──────────────────────────────────
 const DEPARTMENTS = [
-  'Department of Computer Science', 'Student Affairs', 'Finance', 'Library',
-  'Health Services', 'Security', 'Maintenance', 'Academic Registrar', 'Other',
+  'Office of the Vice Chancellor',
+  'Academic Registrar',
+  'Student Affairs',
+  'Finance & Accounts',
+  'Library Services',
+  'Health Services',
+  'Security',
+  'Maintenance & Facilities',
+  'Faculty of Arts and Social Sciences',
+  'Faculty of Commerce',
+  'Faculty of Education',
+  'Faculty of Law',
+  'Faculty of Science',
+  'Institute of Philosophy and Religious Studies',
+  'School of Nursing',
+  'Faculty of Music and Performing Arts',
+  'ICT Department',
+  'Other',
 ]
 
 const STATUS_STYLE: Record<string, { bg: string; text: string; border: string }> = {
@@ -23,11 +45,13 @@ const CAT_GRADIENT: Record<string, string> = {
   Administration: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
   Clubs:          'linear-gradient(135deg,#8b5cf6,#a855f7)',
   Events:         'linear-gradient(135deg,#f59e0b,#ef4444)',
+  Spiritual:      'linear-gradient(135deg,#f59e0b,#fbbf24)',
+  Hostel:         'linear-gradient(135deg,#ec4899,#8b5cf6)',
   Other:          'linear-gradient(135deg,#64748b,#475569)',
 }
 
 function FeedbackCard({ item }: { item: Feedback }) {
-  const s = STATUS_STYLE[item.status] ?? STATUS_STYLE.Pending
+  const s        = STATUS_STYLE[item.status] ?? STATUS_STYLE.Pending
   const gradient = CAT_GRADIENT[item.category] ?? CAT_GRADIENT.Other
 
   return (
@@ -37,7 +61,17 @@ function FeedbackCard({ item }: { item: Feedback }) {
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h3 className="font-display font-semibold text-white text-sm leading-snug">{item.title}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-display font-semibold text-white text-sm leading-snug">{item.title}</h3>
+              {/* Notification dot — admin has responded */}
+              {item.notified && item.status !== 'Pending' && (
+                <span title="Administrator has responded"
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                  style={{ background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.3)' }}>
+                  <Bell className="w-2.5 h-2.5" /> Updated
+                </span>
+              )}
+            </div>
             <p className="text-indigo-300 text-xs mt-0.5">{item.department}</p>
           </div>
           <div className="flex flex-col items-end gap-1.5 shrink-0">
@@ -54,11 +88,20 @@ function FeedbackCard({ item }: { item: Feedback }) {
 
         <div className="flex items-center justify-between pt-2 border-t border-white/10">
           <div className="flex items-center gap-1.5 text-indigo-400 text-xs">
-            {item.isAnonymous ? <><Shield className="w-3 h-3" /> Anonymous</> : <span>{item.submittedBy?.name ?? 'Student'}</span>}
+            {item.isAnonymous
+              ? <><Shield className="w-3 h-3" /> Anonymous</>
+              : <span>{item.submittedBy?.name ?? 'Student'}</span>}
           </div>
-          <span className="text-indigo-400 text-xs">
-            {new Date(item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-          </span>
+          <div className="flex items-center gap-2 text-right">
+            {item.resolvedAt && (
+              <span className="text-emerald-400 text-xs">
+                Resolved {new Date(item.resolvedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+              </span>
+            )}
+            <span className="text-indigo-400 text-xs">
+              {new Date(item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -71,8 +114,9 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
     title: '', description: '', category: 'Academic' as FeedbackCategory,
     department: DEPARTMENTS[0], is_anonymous: false,
   })
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm(f => ({ ...f, [k]: e.target.value }))
+  const set = (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -128,9 +172,11 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
 }
 
 export default function FeedbackPage() {
-  const [items, setItems]       = useState<Feedback[]>([])
-  const [loading, setLoading]   = useState(true)
+  const [items, setItems]         = useState<Feedback[]>([])
+  const [loading, setLoading]     = useState(true)
   const [showModal, setShowModal] = useState(false)
+
+  const notifiedCount = items.filter(i => i.notified && i.status !== 'Pending').length
 
   const load = async () => {
     setLoading(true)
@@ -142,16 +188,30 @@ export default function FeedbackPage() {
 
   return (
     <div className="page-wrapper max-w-5xl mx-auto">
-      <PageHeader title="Feedback" subtitle="Submit feedback to departments and track responses"
+      <PageHeader title="Feedback"
+        subtitle="Submit feedback to CUEA departments and track responses"
         action={<button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" /> Give Feedback</button>}
       />
+
+      {/* Notification banner if any feedback got a status update */}
+      {notifiedCount > 0 && (
+        <div className="flex items-center gap-3 p-4 rounded-xl mb-4"
+          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>
+          <Bell className="w-4 h-4 text-emerald-400 shrink-0" />
+          <p className="text-emerald-300 text-xs leading-relaxed">
+            {notifiedCount} of your feedback item{notifiedCount !== 1 ? 's have' : ' has'} received a response from an administrator.
+          </p>
+        </div>
+      )}
+
       <div className="flex items-start gap-3 p-4 rounded-xl mb-6"
         style={{ background: '#eef2ff', border: '1px solid #c7d2fe' }}>
         <Shield className="w-4 h-4 text-indigo-600 mt-0.5 shrink-0" />
         <p className="text-indigo-800 text-xs leading-relaxed">
-          Your feedback is reviewed by university administrators. You may submit anonymously. All feedback is treated with confidentiality.
+          Your feedback is reviewed by CUEA administrators. You may submit anonymously. All feedback is treated with confidentiality.
         </p>
       </div>
+
       {loading ? <LoadingGrid count={4} /> : items.length === 0 ? (
         <EmptyState icon={MessageSquare} title="No feedback yet" subtitle="Submit your first piece of feedback."
           action={<button onClick={() => setShowModal(true)} className="btn-primary">Give Feedback</button>}

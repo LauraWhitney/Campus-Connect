@@ -6,17 +6,34 @@ import { EmptyState, LoadingGrid, PageHeader, FilterBar } from '../../components
 import Modal from '../../components/ui/Modal'
 import toast from 'react-hot-toast'
 
-const CATEGORIES: string[] = ['All', 'Academic', 'Sports', 'Arts', 'Religious', 'Technology', 'Community']
+// ── CUEA club categories ──────────────────────────────
+const CATEGORIES: string[] = [
+  'All', 'Academic', 'Sports', 'Arts', 'Catholic Ministry',
+  'Technology', 'Law Society', 'Music & Performing Arts', 'Community Service', 'Science',
+]
+
 const CATEGORY_EMOJI: Record<string, string> = {
-  Academic: '📚', Sports: '⚽', Arts: '🎨', Religious: '✝️', Technology: '💻', Community: '🤝',
+  Academic:              '📚',
+  Sports:                '⚽',
+  Arts:                  '🎨',
+  'Catholic Ministry':   '✝️',
+  Technology:            '💻',
+  'Law Society':         '⚖️',
+  'Music & Performing Arts': '🎵',
+  'Community Service':   '🤝',
+  Science:               '🔬',
 }
+
 const CAT_GRADIENT: Record<string, string> = {
-  Academic:   'linear-gradient(135deg,#3b82f6,#6366f1)',
-  Sports:     'linear-gradient(135deg,#10b981,#06b6d4)',
-  Arts:       'linear-gradient(135deg,#a855f7,#ec4899)',
-  Religious:  'linear-gradient(135deg,#f59e0b,#ef4444)',
-  Technology: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-  Community:  'linear-gradient(135deg,#8b5cf6,#a855f7)',
+  Academic:              'linear-gradient(135deg,#3b82f6,#6366f1)',
+  Sports:                'linear-gradient(135deg,#10b981,#06b6d4)',
+  Arts:                  'linear-gradient(135deg,#a855f7,#ec4899)',
+  'Catholic Ministry':   'linear-gradient(135deg,#f59e0b,#ef4444)',
+  Technology:            'linear-gradient(135deg,#6366f1,#8b5cf6)',
+  'Law Society':         'linear-gradient(135deg,#0ea5e9,#6366f1)',
+  'Music & Performing Arts': 'linear-gradient(135deg,#ec4899,#f59e0b)',
+  'Community Service':   'linear-gradient(135deg,#8b5cf6,#a855f7)',
+  Science:               'linear-gradient(135deg,#14b8a6,#3b82f6)',
 }
 
 function ClubCard({ club, onJoin }: { club: Club; onJoin: (id: string) => void }) {
@@ -61,7 +78,9 @@ function ClubCard({ club, onJoin }: { club: Club; onJoin: (id: string) => void }
           </div>
         </div>
 
-        <button type="button" onClick={() => { setLoading(true); onJoin(club._id) }} disabled={loading}
+        <button type="button"
+          onClick={() => { setLoading(true); onJoin(club._id) }}
+          disabled={loading}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mt-1"
           style={club.isMember
             ? { background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc' }
@@ -81,8 +100,9 @@ function CreateClubModal({ open, onClose, onCreated }: { open: boolean; onClose:
     name: '', description: '', category: 'Academic' as ClubCategory,
     president: '', email: '', meeting_schedule: '',
   })
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm(f => ({ ...f, [k]: e.target.value }))
+  const set = (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,7 +122,7 @@ function CreateClubModal({ open, onClose, onCreated }: { open: boolean; onClose:
     <Modal open={open} onClose={onClose} title="Create a Club">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div><label className={lbl}>Club Name</label>
-          <input className="input" value={form.name} onChange={set('name')} required placeholder="e.g. Tech Innovation Club" maxLength={120} /></div>
+          <input className="input" value={form.name} onChange={set('name')} required placeholder="e.g. CUEA Tech Club" maxLength={120} /></div>
         <div><label className={lbl}>Description</label>
           <textarea className="input min-h-[80px] resize-none" value={form.description} onChange={set('description')} required placeholder="What does this club do?" /></div>
         <div className="grid grid-cols-2 gap-3">
@@ -114,7 +134,7 @@ function CreateClubModal({ open, onClose, onCreated }: { open: boolean; onClose:
             <input className="input" value={form.president} onChange={set('president')} required placeholder="Full name" /></div>
         </div>
         <div><label className={lbl}>Contact Email</label>
-          <input className="input" type="email" value={form.email} onChange={set('email')} required placeholder="club@university.edu" /></div>
+          <input className="input" type="email" value={form.email} onChange={set('email')} required placeholder="club@students.cuea.ac.ke" /></div>
         <div><label className={lbl}>Meeting Schedule <span className="text-slate-400">(optional)</span></label>
           <input className="input" value={form.meeting_schedule} onChange={set('meeting_schedule')} placeholder="e.g. Every Friday 4pm, Room 205" /></div>
         <div className="flex gap-3 pt-2">
@@ -129,17 +149,19 @@ function CreateClubModal({ open, onClose, onCreated }: { open: boolean; onClose:
 }
 
 export default function ClubsPage() {
-  const [clubs, setClubs]       = useState<Club[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [filter, setFilter]     = useState('All')
+  const [clubs, setClubs]         = useState<Club[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [filter, setFilter]       = useState('All')
   const [showModal, setShowModal] = useState(false)
-  const [query, setQuery]       = useState('')
+  const [query, setQuery]         = useState('')
 
   const filtered = useMemo(() => {
     let list = filter === 'All' ? clubs : clubs.filter(c => c.category === filter)
     if (query.trim()) {
       const q = query.toLowerCase()
-      list = list.filter(c => c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q))
+      list = list.filter(c =>
+        c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)
+      )
     }
     return list
   }, [clubs, filter, query])
@@ -155,7 +177,8 @@ export default function ClubsPage() {
   const handleJoin = async (id: string) => {
     try {
       const res = await clubsAPI.join(id)
-      setClubs(cl => cl.map(c => c._id === id ? { ...c, memberCount: res.member_count, isMember: !c.isMember } : c))
+      setClubs(cl => cl.map(c => c._id === id
+        ? { ...c, memberCount: res.member_count, isMember: !c.isMember } : c))
       toast.success('Membership updated!')
     } catch { toast.error('Could not update membership') }
   }
@@ -163,7 +186,7 @@ export default function ClubsPage() {
   return (
     <div className="page-wrapper max-w-5xl mx-auto">
       <PageHeader title="Clubs & Societies"
-        subtitle={`${filtered.length} club${filtered.length !== 1 ? 's' : ''} on campus`}
+        subtitle={`${filtered.length} club${filtered.length !== 1 ? 's' : ''} at CUEA`}
         action={<button type="button" onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" /> New Club</button>}
       />
       <div className="relative mb-4">

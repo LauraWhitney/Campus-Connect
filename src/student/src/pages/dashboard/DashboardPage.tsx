@@ -158,32 +158,32 @@ export default function DashboardPage() {
       {/* ── Stat cards — alternating blue→purple gradients ── */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <StatCard
-          to="/events" gradientIndex={0}
+          to="/app/events" gradientIndex={0}
           icon={<Calendar className="w-5 h-5 text-white" />}
           label="Upcoming Events" value={events.length || '—'} sub="This week"
         />
         <StatCard
-          to="/marketplace" gradientIndex={1}
+          to="/app/marketplace" gradientIndex={1}
           icon={<ShoppingBag className="w-5 h-5 text-white" />}
           label="Marketplace" value={items.length || '—'} sub="Available now"
         />
         <StatCard
-          to="/clubs" gradientIndex={2}
+          to="/app/clubs" gradientIndex={2}
           icon={<Users className="w-5 h-5 text-white" />}
           label="Active Clubs" value={loading ? '—' : clubs.length} sub="Join one today"
         />
         <StatCard
-          to="/lost-found" gradientIndex={3}
+          to="/app/lost-found" gradientIndex={3}
           icon={<Search className="w-5 h-5 text-white" />}
           label="Lost & Found" value="Reports" sub="Help your peers"
         />
         <StatCard
-          to="/feedback" gradientIndex={4}
+          to="/app/feedback" gradientIndex={4}
           icon={<MessageSquare className="w-5 h-5 text-white" />}
           label="Feedback" value="Departments" sub="Your voice matters"
         />
         <StatCard
-          to="/events" gradientIndex={5}
+          to="/app/events" gradientIndex={5}
           icon={<TrendingUp className="w-5 h-5 text-white" />}
           label="Your Role" value={user?.role ?? '—'}
           sub={user?.yearOfStudy ? `Year ${user.yearOfStudy}` : 'Campus Connect'}
@@ -197,7 +197,7 @@ export default function DashboardPage() {
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-base font-semibold text-slate-900">Upcoming Events</h3>
-            <Link to="/events" className="text-primary-600 text-xs hover:text-primary-700 flex items-center gap-1 font-medium">
+            <Link to="/app/events" className="text-primary-600 text-xs hover:text-primary-700 flex items-center gap-1 font-medium">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -218,7 +218,7 @@ export default function DashboardPage() {
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-base font-semibold text-slate-900">Marketplace</h3>
-            <Link to="/marketplace" className="text-primary-600 text-xs hover:text-primary-700 flex items-center gap-1 font-medium">
+            <Link to="/app/marketplace" className="text-primary-600 text-xs hover:text-primary-700 flex items-center gap-1 font-medium">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>

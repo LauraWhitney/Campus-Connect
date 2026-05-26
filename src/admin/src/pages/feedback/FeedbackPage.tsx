@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MessageSquare, ChevronDown, Eye } from 'lucide-react'
+import { MessageSquare, ChevronDown, Eye, Bell } from 'lucide-react'
 import { feedbackAPI } from '../../api/admin'
 import type { Feedback } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, Modal } from '../../components/ui/index'
@@ -8,23 +8,23 @@ import toast from 'react-hot-toast'
 const STATUS_BADGE: Record<string, string> = {
   Pending: 'badge-yellow', Reviewed: 'badge-blue', Resolved: 'badge-green',
 }
-
-// Category gets a mini gradient dot — borrows student palette
 const CAT_GRADIENT: Record<string, string> = {
   Academic:       'linear-gradient(135deg,#3b82f6,#6366f1)',
   Facilities:     'linear-gradient(135deg,#10b981,#06b6d4)',
   Administration: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
   Clubs:          'linear-gradient(135deg,#8b5cf6,#a855f7)',
   Events:         'linear-gradient(135deg,#f59e0b,#ef4444)',
+  Spiritual:      'linear-gradient(135deg,#f59e0b,#fbbf24)',
+  Hostel:         'linear-gradient(135deg,#ec4899,#8b5cf6)',
   Other:          'linear-gradient(135deg,#94a3b8,#64748b)',
 }
 
 export default function FeedbackPage() {
-  const [items, setItems]     = useState<Feedback[]>([])
-  const [loading, setLoading] = useState(true)
-  const [page, setPage]       = useState(1)
-  const [pages, setPages]     = useState(1)
-  const [total, setTotal]     = useState(0)
+  const [items, setItems]               = useState<Feedback[]>([])
+  const [loading, setLoading]           = useState(true)
+  const [page, setPage]                 = useState(1)
+  const [pages, setPages]               = useState(1)
+  const [total, setTotal]               = useState(0)
   const [viewTarget, setViewTarget]     = useState<Feedback | null>(null)
   const [statusTarget, setStatusTarget] = useState<Feedback | null>(null)
   const [newStatus, setNewStatus]       = useState('Reviewed')
@@ -41,15 +41,21 @@ export default function FeedbackPage() {
 
   const handleStatusChange = async () => {
     if (!statusTarget) return
-    try { await feedbackAPI.updateStatus(statusTarget.id, newStatus); toast.success('Status updated'); load(page) }
-    catch { toast.error('Failed to update status') }
+    try {
+      const updated = await feedbackAPI.updateStatus(statusTarget.id, newStatus)
+      setItems(it => it.map(i => i.id === statusTarget.id ? updated : i))
+      toast.success(`Status updated → ${newStatus}`)
+    } catch { toast.error('Failed to update status') }
   }
+
+  const pendingCount = items.filter(i => i.status === 'Pending').length
 
   return (
     <div className="max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="Feedback & Reports" subtitle={`${total} submission${total !== 1 ? 's' : ''}`} />
+      <PageHeader title="Feedback & Reports"
+        subtitle={`${total} submission${total !== 1 ? 's' : ''} · ${pendingCount} pending`} />
 
-      {loading ? <TableSkeleton cols={6} rows={8} /> : items.length === 0 ? (
+      {loading ? <TableSkeleton cols={7} rows={8} /> : items.length === 0 ? (
         <EmptyState icon={MessageSquare} title="No feedback yet" subtitle="Student feedback will appear here." />
       ) : (
         <>
@@ -61,6 +67,7 @@ export default function FeedbackPage() {
                 <th className="th hidden md:table-cell">Department</th>
                 <th className="th">Status</th>
                 <th className="th hidden lg:table-cell">From</th>
+                <th className="th hidden lg:table-cell">Resolved</th>
                 <th className="th hidden lg:table-cell">Date</th>
                 <th className="th text-right">Actions</th>
               </tr>
@@ -68,7 +75,15 @@ export default function FeedbackPage() {
             <tbody>
               {items.map(fb => (
                 <tr key={fb.id} className="table-row">
-                  <td className="td font-medium text-white max-w-[180px] truncate">{fb.title}</td>
+                  <td className="td font-medium text-white max-w-[160px]">
+                    <div className="flex items-center gap-1.5">
+                      {/* Bell if admin responded */}
+                      {fb.notified && fb.status !== 'Pending' && (
+                        <span title="Student notified"><Bell className="w-3 h-3 text-emerald-400 shrink-0" /></span>
+                      )}
+                      <span className="truncate">{fb.title}</span>
+                    </div>
+                  </td>
                   <td className="td hidden sm:table-cell">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full shrink-0"
@@ -76,12 +91,21 @@ export default function FeedbackPage() {
                       <span className="text-slate-600 text-xs">{fb.category}</span>
                     </div>
                   </td>
-                  <td className="td text-slate-500 hidden md:table-cell max-w-[140px] truncate">{fb.department}</td>
+                  <td className="td text-slate-500 hidden md:table-cell max-w-[130px] truncate">{fb.department}</td>
                   <td className="td">
                     <span className={STATUS_BADGE[fb.status] ?? 'badge-surface'}>{fb.status}</span>
                   </td>
                   <td className="td text-slate-500 hidden lg:table-cell">
-                    {fb.is_anonymous ? <span className="italic text-slate-400">Anonymous</span> : fb.submitted_by?.name ?? '—'}
+                    {fb.is_anonymous
+                      ? <span className="italic text-slate-400">Anonymous</span>
+                      : fb.submitted_by?.name ?? '—'}
+                  </td>
+                  <td className="td hidden lg:table-cell">
+                    {fb.resolved_at
+                      ? <span className="text-slate-400 text-xs">
+                          {new Date(fb.resolved_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                        </span>
+                      : <span className="text-slate-600 text-xs">—</span>}
                   </td>
                   <td className="td text-slate-400 hidden lg:table-cell">
                     {new Date(fb.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -106,7 +130,7 @@ export default function FeedbackPage() {
         </>
       )}
 
-      {/* View feedback modal */}
+      {/* View modal */}
       <Modal open={!!viewTarget} onClose={() => setViewTarget(null)} title="Feedback Details" size="md">
         {viewTarget && (
           <div className="space-y-4">
@@ -143,6 +167,20 @@ export default function FeedbackPage() {
                     : viewTarget.submitted_by?.name ?? '—'}
                 </p>
               </div>
+              {viewTarget.resolved_at && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-1 font-medium">Resolved At</p>
+                  <p className="text-slate-700 text-sm">
+                    {new Date(viewTarget.resolved_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-slate-500 mb-1 font-medium">Student Notified</p>
+                <span className={viewTarget.notified ? 'badge-green' : 'badge-surface'}>
+                  {viewTarget.notified ? 'Yes' : 'No'}
+                </span>
+              </div>
             </div>
             <div className="pt-2">
               <button onClick={() => { setViewTarget(null); setStatusTarget(viewTarget); setNewStatus(viewTarget.status) }}
@@ -157,6 +195,9 @@ export default function FeedbackPage() {
         <p className="text-slate-600 text-sm mb-4">
           Update status for: <span className="text-slate-900 font-medium">{statusTarget?.title}</span>
         </p>
+        <p className="text-slate-500 text-xs mb-3">
+          Setting this will mark the student as notified and, if Resolved, record the timestamp.
+        </p>
         <select className="input mb-5" value={newStatus} onChange={e => setNewStatus(e.target.value)}
           aria-label={`Update status for ${statusTarget?.title}`}>
           <option value="Pending">Pending</option>
@@ -165,7 +206,9 @@ export default function FeedbackPage() {
         </select>
         <div className="flex gap-3">
           <button onClick={() => setStatusTarget(null)} className="btn-secondary flex-1">Cancel</button>
-          <button onClick={() => { handleStatusChange(); setStatusTarget(null) }} className="btn-primary flex-1">Update</button>
+          <button onClick={() => { handleStatusChange(); setStatusTarget(null) }} className="btn-primary flex-1">
+            Update & Notify Student
+          </button>
         </div>
       </Modal>
     </div>

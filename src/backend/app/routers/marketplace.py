@@ -49,11 +49,7 @@ def list_items(
 
 
 @router.get("/{item_id}", response_model=MarketplaceItemOut)
-def get_item(
-    item_id: int,
-    db:      Session = Depends(get_db),
-    _:       User    = Depends(get_current_user),
-):
+def get_item(item_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     item = db.query(MarketplaceItem).filter(MarketplaceItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -69,8 +65,7 @@ def create_item(
     item = MarketplaceItem(**payload.model_dump(), seller_id=current_user.id)
     db.add(item)
     db.flush()
-    _log(db, "marketplace.list",
-         f"{current_user.email} listed '{item.title}' at KES {item.price}", current_user)
+    _log(db, "marketplace.list", f"Listed item for sale: {item.title} @ KES {item.price}", current_user)
     db.commit()
     db.refresh(item)
     return item
@@ -85,7 +80,7 @@ def mark_sold(
 ):
     """
     Mark an item as sold and record the buyer.
-    Body: { "buyer_id": <int> }   (optional — omit if buyer is anonymous / off-platform)
+    Body: { "buyer_id": <int> }  — optional; omit to mark sold without a recorded buyer.
     Only the seller or an admin may call this.
     """
     item = db.query(MarketplaceItem).filter(MarketplaceItem.id == item_id).first()
@@ -102,39 +97,34 @@ def mark_sold(
         if not buyer:
             raise HTTPException(status_code=404, detail="Buyer user not found")
         item.buyer_id = buyer_id
-        buyer_label = buyer.email
-    else:
-        buyer_label = "external buyer"
 
     item.is_sold  = True
     item.sold_at  = datetime.now(timezone.utc)
 
+    buyer_info = f" to user ID {buyer_id}" if buyer_id else ""
     _log(db, "marketplace.sold",
-         f"'{item.title}' marked as sold by {current_user.email} → {buyer_label}", current_user)
+         f"Marked '{item.title}' as SOLD{buyer_info}", current_user)
     db.commit()
     db.refresh(item)
     return item
 
 
 @router.patch("/{item_id}/unsold", response_model=MarketplaceItemOut)
-def mark_unsold(
+def unmark_sold(
     item_id:      int,
     db:           Session = Depends(get_db),
     current_user: User    = Depends(get_current_user),
 ):
-    """Revert a sold status — e.g. if a deal falls through."""
+    """Reverse a sold marking (seller or admin only)."""
     item = db.query(MarketplaceItem).filter(MarketplaceItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     if item.seller_id != current_user.id and current_user.role.value != "admin":
         raise HTTPException(status_code=403, detail="Not authorised")
-
     item.is_sold  = False
     item.buyer_id = None
     item.sold_at  = None
-
-    _log(db, "marketplace.unsold",
-         f"'{item.title}' relisted as available by {current_user.email}", current_user)
+    _log(db, "marketplace.unmark_sold", f"Un-marked '{item.title}' as sold", current_user)
     db.commit()
     db.refresh(item)
     return item
@@ -151,7 +141,6 @@ def delete_item(
         raise HTTPException(status_code=404, detail="Item not found")
     if item.seller_id != current_user.id and current_user.role.value != "admin":
         raise HTTPException(status_code=403, detail="Not authorised")
-    _log(db, "marketplace.delete",
-         f"{current_user.email} deleted listing: '{item.title}'", current_user)
+    _log(db, "marketplace.delete", f"Deleted listing: {item.title}", current_user)
     db.delete(item)
     db.commit()

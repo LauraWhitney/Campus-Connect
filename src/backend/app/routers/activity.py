@@ -12,14 +12,18 @@ PAGE_SIZE = 30
 
 @router.get("")
 def get_activity_logs(
-    page: int = Query(1, ge=1),
-    action: str = None,
-    db: Session = Depends(get_db),
-    _=Depends(require_admin),
+    page:   int            = Query(1, ge=1),
+    action: str            = None,          # prefix or exact, e.g. "event" or "event.rsvp_add"
+    db:     Session        = Depends(get_db),
+    _                      = Depends(require_admin),
 ):
     query = db.query(ActivityLog)
     if action:
-        query = query.filter(ActivityLog.action == action)
+        # Support both exact match ("event.rsvp_add") and prefix match ("event")
+        if "." in action:
+            query = query.filter(ActivityLog.action == action)
+        else:
+            query = query.filter(ActivityLog.action.like(f"{action}.%"))
 
     total = query.count()
     logs  = (

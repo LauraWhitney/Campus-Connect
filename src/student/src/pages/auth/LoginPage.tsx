@@ -42,8 +42,9 @@ export default function LoginPage() {
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
             <GraduationCap className="w-7 h-7 text-white" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-white">Campus Connect</h1>
-          <p className="text-surface-400 text-sm mt-1">Your university, all in one place</p>
+          <h1 className="font-display text-2xl font-bold text-white">CUEA Campus Connect</h1>
+          <p className="text-surface-400 text-sm mt-1">Sign in with your CUEA email</p>
+          <Link to="/" className="text-indigo-400 text-xs hover:text-indigo-300 transition-colors mt-1">← Back to home</Link>
         </div>
 
         <div className="bg-surface-800/70 backdrop-blur-md border border-surface-700/40 rounded-2xl p-7 shadow-card">
@@ -59,7 +60,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs text-surface-400 mb-1.5 font-medium">Email address</label>
-              <input type="email" className="input" placeholder="you@university.edu"
+              <input type="email" className="input" placeholder="you@students.cuea.ac.ke"
                 value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div>
