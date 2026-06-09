@@ -39,8 +39,7 @@ class UserRegister(BaseModel):
         domain = v.split("@")[-1]
         if domain not in CUEA_EMAIL_DOMAINS:
             raise ValueError(
-                f"Only CUEA email addresses are allowed "
-                f"(@students.cuea.ac.ke or @cuea.ac.ke)"
+                "Only @cuea.edu email addresses are accepted"
             )
         return v
 
@@ -58,9 +57,7 @@ class UserRegister(BaseModel):
             return v
         v = v.strip()
         if v and v not in CUEA_FACULTIES:
-            raise ValueError(
-                f"Invalid faculty. Choose one of: {', '.join(CUEA_FACULTIES)}"
-            )
+            raise ValueError(f"Invalid faculty. Choose one of: {', '.join(CUEA_FACULTIES)}")
         return v
 
     @field_validator("year_of_study")
@@ -123,20 +120,24 @@ class EventCreate(BaseModel):
 
 
 class EventOut(BaseModel):
-    id:          int
-    title:       str
-    description: str
-    category:    str
-    date:        str
-    time:        str
-    venue:       str
-    organizer:   str
-    image:       Optional[str] = None
-    capacity:    Optional[int] = None
-    rsvp_count:  int  = 0
-    has_rsvped:  bool = False
-    created_by:  Optional[int] = None
-    created_at:  datetime
+    id:                  int
+    title:               str
+    description:         str
+    category:            str
+    date:                str
+    time:                str
+    venue:               str
+    organizer:           str
+    image:               Optional[str] = None
+    capacity:            Optional[int] = None
+    rsvp_count:          int  = 0
+    pending_rsvp_count:  int  = 0
+    has_rsvped:          bool = False
+    pending_rsvp:        bool = False
+    is_creator:          bool = False
+    creator_name:        Optional[str] = None
+    created_by:          Optional[int] = None
+    created_at:          datetime
 
     model_config = {"from_attributes": True}
 
@@ -165,6 +166,7 @@ class MarketplaceItemCreate(BaseModel):
     condition:   str
     category:    str
     images:      Optional[List[str]] = []
+    contact:     Optional[str] = None  # seller's contact info
 
     @field_validator("title", "description")
     @classmethod
@@ -203,6 +205,7 @@ class MarketplaceItemOut(BaseModel):
     condition:   str
     category:    str
     images:      List[str] = []
+    contact:     Optional[str] = None
     seller:      SellerOut
     buyer:       Optional[BuyerOut] = None
     is_sold:     bool
@@ -224,6 +227,7 @@ class ClubCreate(BaseModel):
     president:        str
     email:            EmailStr
     meeting_schedule: Optional[str] = None
+    meeting_location: Optional[str] = None
     logo:             Optional[str] = None
 
     @field_validator("name", "description", "president")
@@ -242,9 +246,12 @@ class ClubOut(BaseModel):
     president:        str
     email:            str
     meeting_schedule: Optional[str] = None
+    meeting_location: Optional[str] = None
     logo:             Optional[str] = None
     member_count:     int  = 0
     is_member:        bool = False
+    has_pending:      bool = False
+    is_owner:         bool = False
     created_at:       datetime
     model_config = {"from_attributes": True}
 
@@ -294,6 +301,7 @@ class LostFoundOut(BaseModel):
     image:       Optional[str] = None
     contact:     str
     reporter:    Optional[ReporterOut] = None
+    reported_by: Optional[int] = None
     is_claimed:  bool
     claimed_by:  Optional[int]        = None
     claimer:     Optional[ClaimerOut] = None

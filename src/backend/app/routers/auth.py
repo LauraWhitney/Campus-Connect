@@ -62,7 +62,7 @@ def register(payload: UserRegister, request: Request, db: Session = Depends(get_
     if domain not in CUEA_EMAIL_DOMAINS:
         raise HTTPException(
             status_code=400,
-            detail="Only CUEA email addresses are allowed (@students.cuea.ac.ke or @cuea.ac.ke)"
+            detail="Only @cuea.edu email addresses are accepted"
         )
     if not name:
         raise HTTPException(status_code=422, detail="Name cannot be blank")

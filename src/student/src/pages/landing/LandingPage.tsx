@@ -234,7 +234,7 @@ const FEATURES = [
   {
     icon: Shield, gradient: 'linear-gradient(135deg,#6366f1,#0ea5e9)',
     title: 'CUEA-Only Access',
-    desc: 'Registration is restricted to @students.cuea.ac.ke and @cuea.ac.ke email addresses, keeping the platform safe, trusted, and exclusively for our community.',
+    desc: 'Registration is restricted to @cuea.edu email addresses, keeping the platform safe, trusted, and exclusively for our community.',
     pills: ['Verified Emails', 'Admin Panel', 'Activity Logs'],
   },
 ]
@@ -426,7 +426,7 @@ function Stats() {
 
 // ── How It Works ───────────────────────────────────────
 const STEPS = [
-  { step: '01', icon: Mail,          title: 'Sign up with your CUEA email', desc: 'Register using your @students.cuea.ac.ke or @cuea.ac.ke email. No other emails are accepted — keeping the community verified.' },
+  { step: '01', icon: Mail,          title: 'Sign up with your CUEA email', desc: 'Register using your @cuea.edu email. No other emails are accepted — keeping the community verified.' },
   { step: '02', icon: Globe,         title: 'Explore your campus',          desc: 'Browse events, join clubs, browse the marketplace, and report lost items — all from your dashboard.' },
   { step: '03', icon: CheckCircle2,  title: 'Take action',                  desc: 'RSVP to events and check in, buy or sell items, join clubs, submit feedback, and track every update in real time.' },
   { step: '04', icon: TrendingUp,    title: 'Stay connected',               desc: 'Get notified when your feedback is reviewed, when your item is claimed, or when your club has new members.' },
@@ -562,7 +562,7 @@ function Contact() {
                 </div>
                 <div>
                   <label className={lbl}>Email Address</label>
-                  <input type="email" className={inp} value={form.email} onChange={set('email')} required placeholder="you@cuea.ac.ke"
+                  <input type="email" className={inp} value={form.email} onChange={set('email')} required placeholder="you@cuea.edu"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
                 </div>
                 <div>

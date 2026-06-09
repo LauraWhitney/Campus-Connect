@@ -18,7 +18,13 @@ class EventCategory(str, enum.Enum):
     StaffDev    = "Staff Development"
 
 
-# Many-to-many: users ↔ events (RSVP)
+class RSVPStatus(str, enum.Enum):
+    pending  = "pending"
+    approved = "approved"
+    rejected = "rejected"
+
+
+# Many-to-many: users ↔ events (RSVP) - now using separate model for approval
 event_rsvp = Table(
     "event_rsvps",
     Base.metadata,
@@ -45,6 +51,22 @@ class Event(Base):
 
     creator = relationship("User", foreign_keys=[created_by])
     rsvps   = relationship("User", secondary=event_rsvp, backref="rsvped_events")
+    rsvp_requests = relationship("EventRSVP", back_populates="event", cascade="all, delete-orphan")
+
+
+class EventRSVP(Base):
+    """Tracks RSVP requests with approval workflow."""
+    __tablename__ = "event_rsvp_requests"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    event_id   = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
+    user_id    = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    status     = Column(PgEnum(RSVPStatus), default=RSVPStatus.pending, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    event = relationship("Event", back_populates="rsvp_requests")
+    user  = relationship("User", foreign_keys=[user_id])
 
 
 # ── Event attendance (check-in after RSVP) ─────────────

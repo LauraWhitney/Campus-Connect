@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 import re
+import bcrypt
 
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -11,28 +11,23 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 
-# bcrypt__rounds=10 is fast enough and safe — passlib default is 12 which
-# causes multi-second hangs on Windows Python 3.12.
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__rounds=10,
-)
 bearer_scheme = HTTPBearer()
 
 
 # ── Password helpers ───────────────────────────────────
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    return bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt(rounds=4)).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    except Exception:
+        return False
 
 
 # ── Password strength validation ───────────────────────
 def validate_password_strength(password: str) -> list[str]:
-    """Returns a list of unmet requirements. Empty list = password is strong."""
     errors = []
     if len(password) < 8:
         errors.append("At least 8 characters")
@@ -47,7 +42,6 @@ def validate_password_strength(password: str) -> list[str]:
 
 # ── Input sanitization ─────────────────────────────────
 def sanitize_string(value: str, max_length: int = 500) -> str:
-    """Strip leading/trailing whitespace and enforce max length."""
     return value.strip()[:max_length]
 
 

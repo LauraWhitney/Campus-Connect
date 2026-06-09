@@ -5,8 +5,12 @@ function normalise(e: any): Event {
   return {
     ...e,
     _id: String(e.id),
-    rsvpCount: e.rsvp_count,
-    hasRsvped: e.has_rsvped,
+    rsvpCount: e.rsvp_count ?? 0,
+    pendingRsvpCount: e.pending_rsvp_count ?? 0,
+    hasRsvped: e.has_rsvped ?? false,
+    pendingRsvp: e.pending_rsvp ?? false,
+    isCreator: e.is_creator ?? false,
+    creatorName: e.creator_name ?? null,
     createdBy: e.created_by,
     createdAt: e.created_at,
   }
@@ -42,12 +46,25 @@ export const eventsAPI = {
     return normalise(data)
   },
 
+  /** Toggle RSVP: pending → cancelled, or new request */
   rsvp: async (id: string) => {
     const { data } = await api.post(`/events/${id}/rsvp`)
     return data // { action, rsvp_count }
   },
 
-  /** Confirm physical attendance — must have RSVP'd first */
+  /** Get RSVP requests for an event (creator only) */
+  getRsvps: async (id: string) => {
+    const { data } = await api.get(`/events/${id}/rsvps`)
+    return data
+  },
+
+  /** Approve or reject an RSVP request (creator only) */
+  manageRsvp: async (eventId: string, rsvpId: number, action: 'approve' | 'reject') => {
+    const { data } = await api.patch(`/events/${eventId}/rsvps/${rsvpId}`, { action })
+    return data
+  },
+
+  /** Confirm physical attendance */
   checkIn: async (id: string): Promise<EventAttendance> => {
     const { data } = await api.post(`/events/${id}/checkin`)
     return normaliseAttendance(data)

@@ -4,6 +4,24 @@ import type {
   LostFoundItem, Feedback, DashboardStats, PaginatedResponse, ActivityLog,
 } from '../types'
 
+function normaliseEvent(e: any): Event {
+  return {
+    ...e,
+    rsvp_count: e.rsvp_count ?? 0,
+    pending_rsvp_count: e.pending_rsvp_count ?? 0,
+    creator: e.creator ?? null,
+    creator_name: e.creator_name ?? null,
+  }
+}
+
+function normaliseFeedback(f: any): Feedback {
+  return {
+    ...f,
+    submitted_by: f.submitted_by ?? null,
+    submitter: f.submitted_by ?? null,  // backwards compat
+  }
+}
+
 // ── Auth ──────────────────────────────────────────────
 export const authAPI = {
   login: async (email: string, password: string) => {
@@ -47,6 +65,18 @@ export const usersAPI = {
 export const eventsAPI = {
   getAll: async (page = 1): Promise<PaginatedResponse<Event>> => {
     const { data } = await api.get('/events', { params: { page } })
+    return { ...data, data: data.data.map(normaliseEvent) }
+  },
+  getRsvps: async (id: number) => {
+    const { data } = await api.get(`/events/${id}/rsvps`)
+    return data
+  },
+  approveRsvp: async (eventId: number, rsvpId: number) => {
+    const { data } = await api.patch(`/events/${eventId}/rsvps/${rsvpId}`, { action: 'approve' })
+    return data
+  },
+  rejectRsvp: async (eventId: number, rsvpId: number) => {
+    const { data } = await api.patch(`/events/${eventId}/rsvps/${rsvpId}`, { action: 'reject' })
     return data
   },
   getAttendance: async (id: number) => {
@@ -81,6 +111,22 @@ export const marketplaceAPI = {
 export const clubsAPI = {
   getAll: async (page = 1): Promise<PaginatedResponse<Club>> => {
     const { data } = await api.get('/clubs', { params: { page } })
+    return { ...data, data: data.data.map((c: any) => ({
+      ...c,
+      member_count: c.member_count ?? 0,
+      meeting_location: c.meeting_location ?? null,
+    })) }
+  },
+  getMembers: async (id: number) => {
+    const { data } = await api.get(`/clubs/${id}/members`)
+    return data
+  },
+  approveMember: async (clubId: number, requestId: number) => {
+    const { data } = await api.patch(`/clubs/${clubId}/members/${requestId}`, { action: 'approve' })
+    return data
+  },
+  rejectMember: async (clubId: number, requestId: number) => {
+    const { data } = await api.patch(`/clubs/${clubId}/members/${requestId}`, { action: 'reject' })
     return data
   },
   delete: async (id: number) => {
@@ -111,11 +157,11 @@ export const lostFoundAPI = {
 export const feedbackAPI = {
   getAll: async (page = 1): Promise<PaginatedResponse<Feedback>> => {
     const { data } = await api.get('/feedback', { params: { page } })
-    return data
+    return { ...data, data: data.data.map(normaliseFeedback) }
   },
   updateStatus: async (id: number, status: string): Promise<Feedback> => {
     const { data } = await api.patch(`/feedback/${id}/status`, { status })
-    return data
+    return normaliseFeedback(data)
   },
 }
 

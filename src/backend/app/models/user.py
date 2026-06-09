@@ -15,7 +15,7 @@ CUEA_FACULTIES = [
 ]
 
 # ── CUEA allowed email domains ─────────────────────────
-CUEA_EMAIL_DOMAINS = {"students.cuea.ac.ke", "cuea.ac.ke"}
+CUEA_EMAIL_DOMAINS = {"cuea.edu"}
 
 
 class UserRole(str, enum.Enum):

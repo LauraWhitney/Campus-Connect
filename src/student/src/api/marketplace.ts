@@ -7,7 +7,8 @@ function normalise(i: any): MarketplaceItem {
     _id: String(i.id),
     isSold: i.is_sold,
     soldAt: i.sold_at ?? null,
-    buyer: i.buyer ?? null,
+    buyer: i.buyer ? { ...i.buyer, _id: String(i.buyer.id) } : null,
+    seller: i.seller ? { ...i.seller, _id: String(i.seller.id) } : i.seller,
     createdAt: i.created_at,
   }
 }
@@ -26,18 +27,26 @@ export const marketplaceAPI = {
     return normalise(data)
   },
 
-  create: async (itemData: Partial<MarketplaceItem>): Promise<MarketplaceItem> => {
+  create: async (itemData: {
+    title: string
+    description: string
+    price: number
+    condition: string
+    category: string
+    images?: string[]
+    contact?: string
+  }): Promise<MarketplaceItem> => {
     const { data } = await api.post('/marketplace', itemData)
     return normalise(data)
   },
 
-  /** Mark item as sold. Pass optional buyerId if the buyer is a CUEA student. */
+  /** Mark item as sold. */
   markSold: async (id: string, buyerId?: number): Promise<MarketplaceItem> => {
     const { data } = await api.patch(`/marketplace/${id}/sold`, buyerId ? { buyer_id: buyerId } : {})
     return normalise(data)
   },
 
-  /** Revert sold status (e.g. deal fell through) */
+  /** Revert sold status */
   markUnsold: async (id: string): Promise<MarketplaceItem> => {
     const { data } = await api.patch(`/marketplace/${id}/unsold`)
     return normalise(data)
@@ -46,4 +55,22 @@ export const marketplaceAPI = {
   delete: async (id: string): Promise<void> => {
     await api.delete(`/marketplace/${id}`)
   },
+}
+
+/** Upload an image file to the server. Returns the URL. */
+export async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const token = localStorage.getItem('cc_token')
+  const res = await fetch('/api/upload', {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || 'Upload failed')
+  }
+  const json = await res.json()
+  return json.url
 }

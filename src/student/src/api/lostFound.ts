@@ -7,9 +7,9 @@ function normalise(i: any): LostFoundItem {
     _id: String(i.id),
     isClaimed: i.is_claimed,
     claimedBy: i.claimed_by ?? null,
-    claimer: i.claimer ?? null,
+    claimer: i.claimer ? { ...i.claimer, _id: String(i.claimer.id) } : null,
     claimedAt: i.claimed_at ?? null,
-    reportedBy: i.reporter ?? null,
+    reportedBy: i.reporter ? { ...i.reporter, _id: String(i.reporter.id) } : null,
     createdAt: i.created_at,
   }
 }
@@ -22,7 +22,15 @@ export const lostFoundAPI = {
     return { ...data, data: data.data.map(normalise) }
   },
 
-  create: async (itemData: Partial<LostFoundItem>): Promise<LostFoundItem> => {
+  create: async (itemData: {
+    title: string
+    description: string
+    status: string
+    location: string
+    date: string
+    contact: string
+    image?: string
+  }): Promise<LostFoundItem> => {
     const { data } = await api.post('/lost-found', itemData)
     return normalise(data)
   },

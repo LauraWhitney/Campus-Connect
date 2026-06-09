@@ -1,12 +1,12 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Search, CheckCircle2 } from 'lucide-react'
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Search, CheckCircle2, Trash2, ChevronDown, ChevronUp, UserCheck, UserX } from 'lucide-react'
 import { eventsAPI } from '../../api/events'
 import type { Event, EventCategory } from '../../types'
 import { EmptyState, LoadingGrid, PageHeader, FilterBar } from '../../components/ui/index'
 import Modal from '../../components/ui/Modal'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
-// ── CUEA event categories ─────────────────────────────
 const CATEGORIES: string[] = [
   'All', 'Academic', 'Sports', 'Cultural', 'Spiritual',
   'Career', 'Social', 'Convocation', 'Staff Development',
@@ -24,17 +24,86 @@ const CAT_GRADIENT: Record<string, { bg: string; badge: string }> = {
 }
 const DEFAULT_GRADIENT = { bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' }
 
-function EventCard({ event, onRsvp, onCheckIn }: {
+// ── RSVP Manage Panel (for event creator) ────────────
+function RsvpManagePanel({ event, onClose }: { event: Event; onClose: () => void }) {
+  const [rsvps, setRsvps]     = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const load = async () => {
+    try {
+      const data = await eventsAPI.getRsvps(event._id)
+      setRsvps(data.requests)
+    } catch { toast.error('Failed to load RSVPs') }
+    finally { setLoading(false) }
+  }
+
+  useEffect(() => { load() }, [event._id])
+
+  const handle = async (rsvpId: number, action: 'approve' | 'reject') => {
+    try {
+      await eventsAPI.manageRsvp(event._id, rsvpId, action)
+      toast.success(`RSVP ${action}d`)
+      load()
+    } catch { toast.error(`Failed to ${action} RSVP`) }
+  }
+
+  return (
+    <Modal open onClose={onClose} title={`RSVPs — ${event.title}`} size="md">
+      {loading ? (
+        <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-indigo-400" /></div>
+      ) : rsvps.length === 0 ? (
+        <p className="text-slate-400 text-sm text-center py-6">No RSVP requests yet.</p>
+      ) : (
+        <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+          {rsvps.map((r: any) => (
+            <div key={r.id} className="flex items-center justify-between gap-3 p-3 rounded-xl"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div>
+                <p className="text-white text-xs font-medium">{r.user_name}</p>
+                <p className="text-indigo-300 text-[10px]">{r.user_email}</p>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {r.status === 'pending' ? (
+                  <>
+                    <button onClick={() => handle(r.id, 'approve')}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold"
+                      style={{ background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.3)' }}>
+                      <UserCheck className="w-3.5 h-3.5" /> Approve
+                    </button>
+                    <button onClick={() => handle(r.id, 'reject')}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold"
+                      style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }}>
+                      <UserX className="w-3.5 h-3.5" /> Reject
+                    </button>
+                  </>
+                ) : (
+                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${r.status === 'approved' ? 'bg-emerald-900/40 text-emerald-300' : 'bg-red-900/30 text-red-300'}`}>
+                    {r.status}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps }: {
   event: Event
   onRsvp: (id: string) => void
   onCheckIn: (id: string) => void
+  onDelete: (id: string) => void
+  onManageRsvps: (event: Event) => void
 }) {
   const [rsvpLoading, setRsvpLoading]       = useState(false)
   const [checkinLoading, setCheckinLoading] = useState(false)
   const [checkedIn, setCheckedIn]           = useState(false)
+  const [deleteLoading, setDeleteLoading]   = useState(false)
   const date = new Date(event.date)
   const g    = CAT_GRADIENT[event.category] ?? DEFAULT_GRADIENT
-  const isFull = !!(event.capacity && event.rsvpCount >= event.capacity && !event.hasRsvped)
+  const isFull = !!(event.capacity && event.rsvpCount >= event.capacity && !event.hasRsvped && !event.pendingRsvp)
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in"
@@ -42,7 +111,6 @@ function EventCard({ event, onRsvp, onCheckIn }: {
       <div className="h-1.5 w-full" style={{ background: g.bg }} />
 
       <div className="p-5 flex flex-col gap-3">
-        {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0"
@@ -53,11 +121,28 @@ function EventCard({ event, onRsvp, onCheckIn }: {
             <div>
               <h3 className="font-display font-semibold text-white text-sm leading-snug line-clamp-2">{event.title}</h3>
               <p className="text-indigo-300 text-xs mt-0.5">{event.organizer}</p>
+              {event.isCreator && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold mt-0.5"
+                  style={{ background: 'rgba(99,102,241,0.3)', color: '#a5b4fc' }}>
+                  YOUR EVENT
+                </span>
+              )}
             </div>
           </div>
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border shrink-0 ${g.badge}`}>
-            {event.category}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border shrink-0 ${g.badge}`}>
+              {event.category}
+            </span>
+            {event.isCreator && (
+              <button onClick={async () => { setDeleteLoading(true); await onDelete(event._id); setDeleteLoading(false) }}
+                disabled={deleteLoading}
+                title="Delete event"
+                className="p-1 rounded-lg transition-colors"
+                style={{ background: 'rgba(239,68,68,0.1)', color: '#fca5a5' }}>
+                {deleteLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              </button>
+            )}
+          </div>
         </div>
 
         <p className="text-slate-300 text-xs line-clamp-2 leading-relaxed">{event.description}</p>
@@ -77,39 +162,50 @@ function EventCard({ event, onRsvp, onCheckIn }: {
           </div>
         </div>
 
-        {/* RSVP button */}
-        <button
-          onClick={() => { setRsvpLoading(true); onRsvp(event._id) }}
-          disabled={rsvpLoading || isFull}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mt-1 disabled:opacity-50"
-          style={event.hasRsvped
-            ? { background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc' }
-            : isFull
-              ? { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#64748b' }
-              : { background: g.bg, color: '#fff' }
-          }>
-          {rsvpLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          {isFull ? 'Event Full' : event.hasRsvped ? "✓ RSVP'd — Cancel" : 'RSVP for this Event'}
-        </button>
+        {/* Creator: manage RSVPs */}
+        {event.isCreator && (
+          <button onClick={() => onManageRsvps(event)}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold"
+            style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc' }}>
+            <Users className="w-3.5 h-3.5" />
+            Manage RSVPs ({event.rsvpCount} approved{event.pendingRsvpCount ? `, ${event.pendingRsvpCount} pending` : ''})
+          </button>
+        )}
 
-        {/* Check-in button — only shown after RSVP */}
+        {/* RSVP button (non-creator) */}
+        {!event.isCreator && (
+          <button
+            onClick={() => { setRsvpLoading(true); onRsvp(event._id) }}
+            disabled={rsvpLoading || isFull}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mt-1 disabled:opacity-50"
+            style={event.hasRsvped
+              ? { background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', color: '#6ee7b7' }
+              : event.pendingRsvp
+                ? { background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.35)', color: '#fde68a' }
+                : isFull
+                  ? { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#64748b' }
+                  : { background: g.bg, color: '#fff' }
+            }>
+            {rsvpLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {isFull ? 'Event Full'
+              : event.hasRsvped ? '✓ Approved — Undo RSVP'
+              : event.pendingRsvp ? '⏳ Pending Approval — Cancel'
+              : 'Request RSVP'}
+          </button>
+        )}
+
+        {/* Check-in button */}
         {event.hasRsvped && !checkedIn && (
           <button
             onClick={async () => {
               setCheckinLoading(true)
-              try {
-                await onCheckIn(event._id)
-                setCheckedIn(true)
-              } finally {
-                setCheckinLoading(false)
-              }
+              try { await onCheckIn(event._id); setCheckedIn(true) }
+              finally { setCheckinLoading(false) }
             }}
             disabled={checkinLoading}
             className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
             style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', color: '#6ee7b7' }}>
-            {checkinLoading
-              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              : <CheckCircle2 className="w-3.5 h-3.5" />}
+            {checkinLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
             Check In at Event
           </button>
         )}
@@ -143,7 +239,10 @@ function CreateEventModal({ open, onClose, onCreated }: { open: boolean; onClose
       onCreated()
       onClose()
       setForm({ title: '', description: '', category: 'Academic', date: '', time: '', venue: '', organizer: '', capacity: '' })
-    } catch { toast.error('Failed to create event') }
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || 'Failed to create event'
+      toast.error(msg)
+    }
     finally { setLoading(false) }
   }
 
@@ -201,11 +300,12 @@ function CreateEventModal({ open, onClose, onCreated }: { open: boolean; onClose
 }
 
 export default function EventsPage() {
-  const [events, setEvents]       = useState<Event[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [filter, setFilter]       = useState('All')
-  const [showModal, setShowModal] = useState(false)
-  const [query, setQuery]         = useState('')
+  const [events, setEvents]           = useState<Event[]>([])
+  const [loading, setLoading]         = useState(true)
+  const [filter, setFilter]           = useState('All')
+  const [showModal, setShowModal]     = useState(false)
+  const [query, setQuery]             = useState('')
+  const [manageEvent, setManageEvent] = useState<Event | null>(null)
 
   const results = useMemo(() => {
     if (!query.trim()) return events
@@ -230,11 +330,12 @@ export default function EventsPage() {
   const handleRsvp = async (id: string) => {
     try {
       const res = await eventsAPI.rsvp(id)
-      setEvents(ev => ev.map(e =>
-        e._id === id ? { ...e, rsvpCount: res.rsvp_count, hasRsvped: !e.hasRsvped } : e
-      ))
-      toast.success('RSVP updated!')
-    } catch { toast.error('Could not update RSVP. Please try again.') }
+      load() // reload to get updated state
+      if (res.action === 'requested') toast.success('RSVP request sent! Waiting for creator approval.')
+      else if (res.action === 'cancelled') toast.success('RSVP cancelled.')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Could not update RSVP.')
+    }
   }
 
   const handleCheckIn = async (id: string) => {
@@ -245,6 +346,16 @@ export default function EventsPage() {
       const msg = err?.response?.data?.detail || 'Check-in failed'
       toast.error(msg)
       throw err
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await eventsAPI.delete(id)
+      setEvents(ev => ev.filter(e => e._id !== id))
+      toast.success('Event deleted.')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to delete event')
     }
   }
 
@@ -267,11 +378,15 @@ export default function EventsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {results.map(e => (
-            <EventCard key={e._id} event={e} onRsvp={handleRsvp} onCheckIn={handleCheckIn} />
+            <EventCard key={e._id} event={e}
+              onRsvp={handleRsvp} onCheckIn={handleCheckIn}
+              onDelete={handleDelete} onManageRsvps={setManageEvent}
+            />
           ))}
         </div>
       )}
       <CreateEventModal open={showModal} onClose={() => setShowModal(false)} onCreated={load} />
+      {manageEvent && <RsvpManagePanel event={manageEvent} onClose={() => { setManageEvent(null); load() }} />}
     </div>
   )
 }

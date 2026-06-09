@@ -47,10 +47,16 @@ def get_stats(db: Session = Depends(get_db), _=Depends(require_admin)):
 
 # ── User management ────────────────────────────────────
 @router.get("/users")
-def list_users(page: int = 1, db: Session = Depends(get_db), _=Depends(require_admin)):
-    total = db.query(func.count(User.id)).scalar()
+def list_users(page: int = 1, search: str = None, db: Session = Depends(get_db), _=Depends(require_admin)):
+    query = db.query(User)
+    if search:
+        q = f"%{search}%"
+        query = query.filter(
+            User.name.ilike(q) | User.email.ilike(q)
+        )
+    total = query.count()
     users = (
-        db.query(User)
+        query
         .order_by(User.created_at.desc())
         .offset((page - 1) * PAGE_SIZE)
         .limit(PAGE_SIZE)

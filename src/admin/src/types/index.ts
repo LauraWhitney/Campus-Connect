@@ -22,6 +22,7 @@ export interface Event {
   capacity?: number
   rsvp_count: number
   created_by?: number
+  creator?: { id: number; name: string; email: string } | null
   created_at: string
 }
 
@@ -32,8 +33,11 @@ export interface MarketplaceItem {
   price: number
   condition: string
   category: string
+  images: string[]
+  contact?: string | null
   seller: { id: number; name: string; email: string }
   buyer?: { id: number; name: string; email: string } | null
+  seller_id: number
   is_sold: boolean
   sold_at?: string | null
   created_at: string
@@ -47,7 +51,10 @@ export interface Club {
   president: string
   email: string
   meeting_schedule?: string
+  meeting_location?: string
+  registration_number?: string
   member_count: number
+  created_by?: number
   created_at: string
 }
 
@@ -58,8 +65,10 @@ export interface LostFoundItem {
   status: 'Lost' | 'Found' | 'Claimed'
   location: string
   date: string
+  image?: string
   contact: string
   reporter?: { id: number; name: string } | null
+  reported_by?: number | null
   is_claimed: boolean
   claimed_by?: number | null
   claimer?: { id: number; name: string } | null
@@ -76,7 +85,8 @@ export interface Feedback {
   is_anonymous: boolean
   status: 'Pending' | 'Reviewed' | 'Resolved'
   notified: boolean
-  submitted_by?: { id: number; name: string } | null
+  submitted_by?: number | null
+  submitter?: { id: number; name: string } | null
   resolved_by?: number | null
   resolved_at?: string | null
   created_at: string

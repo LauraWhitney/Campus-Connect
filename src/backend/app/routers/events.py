@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
-from typing import Optional
+from typing import Optional, List
 import math
 from datetime import datetime, timezone
 
 from app.core.database import get_db
 from app.core.security import get_current_user, require_admin
 from app.models.user import User
-from app.models.event import Event, EventAttendance
+from app.models.event import Event, EventAttendance, EventRSVP, RSVPStatus
 from app.models.activity_log import ActivityLog
 from app.schemas.schemas import EventCreate, EventOut, EventListResponse, AttendanceOut
 
@@ -24,10 +24,31 @@ def _log(db: Session, action: str, detail: str, user: User):
 
 
 def _event_out(event: Event, current_user: Optional[User]) -> dict:
+    # Check if user has an approved RSVP request
+    has_rsvped = False
+    pending_rsvp = False
+    if current_user:
+        rsvp_req = next(
+            (r for r in event.rsvp_requests if r.user_id == current_user.id),
+            None
+        )
+        if rsvp_req:
+            has_rsvped = rsvp_req.status == RSVPStatus.approved
+            pending_rsvp = rsvp_req.status == RSVPStatus.pending
+
+    approved_count = sum(1 for r in event.rsvp_requests if r.status == RSVPStatus.approved)
+    pending_count  = sum(1 for r in event.rsvp_requests if r.status == RSVPStatus.pending)
+
+    is_creator = current_user and event.created_by == current_user.id
+
     return {
         **{c.name: getattr(event, c.name) for c in event.__table__.columns},
-        "rsvp_count": len(event.rsvps),
-        "has_rsvped": current_user in event.rsvps if current_user else False,
+        "rsvp_count":    approved_count,
+        "pending_rsvp_count": pending_count,
+        "has_rsvped":    has_rsvped,
+        "pending_rsvp":  pending_rsvp,
+        "is_creator":    is_creator,
+        "creator_name":  event.creator.name if event.creator else None,
     }
 
 
@@ -69,6 +90,23 @@ def create_event(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # ── Venue + time conflict check ────────────────────
+    conflict = db.query(Event).filter(
+        and_(
+            Event.venue == payload.venue.strip(),
+            Event.date  == payload.date,
+            Event.time  == payload.time,
+        )
+    ).first()
+    if conflict:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"The venue '{payload.venue}' is already booked on {payload.date} "
+                f"at {payload.time}. Please choose a different time or location."
+            )
+        )
+
     event = Event(**payload.model_dump(), created_by=current_user.id)
     db.add(event)
     db.flush()
@@ -78,30 +116,119 @@ def create_event(
     return _event_out(event, current_user)
 
 
+# ── RSVP request (student submits, creator approves) ──
+
 @router.post("/{event_id}/rsvp")
-def toggle_rsvp(
+def request_rsvp(
     event_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Toggle RSVP: if no request exists → create pending. If approved → cancel (undo). If pending → cancel."""
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    if current_user in event.rsvps:
-        event.rsvps.remove(current_user)
-        action_label = "cancelled RSVP"
-        action_key   = "event.rsvp_cancel"
-    else:
-        if event.capacity and len(event.rsvps) >= event.capacity:
-            raise HTTPException(status_code=400, detail="Event is at full capacity")
-        event.rsvps.append(current_user)
-        action_label = "RSVP'd"
-        action_key   = "event.rsvp_add"
+    existing = db.query(EventRSVP).filter(
+        and_(EventRSVP.event_id == event_id, EventRSVP.user_id == current_user.id)
+    ).first()
 
-    _log(db, action_key, f"{current_user.email} {action_label} for: {event.title}", current_user)
+    if existing:
+        # Undo RSVP (cancel pending or approved)
+        if existing.status == RSVPStatus.approved:
+            # Remove from legacy rsvps table too
+            if current_user in event.rsvps:
+                event.rsvps.remove(current_user)
+        db.delete(existing)
+        _log(db, "event.rsvp_cancel", f"{current_user.email} cancelled RSVP for: {event.title}", current_user)
+        db.commit()
+        approved_count = sum(1 for r in event.rsvp_requests if r.status == RSVPStatus.approved)
+        return {"action": "cancelled", "rsvp_count": approved_count}
+    else:
+        # Check capacity
+        approved_count = sum(1 for r in event.rsvp_requests if r.status == RSVPStatus.approved)
+        if event.capacity and approved_count >= event.capacity:
+            raise HTTPException(status_code=400, detail="Event is at full capacity")
+        req = EventRSVP(event_id=event_id, user_id=current_user.id, status=RSVPStatus.pending)
+        db.add(req)
+        _log(db, "event.rsvp_request", f"{current_user.email} requested RSVP for: {event.title}", current_user)
+        db.commit()
+        return {"action": "requested", "rsvp_count": approved_count}
+
+
+@router.get("/{event_id}/rsvps")
+def get_event_rsvps(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Creator can see all RSVP requests for their event."""
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    if event.created_by != current_user.id and current_user.role.value != "admin":
+        raise HTTPException(status_code=403, detail="Only the event creator can view RSVPs")
+
+    requests = db.query(EventRSVP).filter(EventRSVP.event_id == event_id).all()
+    return {
+        "event_id":    event_id,
+        "event_title": event.title,
+        "requests": [
+            {
+                "id":       r.id,
+                "user_id":  r.user_id,
+                "user_name": r.user.name if r.user else None,
+                "user_email": r.user.email if r.user else None,
+                "status":   r.status,
+                "created_at": r.created_at,
+            }
+            for r in requests
+        ],
+        "approved_count": sum(1 for r in requests if r.status == RSVPStatus.approved),
+        "pending_count":  sum(1 for r in requests if r.status == RSVPStatus.pending),
+    }
+
+
+@router.patch("/{event_id}/rsvps/{rsvp_id}")
+def approve_reject_rsvp(
+    event_id: int,
+    rsvp_id: int,
+    payload: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Creator approves or rejects an RSVP request. payload: {action: 'approve'|'reject'}"""
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    if event.created_by != current_user.id and current_user.role.value != "admin":
+        raise HTTPException(status_code=403, detail="Only the event creator can manage RSVPs")
+
+    rsvp_req = db.query(EventRSVP).filter(
+        and_(EventRSVP.id == rsvp_id, EventRSVP.event_id == event_id)
+    ).first()
+    if not rsvp_req:
+        raise HTTPException(status_code=404, detail="RSVP request not found")
+
+    action = payload.get("action")
+    if action == "approve":
+        # Check capacity
+        approved_count = sum(1 for r in event.rsvp_requests if r.status == RSVPStatus.approved)
+        if event.capacity and approved_count >= event.capacity:
+            raise HTTPException(status_code=400, detail="Event is at full capacity")
+        rsvp_req.status = RSVPStatus.approved
+        # Also add to legacy event_rsvps
+        if rsvp_req.user and rsvp_req.user not in event.rsvps:
+            event.rsvps.append(rsvp_req.user)
+        _log(db, "event.rsvp_approve", f"Approved RSVP for {rsvp_req.user.email if rsvp_req.user else rsvp_id}", current_user)
+    elif action == "reject":
+        rsvp_req.status = RSVPStatus.rejected
+        _log(db, "event.rsvp_reject", f"Rejected RSVP for {rsvp_req.user.email if rsvp_req.user else rsvp_id}", current_user)
+    else:
+        raise HTTPException(status_code=422, detail="action must be 'approve' or 'reject'")
+
     db.commit()
-    return {"action": action_label, "rsvp_count": len(event.rsvps)}
+    return {"action": action, "rsvp_id": rsvp_id, "status": rsvp_req.status}
 
 
 # ── Attendance check-in ────────────────────────────────
@@ -112,12 +239,16 @@ def check_in(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Confirm physical attendance at an event the user has RSVP'd for."""
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    if current_user not in event.rsvps:
-        raise HTTPException(status_code=400, detail="You must RSVP before checking in")
+
+    approved = db.query(EventRSVP).filter(
+        and_(EventRSVP.event_id == event_id, EventRSVP.user_id == current_user.id,
+             EventRSVP.status == RSVPStatus.approved)
+    ).first()
+    if not approved:
+        raise HTTPException(status_code=400, detail="You must have an approved RSVP to check in")
 
     existing = db.query(EventAttendance).filter(
         and_(EventAttendance.event_id == event_id, EventAttendance.user_id == current_user.id)
@@ -148,17 +279,17 @@ def get_attendance(
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ):
-    """Admin: list all check-ins for an event."""
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    records = db.query(EventAttendance).filter(EventAttendance.event_id == event_id).all()
+    records  = db.query(EventAttendance).filter(EventAttendance.event_id == event_id).all()
+    approved = sum(1 for r in event.rsvp_requests if r.status == RSVPStatus.approved)
     return {
-        "event_id":        event_id,
-        "event_title":     event.title,
-        "rsvp_count":      len(event.rsvps),
+        "event_id":         event_id,
+        "event_title":      event.title,
+        "rsvp_count":       approved,
         "checked_in_count": sum(1 for r in records if r.checked_in),
-        "records":         records,
+        "records":          records,
     }
 
 
@@ -171,8 +302,8 @@ def delete_event(
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    if event.created_by != current_user.id and current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Not authorised")
+    if event.created_by != current_user.id and current_user.role.value != "admin":
+        raise HTTPException(status_code=403, detail="Only the event creator can delete this event")
     _log(db, "event.delete", f"Deleted event: {event.title}", current_user)
     db.delete(event)
     db.commit()

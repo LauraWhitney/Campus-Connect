@@ -3,6 +3,7 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
+  timeout: 60000, // 60 seconds — bcrypt can be slow on Windows Python 3.12
 })
 
 // Attach JWT to every request if present
@@ -19,6 +20,11 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('cc_token')
       window.location.href = '/login'
+    }
+    if (error.code === 'ECONNABORTED') {
+      error.response = {
+        data: { detail: 'Request timed out. Check that the backend server is running.' }
+      }
     }
     return Promise.reject(error)
   }

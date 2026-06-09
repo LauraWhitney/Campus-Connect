@@ -33,6 +33,7 @@ class MarketplaceItem(Base):
     condition   = Column(PgEnum(ItemCondition), nullable=False)
     category    = Column(PgEnum(ItemCategory), nullable=False)
     images      = Column(ARRAY(String), default=[])
+    contact     = Column(String(200), nullable=True)   # seller's preferred contact (phone/email/WhatsApp)
     seller_id   = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     # ── Transaction fields ─────────────────────────────
     is_sold     = Column(Boolean, default=False)

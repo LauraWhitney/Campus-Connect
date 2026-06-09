@@ -22,6 +22,22 @@ def _log(db: Session, action: str, detail: str, user: User):
     ))
 
 
+def _fb_out(fb: Feedback) -> dict:
+    submitter = None
+    if fb.submitter and not fb.is_anonymous:
+        submitter = {"id": fb.submitter.id, "name": fb.submitter.name}
+    # Normalise enum fields to plain strings so JSON serialises correctly
+    data = {}
+    for col in fb.__table__.columns:
+        val = getattr(fb, col.name)
+        data[col.name] = val.value if hasattr(val, "value") else val
+    return {
+        **data,
+        "submitted_by": submitter,
+        "submitter": submitter,
+    }
+
+
 @router.get("", response_model=FeedbackListResponse)
 def list_feedback(
     page:     int            = Query(1, ge=1),
@@ -31,7 +47,6 @@ def list_feedback(
     current_user: User       = Depends(get_current_user),
 ):
     query = db.query(Feedback)
-    # Non-admins only see their own feedback
     if current_user.role.value != "admin":
         query = query.filter(Feedback.submitted_by == current_user.id)
     if status:
@@ -45,7 +60,7 @@ def list_feedback(
         .offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).all()
     )
     return {
-        "data": items, "total": total, "page": page,
+        "data": [_fb_out(fb) for fb in items], "total": total, "page": page,
         "pages": max(1, math.ceil(total / PAGE_SIZE)), "page_size": PAGE_SIZE,
     }
 
@@ -61,7 +76,7 @@ def get_feedback(
         raise HTTPException(status_code=404, detail="Feedback not found")
     if current_user.role.value != "admin" and fb.submitted_by != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorised")
-    return fb
+    return _fb_out(fb)
 
 
 @router.post("", response_model=FeedbackOut, status_code=201)
@@ -71,8 +86,12 @@ def submit_feedback(
     current_user: User    = Depends(get_current_user),
 ):
     fb = Feedback(
-        **payload.model_dump(),
-        submitted_by=current_user.id if not payload.is_anonymous else None,
+        title        = payload.title,
+        description  = payload.description,
+        category     = payload.category,
+        department   = payload.department,
+        is_anonymous = payload.is_anonymous,
+        submitted_by = current_user.id if not payload.is_anonymous else None,
     )
     db.add(fb)
     db.flush()
@@ -81,7 +100,7 @@ def submit_feedback(
          f"{identity} submitted feedback: '{fb.title}' [{fb.category}]", current_user)
     db.commit()
     db.refresh(fb)
-    return fb
+    return _fb_out(fb)
 
 
 @router.patch("/{feedback_id}/status", response_model=FeedbackOut)
@@ -91,33 +110,30 @@ def update_status(
     db:           Session = Depends(get_db),
     current_user: User    = Depends(require_admin),
 ):
-    """
-    Admin updates feedback status.
-    Records WHO resolved it, WHEN, and marks notified=True so the submitter
-    knows their feedback was acted on.
-    """
     fb = db.query(Feedback).filter(Feedback.id == feedback_id).first()
     if not fb:
         raise HTTPException(status_code=404, detail="Feedback not found")
 
     new_status = payload.get("status")
-    if new_status not in [s.value for s in FeedbackStatus]:
-        raise HTTPException(status_code=400, detail="Invalid status value")
+    valid = [s.value for s in FeedbackStatus]
+    if new_status not in valid:
+        raise HTTPException(status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(valid)}")
 
-    old_status   = fb.status.value if hasattr(fb.status, "value") else str(fb.status)
-    fb.status    = new_status
-    fb.notified  = True                               # ← flag submitter for notification
+    old_status = fb.status.value if hasattr(fb.status, "value") else str(fb.status)
+    fb.status   = new_status
+    fb.notified = True
 
     if new_status == FeedbackStatus.Resolved.value:
-        fb.resolved_by  = current_user.id
-        fb.resolved_at  = datetime.now(timezone.utc)
+        fb.resolved_by = current_user.id
+        fb.resolved_at = datetime.now(timezone.utc)
 
     _log(db, "feedback.status_update",
          f"Admin {current_user.email} changed feedback #{feedback_id} "
          f"'{fb.title}' from {old_status} → {new_status}", current_user)
     db.commit()
     db.refresh(fb)
-    return fb
+    return _fb_out(fb)
 
 
 @router.delete("/{feedback_id}", status_code=204)

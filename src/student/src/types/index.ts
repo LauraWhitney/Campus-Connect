@@ -44,8 +44,12 @@ export interface Event {
   image?: string
   capacity?: number
   rsvpCount: number
+  pendingRsvpCount?: number
   hasRsvped?: boolean
-  createdBy: string
+  pendingRsvp?: boolean
+  isCreator?: boolean
+  creatorName?: string | null
+  createdBy?: string | number
   createdAt: string
 }
 
@@ -63,6 +67,7 @@ export interface MarketplaceItem {
   condition: ItemCondition
   category: ItemCategory
   images: string[]
+  contact?: string | null
   seller: Pick<User, '_id' | 'name' | 'email'>
   buyer?: Pick<User, '_id' | 'name' | 'email'> | null
   isSold: boolean
@@ -85,7 +90,10 @@ export interface Club {
   president: string
   email: string
   meetingSchedule?: string
+  meetingLocation?: string
   isMember?: boolean
+  hasPending?: boolean
+  isOwner?: boolean
   logo?: string
   createdAt: string
 }

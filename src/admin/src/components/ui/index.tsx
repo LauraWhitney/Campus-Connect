@@ -46,21 +46,23 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
 // ── Confirm Dialog ────────────────────────────────────
 interface ConfirmProps {
   open: boolean
-  onClose: () => void
+  onClose?: () => void
+  onCancel?: () => void
   onConfirm: () => void
   title: string
   message: string
   danger?: boolean
 }
-export function ConfirmDialog({ open, onClose, onConfirm, title, message, danger }: ConfirmProps) {
+export function ConfirmDialog({ open, onClose, onCancel, onConfirm, title, message, danger }: ConfirmProps) {
+  const handleClose = onCancel ?? onClose ?? (() => {})
   return (
-    <Modal open={open} onClose={onClose} title={title} size="sm">
+    <Modal open={open} onClose={handleClose} title={title} size="sm">
       <p className="text-surface-300 text-sm mb-5">{message}</p>
       <div className="flex gap-3">
-        <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+        <button type="button" onClick={handleClose} className="btn-secondary flex-1">Cancel</button>
         <button
           type="button"
-          onClick={() => { onConfirm(); onClose() }}
+          onClick={() => { onConfirm(); handleClose() }}
           className={clsx('flex-1 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all', danger
             ? 'bg-red-500/20 border border-red-500/40 text-red-300 hover:bg-red-500/30'
             : 'btn-primary')}
@@ -74,7 +76,12 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, message, danger
 }
 
 // ── EmptyState ────────────────────────────────────────
-export function EmptyState({ icon: Icon = Inbox, title, subtitle }: { icon?: LucideIcon; title: string; subtitle?: string }) {
+export function EmptyState({ icon: Icon = Inbox, title, subtitle, action }: {
+  icon?: LucideIcon
+  title: string
+  subtitle?: string
+  action?: ReactNode
+}) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="w-14 h-14 rounded-2xl bg-surface-700/60 border border-surface-600/40 flex items-center justify-center mb-4">
@@ -82,6 +89,7 @@ export function EmptyState({ icon: Icon = Inbox, title, subtitle }: { icon?: Luc
       </div>
       <p className="font-display text-base font-semibold text-white mb-1">{title}</p>
       {subtitle && <p className="text-surface-400 text-sm max-w-xs">{subtitle}</p>}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   )
 }
@@ -99,12 +107,58 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   )
 }
 
-// ── Table wrapper ─────────────────────────────────────
-export function Table({ children }: { children: ReactNode }) {
+// ── Column definition ─────────────────────────────────
+export interface ColumnDef<T = any> {
+  key: string
+  label: string
+  render?: (value: any, row: T) => ReactNode
+}
+
+// ── Table — supports both children and columns/data ──
+type TableWithChildren = { children: ReactNode; columns?: never; data?: never }
+type TableWithColumns<T> = { columns: ColumnDef<T>[]; data: T[]; children?: never }
+
+export function Table<T extends Record<string, any>>(
+  props: TableWithChildren | TableWithColumns<T>
+) {
+  // Children mode (raw thead/tbody passed in)
+  if ('children' in props && props.children !== undefined) {
+    return (
+      <div className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">{props.children}</table>
+        </div>
+      </div>
+    )
+  }
+
+  // Columns/data mode
+  const { columns, data } = props as TableWithColumns<T>
   return (
-    <div className="card overflow-hidden">
+    <div className="overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">{children}</table>
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-surface-700/40">
+              {columns.map(col => (
+                <th key={col.key} className="th">{col.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, ri) => (
+              <tr key={ri} className="table-row">
+                {columns.map(col => (
+                  <td key={col.key} className="td">
+                    {col.render
+                      ? col.render(row[col.key], row)
+                      : (row[col.key] ?? '—')}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )
@@ -113,7 +167,7 @@ export function Table({ children }: { children: ReactNode }) {
 // ── Skeleton rows ─────────────────────────────────────
 export function TableSkeleton({ cols = 5, rows = 6 }: { cols?: number; rows?: number }) {
   return (
-    <div className="card overflow-hidden">
+    <div className="overflow-hidden">
       <table className="w-full">
         <thead><tr className="border-b border-surface-700/40">
           {Array.from({ length: cols }).map((_, i) => (

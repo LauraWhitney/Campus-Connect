@@ -1,10 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { GraduationCap, Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { GraduationCap, Loader2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
-// ── CUEA Faculties (must match backend) ───────────────
 const FACULTIES = [
   'Faculty of Arts and Social Sciences',
   'Faculty of Commerce',
@@ -50,6 +49,7 @@ function PasswordStrength({ password }: { password: string }) {
 export default function RegisterPage() {
   const { register } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
   const [form, setForm] = useState({
     name: '', email: '', password: '', faculty: '', year_of_study: '',
   })
@@ -60,10 +60,9 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    // ── CUEA email domain check (client-side fast-fail) ──
     const domain = form.email.trim().toLowerCase().split('@')[1]
-    if (!['students.cuea.ac.ke', 'cuea.ac.ke'].includes(domain)) {
-      toast.error('Only CUEA email addresses are allowed (@students.cuea.ac.ke or @cuea.ac.ke)')
+    if (!['cuea.edu'].includes(domain)) {
+      setErrorMsg('Only @cuea.edu email addresses are accepted')
       return
     }
     const pwChecks = [
@@ -73,9 +72,10 @@ export default function RegisterPage() {
       /\d/.test(form.password),
     ]
     if (!pwChecks.every(Boolean)) {
-      toast.error('Please meet all password requirements')
+      setErrorMsg('Please meet all password requirements')
       return
     }
+    setErrorMsg('')
     setLoading(true)
     try {
       await register({
@@ -89,7 +89,8 @@ export default function RegisterPage() {
       const detail = err?.response?.data?.detail
       const msg = Array.isArray(detail)
         ? detail.map((d: any) => d.msg).join(', ')
-        : detail || 'Registration failed. Try a different email.'
+        : detail || 'Registration failed. Check your details and try again.'
+      setErrorMsg(msg)
       toast.error(msg)
     } finally {
       setLoading(false)
@@ -112,11 +113,18 @@ export default function RegisterPage() {
           </div>
           <h1 className="font-display text-2xl font-bold text-white">CUEA Campus Connect</h1>
           <p className="text-surface-400 text-sm mt-1">Create your student account</p>
-          <p className="text-indigo-400 text-xs mt-1">Use your @students.cuea.ac.ke email</p>
+          <p className="text-indigo-400 text-xs mt-1">Use your @cuea.edu email</p>
         </div>
 
         <div className="bg-surface-800/70 backdrop-blur-md border border-surface-700/40 rounded-2xl p-7 shadow-card">
           <h2 className="font-display text-lg font-semibold text-white mb-5">Register</h2>
+
+          {errorMsg && (
+            <div className="flex items-start gap-2 p-3 rounded-xl mb-4 bg-red-500/10 border border-red-500/20">
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              <p className="text-red-300 text-xs leading-relaxed">{errorMsg}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -126,15 +134,11 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-xs text-surface-400 mb-1.5 font-medium">
-                CUEA Email
-              </label>
+              <label htmlFor="email" className="block text-xs text-surface-400 mb-1.5 font-medium">CUEA Email</label>
               <input id="email" type="email" className="input"
-                placeholder="s123456@students.cuea.ac.ke"
+                placeholder="s123456@cuea.edu"
                 value={form.email} onChange={set('email')} required />
-              <p className="text-indigo-400/70 text-[11px] mt-1">
-                Must be @students.cuea.ac.ke or @cuea.ac.ke
-              </p>
+              <p className="text-indigo-400/70 text-[11px] mt-1">Must be @cuea.edu</p>
             </div>
 
             <div>

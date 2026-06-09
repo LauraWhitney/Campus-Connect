@@ -1,10 +1,19 @@
 import api from './index'
 import type { User } from '../types'
 
+function normaliseUser(u: any): User {
+  return {
+    ...u,
+    _id: String(u.id),
+    yearOfStudy: u.year_of_study ?? null,
+    createdAt: u.created_at,
+  }
+}
+
 export const authAPI = {
   login: async (email: string, password: string): Promise<{ user: User; token: string }> => {
     const { data } = await api.post('/auth/login', { email, password })
-    return data
+    return { user: normaliseUser(data.user), token: data.token }
   },
 
   register: async (userData: {
@@ -14,7 +23,6 @@ export const authAPI = {
     faculty?: string
     yearOfStudy?: number
   }): Promise<{ user: User; token: string }> => {
-    // Backend expects snake_case field names
     const payload = {
       name: userData.name,
       email: userData.email,
@@ -23,14 +31,13 @@ export const authAPI = {
       year_of_study: userData.yearOfStudy,
     }
     const { data } = await api.post('/auth/register', payload)
-    return data
+    return { user: normaliseUser(data.user), token: data.token }
   },
 
   me: async (token: string): Promise<User> => {
     const { data } = await api.get('/auth/me', {
       headers: { Authorization: `Bearer ${token}` },
     })
-    // /auth/me returns the User object directly (not wrapped in {user})
-    return data
+    return normaliseUser(data)
   },
 }

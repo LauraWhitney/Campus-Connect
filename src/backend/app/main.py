@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile, File, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
@@ -6,12 +6,17 @@ from starlette.middleware.base import BaseHTTPMiddleware
 import os
 import sys
 import time
+import uuid
+import shutil
 
 from app.core.config import settings
 from app.core.database import engine, Base
+from app.core.security import get_current_user
+from app.models.user import User
 
 from app.models import user, event, marketplace, club, lost_found, feedback  # noqa: F401
-from app.models.event import EventAttendance  # noqa: F401 — registers attendance table
+from app.models.event import EventAttendance, EventRSVP  # noqa: F401
+from app.models.club import ClubMembershipRequest  # noqa: F401
 from app.models import activity_log  # noqa: F401
 
 from app.routers import (
@@ -67,7 +72,7 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
-# ── Middleware (order matters — first added = outermost) ──
+# ── Middleware ─────────────────────────────────────────
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -90,6 +95,42 @@ app.include_router(lf_router.router,          prefix="/api")
 app.include_router(fb_router.router,          prefix="/api")
 app.include_router(admin_router.router,       prefix="/api")
 app.include_router(activity_router.router,    prefix="/api")
+
+
+# ── Image upload endpoint ──────────────────────────────
+ALLOWED_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+MAX_SIZE_MB   = 5
+
+
+@app.post("/api/upload")
+async def upload_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """Upload an image file. Returns the public URL path."""
+    if file.content_type not in ALLOWED_TYPES:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Only JPEG, PNG, GIF and WebP images are accepted."}
+        )
+
+    # Read and check size
+    data = await file.read()
+    if len(data) > MAX_SIZE_MB * 1024 * 1024:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": f"File too large. Maximum size is {MAX_SIZE_MB}MB."}
+        )
+
+    # Generate unique filename
+    ext      = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "jpg"
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    dest     = os.path.join(settings.upload_dir, filename)
+
+    with open(dest, "wb") as f:
+        f.write(data)
+
+    return {"url": f"/uploads/{filename}", "filename": filename}
 
 
 @app.get("/api/health")
