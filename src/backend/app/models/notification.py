@@ -36,4 +36,15 @@ class Notification(Base):
     is_read    = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    # ── Admin reply ─────────────────────────────────────
+    # For admin-audience notifications: reply_to_email is set when the
+    # notification came from someone without an account (e.g. the public
+    # Contact Us form), so a reply is emailed instead of posted in-app.
+    # When user_id is set, the reply is delivered as a new notification on
+    # that user's own notifications page.
+    reply_to_email = Column(String(255), nullable=True)
+    admin_reply    = Column(Text, nullable=True)
+    replied_by     = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    replied_at     = Column(DateTime(timezone=True), nullable=True)
+
     user = relationship("User", foreign_keys=[user_id])

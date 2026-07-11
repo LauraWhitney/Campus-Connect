@@ -58,6 +58,7 @@ def submit_contact_message(payload: ContactMessageCreate, db: Session = Depends(
         title="New Contact Us message",
         message=f"{payload.name} ({payload.email}): {payload.message[:120]}",
         link="/notifications",
+        reply_to_email=payload.email,
     )
     msg.admin_notified = True
 

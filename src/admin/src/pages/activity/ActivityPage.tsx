@@ -127,14 +127,14 @@ export default function ActivityPage() {
         </div>
       </div>
 
-      {loading ? <TableSkeleton cols={5} rows={12} /> : results.length === 0 ? (
-        <EmptyState icon={Activity}
-          title="No activity found"
-          subtitle={query
-            ? `No results for "${query}"`
-            : 'User actions across all modules will appear here.'} />
-      ) : (
-        <>
+      <div className="card">
+        {loading ? <TableSkeleton cols={5} rows={12} /> : results.length === 0 ? (
+          <EmptyState icon={Activity}
+            title="No activity found"
+            subtitle={query
+              ? `No results for "${query}"`
+              : 'User actions across all modules will appear here.'} />
+        ) : (
           <Table>
             <thead>
               <tr className="border-b border-surface-700/40">
@@ -185,9 +185,9 @@ export default function ActivityPage() {
               })}
             </tbody>
           </Table>
-          {!query && <Pagination page={page} pages={pages} onChange={setPage} />}
-        </>
-      )}
+        )}
+      </div>
+      {!loading && results.length > 0 && !query && <Pagination page={page} pages={pages} onChange={setPage} />}
     </div>
   )
 }

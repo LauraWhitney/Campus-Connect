@@ -7,14 +7,14 @@ import { TestDataCleanup } from '../../components/ui/TestDataCleanup'
 import toast from 'react-hot-toast'
 
 const ROLE_BADGE: Record<string, string> = {
-  admin: 'badge-brand', lecturer: 'badge-blue', student: 'badge-surface',
+  admin: 'badge-brand', lecturer: 'badge-yellow', student: 'badge-surface',
 }
 
-// Gradient index per role for avatar — borrows student palette
+// Gradient per role for avatar — maroon/gold CUEA palette only
 const ROLE_GRADIENT: Record<string, string> = {
   admin:    'linear-gradient(135deg, #c81e45, #d4af37)',
-  lecturer: 'linear-gradient(135deg, #3b82f6, #c81e45)',
-  student:  'linear-gradient(135deg, #d4af37, #a855f7)',
+  lecturer: 'linear-gradient(135deg, #e9ba3f, #b8912a)',
+  student:  'linear-gradient(135deg, #d4af37, #a0002a)',
 }
 
 export default function UsersPage() {
@@ -90,11 +90,11 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {loading ? <TableSkeleton cols={6} rows={8} /> : results.length === 0 ? (
-        <EmptyState icon={Users} title={query ? `No results for "${query}"` : 'No users found'}
-          subtitle={query ? 'Try a different search term.' : 'Registered users will appear here.'} />
-      ) : (
-        <>
+      <div className="card">
+        {loading ? <TableSkeleton cols={6} rows={8} /> : results.length === 0 ? (
+          <EmptyState icon={Users} title={query ? `No results for "${query}"` : 'No users found'}
+            subtitle={query ? 'Try a different search term.' : 'Registered users will appear here.'} />
+        ) : (
           <Table>
             <thead>
               <tr className="border-b border-surface-700/40">
@@ -144,9 +144,9 @@ export default function UsersPage() {
               ))}
             </tbody>
           </Table>
-          {!query && <Pagination page={page} pages={pages} onChange={setPage} />}
-        </>
-      )}
+        )}
+      </div>
+      {!loading && results.length > 0 && !query && <Pagination page={page} pages={pages} onChange={setPage} />}
 
       <ConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete}
         title="Delete User" message={`Permanently delete "${deleteTarget?.name}" (${deleteTarget?.email})? This cannot be undone.`} danger />

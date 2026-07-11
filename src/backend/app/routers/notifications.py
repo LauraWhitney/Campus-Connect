@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
+from pydantic import BaseModel, field_validator
+from datetime import datetime, timezone
 import math
 
 from app.core.database import get_db
 from app.core.security import get_current_user, require_admin
+from app.core.notify import notify_user
+from app.core.email_utils import send_email
 from app.models.user import User
 from app.models.notification import Notification, NotificationAudience
 
@@ -22,6 +26,9 @@ def _out(n: Notification) -> dict:
         "link":       n.link,
         "is_read":    n.is_read,
         "created_at": n.created_at,
+        "admin_reply":     n.admin_reply,
+        "replied_at":      n.replied_at,
+        "can_reply":       bool(n.user_id or n.reply_to_email),
     }
 
 
@@ -155,3 +162,64 @@ def admin_mark_all_read(db: Session = Depends(get_db), _=Depends(require_admin))
     ).update({"is_read": True})
     db.commit()
     return {"message": "All notifications marked as read"}
+
+
+class ReplyRequest(BaseModel):
+    message: str
+
+    @field_validator("message")
+    @classmethod
+    def not_blank(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Reply cannot be blank")
+        return v[:500]
+
+
+@admin_router.post("/{notification_id}/reply")
+def reply_to_notification(
+    notification_id: int,
+    payload: ReplyRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """
+    Reply to an admin notification. If the notification is tied to a
+    registered user (e.g. an event submission), the reply is delivered as a
+    new notification on that user's own notifications page. Otherwise, if it
+    came from someone without an account (e.g. the public Contact Us form),
+    the reply is emailed to them instead.
+    """
+    n = db.query(Notification).filter(
+        Notification.id == notification_id, Notification.audience == NotificationAudience.admin
+    ).first()
+    if not n:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    if not n.user_id and not n.reply_to_email:
+        raise HTTPException(status_code=400, detail="This notification has no one to reply to")
+
+    n.admin_reply = payload.message
+    n.replied_by  = current_user.id
+    n.replied_at  = datetime.now(timezone.utc)
+
+    if n.user_id:
+        notify_user(
+            db,
+            user_id=n.user_id,
+            type_=n.type.value if hasattr(n.type, "value") else n.type,
+            title="Reply from Admin",
+            message=payload.message,
+            link=n.link,
+        )
+    elif n.reply_to_email:
+        send_email(
+            to=n.reply_to_email,
+            subject=f"Re: {n.title}",
+            body=f"You previously contacted CUEA Campus Connect:\n\n"
+                 f"  {n.message}\n\n"
+                 f"Administrator's reply:\n\n{payload.message}",
+        )
+
+    db.commit()
+    db.refresh(n)
+    return _out(n)

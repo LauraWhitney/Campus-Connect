@@ -11,9 +11,9 @@ import toast from 'react-hot-toast'
 const FILTERS = ['All', 'Lost', 'Found', 'Claimed']
 
 const STATUS_STYLE: Record<string, { gradient: string; badge: { bg: string; text: string; border: string } }> = {
-  Lost:    { gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)', badge: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' } },
-  Found:   { gradient: 'linear-gradient(135deg,#10b981,#06b6d4)', badge: { bg: '#d1fae5', text: '#065f46', border: '#6ee7b7' } },
-  Claimed: { gradient: 'linear-gradient(135deg,#64748b,#475569)', badge: { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' } },
+  Lost:    { gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)', badge: { bg: 'rgba(239,68,68,0.15)', text: '#fca5a5', border: 'rgba(239,68,68,0.3)' } },
+  Found:   { gradient: 'linear-gradient(135deg,#10b981,#06b6d4)', badge: { bg: 'rgba(16,185,129,0.15)', text: '#6ee7b7', border: 'rgba(16,185,129,0.3)' } },
+  Claimed: { gradient: 'linear-gradient(135deg,#64748b,#475569)', badge: { bg: 'rgba(255,255,255,0.08)', text: '#cbd5e1', border: 'rgba(255,255,255,0.15)' } },
 }
 
 function LostFoundCard({ item, currentUserId, onClaim, onMarkFound, onDelete }: {
@@ -141,7 +141,7 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
     } finally { setLoading(false) }
   }
 
-  const lbl = 'block text-xs text-slate-600 mb-1.5 font-medium'
+  const lbl = 'block text-xs text-slate-300 mb-1.5 font-medium'
   return (
     <Modal open={open} onClose={onClose} title="Report Lost / Found Item">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -150,13 +150,13 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
           <label className={lbl}>Photo <span className="text-slate-400">(optional)</span></label>
           <div onClick={() => fileRef.current?.click()}
             className="w-full h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition-colors overflow-hidden"
-            style={{ borderColor: previewUrl ? 'transparent' : '#fae3a3', background: previewUrl ? 'transparent' : '#fefaf0' }}>
+            style={{ borderColor: previewUrl ? 'transparent' : 'rgba(200,30,69,0.4)', background: previewUrl ? 'transparent' : 'rgba(255,255,255,0.05)' }}>
             {previewUrl ? (
               <img src={previewUrl} alt="preview" className="w-full h-full object-cover rounded-xl" />
             ) : (
               <div className="flex flex-col items-center gap-1">
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin text-indigo-400" /> : <ImagePlus className="w-4 h-4 text-indigo-400" />}
-                <span className="text-indigo-500 text-xs">{uploading ? 'Uploading…' : 'Click to add photo'}</span>
+                <span className="text-indigo-300 text-xs">{uploading ? 'Uploading…' : 'Click to add photo'}</span>
               </div>
             )}
           </div>

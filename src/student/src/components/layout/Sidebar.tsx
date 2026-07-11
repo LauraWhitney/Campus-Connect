@@ -34,7 +34,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
           open ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0 lg:static lg:z-auto',
         )}
-        style={{ background: 'linear-gradient(180deg,#0a0e1a 0%,#0f172a 50%,#2e000b 100%)' }}
+        style={{ background: 'linear-gradient(180deg,#0a0e1a 0%,#0f0e1a 100%)' }}
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/5">

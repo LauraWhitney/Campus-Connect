@@ -73,7 +73,7 @@ export default function NotificationsPage() {
         action={
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => load()}
-              className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
               title="Refresh" aria-label="Refresh notifications">
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -112,10 +112,10 @@ export default function NotificationsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-slate-900 text-sm font-semibold truncate">{n.title}</p>
+                    <p className="text-white text-sm font-semibold truncate">{n.title}</p>
                     {!n.is_read && <span className="w-2 h-2 rounded-full bg-primary-500 shrink-0" />}
                   </div>
-                  <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">{n.message}</p>
+                  <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{n.message}</p>
                   <p className="text-slate-400 text-[11px] mt-1.5">{formatTime(n.created_at)}</p>
                 </div>
               </button>

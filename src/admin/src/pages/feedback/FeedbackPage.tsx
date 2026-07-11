@@ -6,7 +6,7 @@ import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, Modal } from 
 import toast from 'react-hot-toast'
 
 const STATUS_BADGE: Record<string, string> = {
-  Pending: 'badge-yellow', Reviewed: 'badge-blue', Resolved: 'badge-green',
+  Pending: 'badge-brand', Reviewed: 'badge-yellow', Resolved: 'badge-green',
 }
 const CAT_GRADIENT: Record<string, string> = {
   Academic:       'linear-gradient(135deg,#3b82f6,#c81e45)',
@@ -55,10 +55,10 @@ export default function FeedbackPage() {
       <PageHeader title="Feedback & Reports"
         subtitle={`${total} submission${total !== 1 ? 's' : ''} · ${pendingCount} pending`} />
 
-      {loading ? <TableSkeleton cols={7} rows={8} /> : items.length === 0 ? (
-        <EmptyState icon={MessageSquare} title="No feedback yet" subtitle="Student feedback will appear here." />
-      ) : (
-        <>
+      <div className="card">
+        {loading ? <TableSkeleton cols={7} rows={8} /> : items.length === 0 ? (
+          <EmptyState icon={MessageSquare} title="No feedback yet" subtitle="Student feedback will appear here." />
+        ) : (
           <Table>
             <thead>
               <tr className="border-b border-surface-700/40">
@@ -79,7 +79,7 @@ export default function FeedbackPage() {
                     <div className="flex items-center gap-1.5">
                       {/* Bell if admin responded */}
                       {fb.notified && fb.status !== 'Pending' && (
-                        <span title="Student notified"><Bell className="w-3 h-3 text-emerald-400 shrink-0" /></span>
+                        <span title="Student notified"><Bell className="w-3 h-3 text-primary-400 shrink-0" /></span>
                       )}
                       <span className="truncate">{fb.title}</span>
                     </div>
@@ -126,9 +126,9 @@ export default function FeedbackPage() {
               ))}
             </tbody>
           </Table>
-          <Pagination page={page} pages={pages} onChange={setPage} />
-        </>
-      )}
+        )}
+      </div>
+      {!loading && items.length > 0 && <Pagination page={page} pages={pages} onChange={setPage} />}
 
       {/* View modal */}
       <Modal open={!!viewTarget} onClose={() => setViewTarget(null)} title="Feedback Details" size="md">

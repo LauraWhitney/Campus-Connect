@@ -7,24 +7,16 @@ import {
 import { statsAPI } from '../../api/admin'
 import type { DashboardStats } from '../../types'
 
-// Same gradient palette as student DashboardPage
-const CARD_GRADIENTS = [
-  { bg: 'linear-gradient(135deg, #3b82f6 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(59,130,246,0.35)'  },
-  { bg: 'linear-gradient(135deg, #c81e45 0%, #d4af37 100%)', shadow: '0 8px 24px rgba(200,30,69,0.35)'  },
-  { bg: 'linear-gradient(135deg, #d4af37 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(212,175,55,0.35)'  },
-  { bg: 'linear-gradient(135deg, #3b82f6 0%, #d4af37 100%)', shadow: '0 8px 24px rgba(59,130,246,0.30)'  },
-  { bg: 'linear-gradient(135deg, #c81e45 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(200,30,69,0.30)'  },
-  { bg: 'linear-gradient(135deg, #d4af37 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(212,175,55,0.30)'  },
-  { bg: 'linear-gradient(135deg, #06b6d4 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(6,182,212,0.30)'   },
-]
+// Single red brand style for every stat card — muted, not bright — same as student DashboardPage
+const CARD_STYLE = { bg: 'linear-gradient(135deg, #4d0013 0%, #800022 100%)', shadow: '0 6px 20px rgba(77,0,19,0.3)' }
 
-const CHART_COLORS = ['#c81e45', '#d4af37', '#3b82f6', '#06b6d4', '#a855f7', '#ec4899']
+const CHART_COLORS = ['#c81e45', '#d4af37', '#a0002a', '#e9ba3f', '#800022', '#b8912a']
 
 const TOOLTIP_STYLE = {
-  backgroundColor: '#ffffff',
-  border: '1px solid rgba(200,30,69,0.2)',
+  backgroundColor: '#1a0007',
+  border: '1px solid rgba(200,30,69,0.3)',
   borderRadius: '10px',
-  color: '#0f172a',
+  color: '#ffffff',
   fontSize: '12px',
 }
 
@@ -32,14 +24,12 @@ interface GradientStatCardProps {
   icon: React.ReactNode
   label: string
   value: number | string
-  gradientIndex: number
 }
 
-function GradientStatCard({ icon, label, value, gradientIndex }: GradientStatCardProps) {
-  const g = CARD_GRADIENTS[gradientIndex % CARD_GRADIENTS.length]
+function GradientStatCard({ icon, label, value }: GradientStatCardProps) {
   return (
     <div className="rounded-2xl p-5 flex items-start gap-4 transition-all duration-300 hover:scale-[1.02]"
-      style={{ background: g.bg, boxShadow: g.shadow }}>
+      style={{ background: CARD_STYLE.bg, boxShadow: CARD_STYLE.shadow }}>
       <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm">
         {icon}
       </div>
@@ -55,20 +45,16 @@ function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       {Array.from({ length: 7 }).map((_, i) => (
-        <div key={i} className="rounded-2xl p-5 flex items-start gap-4 animate-pulse bg-slate-200" style={{ height: 96 }} />
+        <div key={i} className="rounded-2xl p-5 flex items-start gap-4 animate-pulse bg-white/5" style={{ height: 96 }} />
       ))}
     </div>
   )
 }
 
-// The "Recently Registered Users" table sits on a light card (unlike the
-// rest of this dark-themed app), so it needs its own light-appropriate
-// badge colors — the shared badge-* classes elsewhere are tuned for dark
-// backgrounds and read poorly on white.
-const ROLE_BADGE_LIGHT: Record<string, string> = {
-  admin:    'bg-primary-100 text-primary-700 border-primary-200',
-  lecturer: 'bg-blue-100 text-blue-700 border-blue-200',
-  student:  'bg-slate-100 text-slate-600 border-slate-200',
+const ROLE_BADGE: Record<string, string> = {
+  admin:    'badge-brand',
+  lecturer: 'badge-yellow',
+  student:  'badge-surface',
 }
 
 export default function DashboardPage() {
@@ -99,7 +85,7 @@ export default function DashboardPage() {
       {/* ── Hero header — same indigo→purple gradient as student greeting card ── */}
       <div className="rounded-2xl p-6 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #a0002a 0%, #b8912a 50%, #9333ea 100%)',
+          background: 'linear-gradient(135deg, #a0002a 0%, #c81e45 55%, #d4af37 100%)',
           boxShadow: '0 12px 40px rgba(200,30,69,0.4)',
         }}>
         <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/10 blur-2xl pointer-events-none" />
@@ -123,21 +109,21 @@ export default function DashboardPage() {
       {/* ── Gradient stat cards — same palette as student ── */}
       {loading ? <StatsSkeleton /> : (
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          <GradientStatCard gradientIndex={0} icon={<Users className="w-5 h-5 text-white" />}       label="Total Users"       value={stats!.total_users} />
-          <GradientStatCard gradientIndex={1} icon={<Calendar className="w-5 h-5 text-white" />}    label="Total Events"      value={stats!.total_events} />
-          <GradientStatCard gradientIndex={2} icon={<ShoppingBag className="w-5 h-5 text-white" />} label="Marketplace"       value={stats!.total_marketplace_items} />
-          <GradientStatCard gradientIndex={3} icon={<UserCheck className="w-5 h-5 text-white" />}   label="Active Clubs"      value={stats!.total_clubs} />
-          <GradientStatCard gradientIndex={4} icon={<Search className="w-5 h-5 text-white" />}      label="Lost & Found"      value={stats!.total_lost_found} />
-          <GradientStatCard gradientIndex={5} icon={<MessageSquare className="w-5 h-5 text-white" />} label="Total Feedback"  value={stats!.total_feedback} />
-          <GradientStatCard gradientIndex={6} icon={<Clock className="w-5 h-5 text-white" />}       label="Pending Feedback"  value={stats!.pending_feedback} />
+          <GradientStatCard icon={<Users className="w-5 h-5 text-white" />}       label="Total Users"       value={stats!.total_users} />
+          <GradientStatCard icon={<Calendar className="w-5 h-5 text-white" />}    label="Total Events"      value={stats!.total_events} />
+          <GradientStatCard icon={<ShoppingBag className="w-5 h-5 text-white" />} label="Marketplace"       value={stats!.total_marketplace_items} />
+          <GradientStatCard icon={<UserCheck className="w-5 h-5 text-white" />}   label="Active Clubs"      value={stats!.total_clubs} />
+          <GradientStatCard icon={<Search className="w-5 h-5 text-white" />}      label="Lost & Found"      value={stats!.total_lost_found} />
+          <GradientStatCard icon={<MessageSquare className="w-5 h-5 text-white" />} label="Total Feedback"  value={stats!.total_feedback} />
+          <GradientStatCard icon={<Clock className="w-5 h-5 text-white" />}       label="Pending Feedback"  value={stats!.pending_feedback} />
         </div>
       )}
 
       {/* ── Charts ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 lg:col-span-2 shadow-sm">
-          <h3 className="font-display text-base font-semibold text-slate-900 mb-5">Platform Activity</h3>
-          {loading ? <div className="h-52 bg-slate-100 rounded-xl animate-pulse" /> : (
+        <div className="card p-5 lg:col-span-2">
+          <h3 className="font-display text-base font-semibold text-white mb-5">Platform Activity</h3>
+          {loading ? <div className="h-52 bg-white/5 rounded-xl animate-pulse" /> : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={overviewData} barSize={28}>
                 <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -151,16 +137,16 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <h3 className="font-display text-base font-semibold text-slate-900 mb-5">Feedback Status</h3>
-          {loading ? <div className="h-52 bg-slate-100 rounded-xl animate-pulse" /> : (
+        <div className="card p-5">
+          <h3 className="font-display text-base font-semibold text-white mb-5">Feedback Status</h3>
+          {loading ? <div className="h-52 bg-white/5 rounded-xl animate-pulse" /> : (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={feedbackPie} cx="50%" cy="45%" innerRadius={50} outerRadius={75} paddingAngle={4} dataKey="value">
                   <Cell fill="#c81e45" />
-                  <Cell fill="#10b981" />
+                  <Cell fill="#d4af37" />
                 </Pie>
-                <Legend formatter={(v) => <span style={{ color: '#64748b', fontSize: 12 }}>{v}</span>} />
+                <Legend formatter={(v) => <span style={{ color: '#cbd5e1', fontSize: 12 }}>{v}</span>} />
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
               </PieChart>
             </ResponsiveContainer>
@@ -169,39 +155,39 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Recent users ── */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="font-display text-base font-semibold text-slate-900">Recently Registered Users</h3>
+      <div className="card overflow-hidden">
+        <div className="px-5 py-4 border-b border-indigo-900/60 flex items-center justify-between">
+          <h3 className="font-display text-base font-semibold text-white">Recently Registered Users</h3>
           <ArrowRight className="w-4 h-4 text-slate-400" />
         </div>
         {loading ? (
           <div className="p-5 space-y-3">
             {[1,2,3,4].map(i => (
               <div key={i} className="flex items-center gap-3 animate-pulse">
-                <div className="w-8 h-8 rounded-full bg-slate-200" />
+                <div className="w-8 h-8 rounded-full bg-white/10" />
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-3 bg-slate-200 rounded w-1/3" />
-                  <div className="h-2.5 bg-slate-100 rounded w-1/2" />
+                  <div className="h-3 bg-white/10 rounded w-1/3" />
+                  <div className="h-2.5 bg-white/5 rounded w-1/2" />
                 </div>
-                <div className="h-5 w-16 bg-slate-200 rounded-full" />
+                <div className="h-5 w-16 bg-white/10 rounded-full" />
               </div>
             ))}
           </div>
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-200">
-                <th className="th text-slate-500">Name</th>
-                <th className="th text-slate-500">Email</th>
-                <th className="th text-slate-500">Role</th>
-                <th className="th text-slate-500 hidden sm:table-cell">Faculty</th>
-                <th className="th text-slate-500 hidden md:table-cell">Joined</th>
+              <tr className="border-b border-indigo-900/60">
+                <th className="th">Name</th>
+                <th className="th">Email</th>
+                <th className="th">Role</th>
+                <th className="th hidden sm:table-cell">Faculty</th>
+                <th className="th hidden md:table-cell">Joined</th>
               </tr>
             </thead>
             <tbody>
               {(stats?.recent_users ?? []).map(u => (
-                <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="td font-medium text-slate-900">
+                <tr key={u.id} className="table-row">
+                  <td className="td font-medium text-white">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                         style={{ background: 'linear-gradient(135deg,#c81e45,#d4af37)' }}>
@@ -210,9 +196,9 @@ export default function DashboardPage() {
                       {u.name}
                     </div>
                   </td>
-                  <td className="td text-slate-500">{u.email}</td>
-                  <td className="td"><span className={`badge ${ROLE_BADGE_LIGHT[u.role] ?? ROLE_BADGE_LIGHT.student}`}>{u.role}</span></td>
-                  <td className="td text-slate-500 hidden sm:table-cell">{u.faculty ?? '—'}</td>
+                  <td className="td">{u.email}</td>
+                  <td className="td"><span className={ROLE_BADGE[u.role] ?? ROLE_BADGE.student}>{u.role}</span></td>
+                  <td className="td hidden sm:table-cell">{u.faculty ?? '—'}</td>
                   <td className="td text-slate-400 hidden md:table-cell">
                     {new Date(u.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>

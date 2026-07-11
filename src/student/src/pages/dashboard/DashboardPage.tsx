@@ -7,16 +7,8 @@ import { marketplaceAPI } from '../../api/marketplace'
 import { clubsAPI } from '../../api/clubs'
 import type { Event, MarketplaceItem, Club } from '../../types'
 
-// ── Alternating blue→purple card gradients ─────────────
-// Even index = blue-leaning, Odd index = purple-leaning
-const CARD_GRADIENTS = [
-  { bg: 'linear-gradient(135deg, #3b82f6 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(59,130,246,0.35)'  }, // blue→indigo
-  { bg: 'linear-gradient(135deg, #c81e45 0%, #d4af37 100%)', shadow: '0 8px 24px rgba(200,30,69,0.35)' }, // indigo→purple
-  { bg: 'linear-gradient(135deg, #d4af37 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(212,175,55,0.35)' }, // purple→violet
-  { bg: 'linear-gradient(135deg, #3b82f6 0%, #d4af37 100%)', shadow: '0 8px 24px rgba(59,130,246,0.30)'  }, // blue→purple
-  { bg: 'linear-gradient(135deg, #c81e45 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(200,30,69,0.30)' }, // indigo→violet
-  { bg: 'linear-gradient(135deg, #d4af37 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(212,175,55,0.30)' }, // purple→indigo
-]
+// ── Single red brand style for every stat card — muted, not bright ──
+const CARD_STYLE = { bg: 'linear-gradient(135deg, #4d0013 0%, #800022 100%)', shadow: '0 6px 20px rgba(77,0,19,0.3)' }
 
 interface StatCardProps {
   icon: React.ReactNode
@@ -24,16 +16,14 @@ interface StatCardProps {
   value: string | number
   sub?: string
   to: string
-  gradientIndex: number
 }
 
-function StatCard({ icon, label, value, sub, to, gradientIndex }: StatCardProps) {
-  const g = CARD_GRADIENTS[gradientIndex % CARD_GRADIENTS.length]
+function StatCard({ icon, label, value, sub, to }: StatCardProps) {
   return (
     <Link
       to={to}
       className="rounded-2xl p-5 flex items-start gap-4 group cursor-pointer transition-all duration-300 hover:scale-[1.02]"
-      style={{ background: g.bg, boxShadow: g.shadow }}
+      style={{ background: CARD_STYLE.bg, boxShadow: CARD_STYLE.shadow }}
     >
       <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm">
         {icon}
@@ -50,14 +40,14 @@ function StatCard({ icon, label, value, sub, to, gradientIndex }: StatCardProps)
 
 function QuickEventCard({ event }: { event: Event }) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-      <div className="w-10 h-10 rounded-lg bg-primary-50 border border-primary-100 flex flex-col items-center justify-center shrink-0">
-        <span className="text-primary-600 text-xs font-bold leading-none">{new Date(event.date).getDate()}</span>
+    <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors">
+      <div className="w-10 h-10 rounded-lg bg-primary-500/10 border border-primary-500/20 flex flex-col items-center justify-center shrink-0">
+        <span className="text-primary-300 text-xs font-bold leading-none">{new Date(event.date).getDate()}</span>
         <span className="text-primary-400 text-[10px] uppercase">{new Date(event.date).toLocaleString('default', { month: 'short' })}</span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-slate-800 text-sm font-medium truncate">{event.title}</p>
-        <p className="text-slate-500 text-xs">{event.venue} · {event.time}</p>
+        <p className="text-white text-sm font-medium truncate">{event.title}</p>
+        <p className="text-slate-400 text-xs">{event.venue} · {event.time}</p>
       </div>
       <span className="badge-brand shrink-0 text-[10px]">{event.category}</span>
     </div>
@@ -66,15 +56,15 @@ function QuickEventCard({ event }: { event: Event }) {
 
 function QuickItemCard({ item }: { item: MarketplaceItem }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-      <div className="w-10 h-10 rounded-lg bg-primary-50 border border-primary-100 flex items-center justify-center shrink-0">
-        <ShoppingBag className="w-4 h-4 text-primary-500" />
+    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors">
+      <div className="w-10 h-10 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0">
+        <ShoppingBag className="w-4 h-4 text-primary-400" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-slate-800 text-sm font-medium truncate">{item.title}</p>
-        <p className="text-slate-500 text-xs">{item.condition} · {item.category}</p>
+        <p className="text-white text-sm font-medium truncate">{item.title}</p>
+        <p className="text-slate-400 text-xs">{item.condition} · {item.category}</p>
       </div>
-      <span className="text-primary-600 text-sm font-semibold shrink-0">${Number(item.price).toLocaleString()}</span>
+      <span className="text-primary-300 text-sm font-semibold shrink-0">${Number(item.price).toLocaleString()}</span>
     </div>
   )
 }
@@ -106,7 +96,7 @@ export default function DashboardPage() {
       <div
         className="rounded-2xl p-7 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #a0002a 0%, #b8912a 50%, #9333ea 100%)',
+          background: 'linear-gradient(135deg, #a0002a 0%, #c81e45 55%, #d4af37 100%)',
           boxShadow: '0 12px 40px rgba(200,30,69,0.4)',
         }}
       >
@@ -158,32 +148,32 @@ export default function DashboardPage() {
       {/* ── Stat cards — alternating blue→purple gradients ── */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <StatCard
-          to="/app/events" gradientIndex={0}
+          to="/app/events"
           icon={<Calendar className="w-5 h-5 text-white" />}
           label="Upcoming Events" value={events.length || '—'} sub="This week"
         />
         <StatCard
-          to="/app/marketplace" gradientIndex={1}
+          to="/app/marketplace"
           icon={<ShoppingBag className="w-5 h-5 text-white" />}
           label="Marketplace" value={items.length || '—'} sub="Available now"
         />
         <StatCard
-          to="/app/clubs" gradientIndex={2}
+          to="/app/clubs"
           icon={<Users className="w-5 h-5 text-white" />}
           label="Active Clubs" value={loading ? '—' : clubs.length} sub="Join one today"
         />
         <StatCard
-          to="/app/lost-found" gradientIndex={3}
+          to="/app/lost-found"
           icon={<Search className="w-5 h-5 text-white" />}
           label="Lost & Found" value="Reports" sub="Help your peers"
         />
         <StatCard
-          to="/app/feedback" gradientIndex={4}
+          to="/app/feedback"
           icon={<MessageSquare className="w-5 h-5 text-white" />}
           label="Feedback" value="Departments" sub="Your voice matters"
         />
         <StatCard
-          to="/app/events" gradientIndex={5}
+          to="/app/events"
           icon={<TrendingUp className="w-5 h-5 text-white" />}
           label="Your Role" value={user?.role ?? '—'}
           sub={user?.yearOfStudy ? `Year ${user.yearOfStudy}` : 'Campus Connect'}
@@ -196,14 +186,14 @@ export default function DashboardPage() {
         {/* Upcoming events */}
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-base font-semibold text-slate-900">Upcoming Events</h3>
-            <Link to="/app/events" className="text-primary-600 text-xs hover:text-primary-700 flex items-center gap-1 font-medium">
+            <h3 className="font-display text-base font-semibold text-white">Upcoming Events</h3>
+            <Link to="/app/events" className="text-primary-300 text-xs hover:text-primary-200 flex items-center gap-1 font-medium">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           {loading ? (
             <div className="space-y-2">
-              {[1,2,3].map(i => <div key={i} className="h-14 bg-slate-100 rounded-xl animate-pulse" />)}
+              {[1,2,3].map(i => <div key={i} className="h-14 bg-white/5 rounded-xl animate-pulse" />)}
             </div>
           ) : events.length === 0 ? (
             <p className="text-slate-400 text-sm text-center py-6">No upcoming events</p>
@@ -217,14 +207,14 @@ export default function DashboardPage() {
         {/* Recent marketplace listings */}
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-base font-semibold text-slate-900">Marketplace</h3>
-            <Link to="/app/marketplace" className="text-primary-600 text-xs hover:text-primary-700 flex items-center gap-1 font-medium">
+            <h3 className="font-display text-base font-semibold text-white">Marketplace</h3>
+            <Link to="/app/marketplace" className="text-primary-300 text-xs hover:text-primary-200 flex items-center gap-1 font-medium">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           {loading ? (
             <div className="space-y-2">
-              {[1,2,3].map(i => <div key={i} className="h-14 bg-slate-100 rounded-xl animate-pulse" />)}
+              {[1,2,3].map(i => <div key={i} className="h-14 bg-white/5 rounded-xl animate-pulse" />)}
             </div>
           ) : items.length === 0 ? (
             <p className="text-slate-400 text-sm text-center py-6">No listings yet</p>

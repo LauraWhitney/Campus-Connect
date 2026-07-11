@@ -58,7 +58,7 @@ function JoinFormModal({ club, open, onClose, onJoined }: {
     } finally { setLoading(false) }
   }
 
-  const lbl = 'block text-xs text-slate-600 mb-1.5 font-medium'
+  const lbl = 'block text-xs text-slate-300 mb-1.5 font-medium'
   return (
     <Modal open={open} onClose={onClose} title={`Join ${club.name}`}>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -90,7 +90,7 @@ function JoinFormModal({ club, open, onClose, onJoined }: {
             <Mail className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
             <span className="truncate">{user?.email}</span>
           </div>
-          <p className="text-slate-500 text-[11px] mt-1">Used to identify you to the club — no admission number needed.</p>
+          <p className="text-slate-400 text-[11px] mt-1">Used to identify you to the club — no admission number needed.</p>
         </div>
         <div className="flex gap-3 pt-2">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
@@ -317,11 +317,11 @@ function CreateClubModal({ open, onClose, onCreated }: { open: boolean; onClose:
     finally { setLoading(false) }
   }
 
-  const lbl = 'block text-xs text-slate-600 mb-1.5 font-medium'
+  const lbl = 'block text-xs text-slate-300 mb-1.5 font-medium'
   return (
     <Modal open={open} onClose={onClose} title="Register a Club">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-xs text-slate-400 bg-slate-50 rounded-lg p-2.5 border border-slate-200">
+        <p className="text-xs text-slate-400 bg-white/5 rounded-lg p-2.5 border border-indigo-900/60">
           Only school-registered clubs may be created. The club must not already exist in the system.
         </p>
         <div><label className={lbl}>Club Name</label>

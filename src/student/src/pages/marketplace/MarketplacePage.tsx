@@ -14,10 +14,10 @@ const CATEGORIES: string[] = [
 const CONDITIONS: ItemCondition[] = ['New', 'Like New', 'Good', 'Fair']
 
 const COND_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-  New:        { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
-  'Like New': { bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' },
-  Good:       { bg: '#fdf3d6', text: '#660019', border: '#fae3a3' },
-  Fair:       { bg: '#f1f5f9', text: '#475569', border: '#e2e8f0' },
+  New:        { bg: 'rgba(16,185,129,0.15)', text: '#6ee7b7', border: 'rgba(16,185,129,0.3)' },
+  'Like New': { bg: 'rgba(20,184,166,0.15)', text: '#5eead4', border: 'rgba(20,184,166,0.3)' },
+  Good:       { bg: 'rgba(212,175,55,0.15)', text: '#f5cd6b', border: 'rgba(212,175,55,0.3)' },
+  Fair:       { bg: 'rgba(255,255,255,0.08)', text: '#cbd5e1', border: 'rgba(255,255,255,0.15)' },
 }
 const CAT_GRADIENT: Record<string, string> = {
   Books: 'linear-gradient(135deg,#3b82f6,#c81e45)', Electronics: 'linear-gradient(135deg,#c81e45,#d4af37)',
@@ -57,7 +57,7 @@ function ItemCard({ item, currentUserId, onMarkSold, onMarkUnsold, onDelete }: {
             <h3 className="font-display font-semibold text-white text-sm leading-snug line-clamp-2">{item.title}</h3>
             <p className="text-indigo-300 text-xs mt-0.5">
               {item.seller.name}
-              {item.isSold && item.buyer && <span className="text-slate-500"> → sold to {item.buyer.name}</span>}
+              {item.isSold && item.buyer && <span className="text-slate-400"> → sold to {item.buyer.name}</span>}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
@@ -84,7 +84,7 @@ function ItemCard({ item, currentUserId, onMarkSold, onMarkUnsold, onDelete }: {
           </div>
           <span className="text-indigo-300 text-xs">{item.category}</span>
           {item.soldAt && (
-            <span className="text-slate-500 text-xs ml-auto">
+            <span className="text-slate-400 text-xs ml-auto">
               Sold {new Date(item.soldAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
             </span>
           )}
@@ -184,7 +184,7 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
     } finally { setLoading(false) }
   }
 
-  const lbl = 'block text-xs text-slate-600 mb-1.5 font-medium'
+  const lbl = 'block text-xs text-slate-300 mb-1.5 font-medium'
   return (
     <Modal open={open} onClose={onClose} title="List an Item">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -193,13 +193,13 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
           <label className={lbl}>Photo <span className="text-slate-400">(optional)</span></label>
           <div onClick={() => fileRef.current?.click()}
             className="w-full h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition-colors overflow-hidden"
-            style={{ borderColor: previewUrl ? 'transparent' : '#fae3a3', background: previewUrl ? 'transparent' : '#fefaf0' }}>
+            style={{ borderColor: previewUrl ? 'transparent' : 'rgba(200,30,69,0.4)', background: previewUrl ? 'transparent' : 'rgba(255,255,255,0.05)' }}>
             {previewUrl ? (
               <img src={previewUrl} alt="preview" className="w-full h-full object-cover rounded-xl" />
             ) : (
               <div className="flex flex-col items-center gap-1.5">
                 {uploading ? <Loader2 className="w-5 h-5 animate-spin text-indigo-400" /> : <ImagePlus className="w-5 h-5 text-indigo-400" />}
-                <span className="text-indigo-500 text-xs">{uploading ? 'Uploading…' : 'Click to upload photo'}</span>
+                <span className="text-indigo-300 text-xs">{uploading ? 'Uploading…' : 'Click to upload photo'}</span>
               </div>
             )}
           </div>

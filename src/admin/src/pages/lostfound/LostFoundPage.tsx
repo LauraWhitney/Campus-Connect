@@ -54,10 +54,10 @@ export default function LostFoundPage() {
       <PageHeader title="Lost & Found Management"
         subtitle={`${total} report${total !== 1 ? 's' : ''} · ${items.filter(i => i.is_claimed).length} resolved`} />
 
-      {loading ? <TableSkeleton cols={7} rows={8} /> : items.length === 0 ? (
-        <EmptyState icon={Search} title="No reports yet" subtitle="Student reports will appear here." />
-      ) : (
-        <>
+      <div className="card">
+        {loading ? <TableSkeleton cols={7} rows={8} /> : items.length === 0 ? (
+          <EmptyState icon={Search} title="No reports yet" subtitle="Student reports will appear here." />
+        ) : (
           <Table>
             <thead>
               <tr className="border-b border-surface-700/40">
@@ -122,9 +122,9 @@ export default function LostFoundPage() {
               ))}
             </tbody>
           </Table>
-          <Pagination page={page} pages={pages} onChange={setPage} />
-        </>
-      )}
+        )}
+      </div>
+      {!loading && items.length > 0 && <Pagination page={page} pages={pages} onChange={setPage} />}
 
       <ConfirmDialog open={!!claimTarget} onClose={() => setClaimTarget(null)} onConfirm={handleClaim}
         title="Mark as Claimed"

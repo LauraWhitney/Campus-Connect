@@ -198,6 +198,9 @@ export interface AdminNotification {
   link?: string | null
   is_read: boolean
   created_at: string
+  admin_reply?: string | null
+  replied_at?: string | null
+  can_reply: boolean
 }
 
 export const notificationsAPI = {
@@ -215,6 +218,10 @@ export const notificationsAPI = {
   },
   markAllRead: async () => {
     await api.patch('/admin/notifications/read-all')
+  },
+  reply: async (id: number, message: string): Promise<AdminNotification> => {
+    const { data } = await api.post(`/admin/notifications/${id}/reply`, { message })
+    return data
   },
 }
 

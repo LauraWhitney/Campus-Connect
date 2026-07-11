@@ -11,17 +11,17 @@ const CATEGORIES: string[] = [
   'Career', 'Social', 'Convocation', 'Staff Development',
 ]
 
-const CAT_GRADIENT: Record<string, { bg: string; badge: string }> = {
-  Academic:         { bg: 'linear-gradient(135deg,#3b82f6,#c81e45)', badge: 'bg-blue-100 text-blue-700 border-blue-200' },
-  Sports:           { bg: 'linear-gradient(135deg,#10b981,#06b6d4)', badge: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  Cultural:         { bg: 'linear-gradient(135deg,#d4af37,#a855f7)', badge: 'bg-violet-100 text-violet-700 border-violet-200' },
-  Spiritual:        { bg: 'linear-gradient(135deg,#f59e0b,#ef4444)', badge: 'bg-amber-100 text-amber-700 border-amber-200' },
-  Career:           { bg: 'linear-gradient(135deg,#c81e45,#d4af37)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
-  Social:           { bg: 'linear-gradient(135deg,#ec4899,#d4af37)', badge: 'bg-pink-100 text-pink-700 border-pink-200' },
-  Convocation:      { bg: 'linear-gradient(135deg,#0ea5e9,#c81e45)', badge: 'bg-sky-100 text-sky-700 border-sky-200' },
-  'Staff Development': { bg: 'linear-gradient(135deg,#14b8a6,#3b82f6)', badge: 'bg-teal-100 text-teal-700 border-teal-200' },
+const CAT_GRADIENT: Record<string, string> = {
+  Academic:            'linear-gradient(135deg,#3b82f6,#c81e45)',
+  Sports:              'linear-gradient(135deg,#10b981,#06b6d4)',
+  Cultural:            'linear-gradient(135deg,#d4af37,#a855f7)',
+  Spiritual:           'linear-gradient(135deg,#f59e0b,#ef4444)',
+  Career:              'linear-gradient(135deg,#c81e45,#d4af37)',
+  Social:              'linear-gradient(135deg,#ec4899,#d4af37)',
+  Convocation:         'linear-gradient(135deg,#0ea5e9,#c81e45)',
+  'Staff Development': 'linear-gradient(135deg,#14b8a6,#3b82f6)',
 }
-const DEFAULT_GRADIENT = { bg: 'linear-gradient(135deg,#c81e45,#d4af37)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' }
+const DEFAULT_GRADIENT = 'linear-gradient(135deg,#c81e45,#d4af37)'
 
 // ── RSVP Manage Panel (for event creator) ────────────
 function RsvpManagePanel({ event, onClose }: { event: Event; onClose: () => void }) {
@@ -108,13 +108,13 @@ function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps, onEdit }
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in"
       style={{ background: '#2e000b' }}>
-      <div className="h-1.5 w-full" style={{ background: g.bg }} />
+      <div className="h-1.5 w-full" style={{ background: g }} />
 
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0"
-              style={{ background: g.bg }}>
+              style={{ background: g }}>
               <span className="text-white text-base font-bold leading-none">{date.getDate()}</span>
               <span className="text-white/70 text-[10px] uppercase">{date.toLocaleString('default', { month: 'short' })}</span>
             </div>
@@ -137,7 +137,8 @@ function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps, onEdit }
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border shrink-0 ${g.badge}`}>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium text-white/80 border border-white/20 shrink-0"
+              style={{ background: 'rgba(255,255,255,0.1)' }}>
               {event.category}
             </span>
             {event.isCreator && (
@@ -202,12 +203,12 @@ function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps, onEdit }
             disabled={rsvpLoading || isFull}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mt-1 disabled:opacity-50"
             style={event.hasRsvped
-              ? { background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', color: '#6ee7b7' }
+              ? { background: 'rgba(200,30,69,0.2)', border: '1px solid rgba(200,30,69,0.4)', color: '#f5cd6b' }
               : event.pendingRsvp
                 ? { background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.35)', color: '#fde68a' }
                 : isFull
                   ? { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#64748b' }
-                  : { background: g.bg, color: '#fff' }
+                  : { background: 'rgba(200,30,69,0.2)', border: '1px solid rgba(200,30,69,0.4)', color: '#f5cd6b' }
             }>
             {rsvpLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {isFull ? 'Event Full'
@@ -293,7 +294,7 @@ function CreateEventModal({ open, onClose, onCreated, editEvent }: {
     finally { setLoading(false) }
   }
 
-  const labelCls = 'block text-xs text-slate-600 mb-1.5 font-medium'
+  const labelCls = 'block text-xs text-slate-300 mb-1.5 font-medium'
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? 'Edit & Resubmit Event' : 'Create Event'} size="md">
       <form onSubmit={handleSubmit} className="space-y-4">

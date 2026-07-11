@@ -82,7 +82,7 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200/10 px-4 sm:px-6 py-4"
-      style={{ background: 'linear-gradient(90deg,#0f172a,#2e000b)', backdropFilter: 'blur(12px)' }}>
+      style={{ background: 'linear-gradient(90deg,#0a0e1a,#0f172a)', backdropFilter: 'blur(12px)' }}>
       <div className="flex items-center justify-between">
         {/* Left: hamburger + page title */}
         <div className="flex items-center gap-4">

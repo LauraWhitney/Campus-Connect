@@ -132,6 +132,7 @@ def create_event(
     notify_admins(
         db, "event", "New event awaiting approval",
         f"{current_user.name} submitted '{event.title}' for review.",
+        user_id=current_user.id,
         link="/events",
     )
     db.commit()
@@ -215,7 +216,8 @@ def update_event(
         event.reviewed_at      = None
         _log(db, "event.resubmit", f"Resubmitted event for review: {event.title}", current_user)
         notify_admins(db, "event", "Event resubmitted for approval",
-                      f"{current_user.name} edited and resubmitted '{event.title}'.", link="/events")
+                      f"{current_user.name} edited and resubmitted '{event.title}'.",
+                      user_id=current_user.id, link="/events")
     else:
         _log(db, "event.update", f"Updated event: {event.title}", current_user)
 

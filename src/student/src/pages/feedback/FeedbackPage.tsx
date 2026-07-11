@@ -35,9 +35,9 @@ const DEPARTMENTS = [
 ]
 
 const STATUS_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-  Pending:  { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
-  Reviewed: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
-  Resolved: { bg: '#d1fae5', text: '#065f46', border: '#6ee7b7' },
+  Pending:  { bg: 'rgba(245,158,11,0.15)', text: '#fcd34d', border: 'rgba(245,158,11,0.3)' },
+  Reviewed: { bg: 'rgba(59,130,246,0.15)', text: '#93c5fd', border: 'rgba(59,130,246,0.3)' },
+  Resolved: { bg: 'rgba(16,185,129,0.15)', text: '#6ee7b7', border: 'rgba(16,185,129,0.3)' },
 }
 const CAT_GRADIENT: Record<string, string> = {
   Academic:       'linear-gradient(135deg,#3b82f6,#c81e45)',
@@ -131,7 +131,7 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
     finally { setLoading(false) }
   }
 
-  const lbl = 'block text-xs text-slate-600 mb-1.5 font-medium'
+  const lbl = 'block text-xs text-slate-300 mb-1.5 font-medium'
   return (
     <Modal open={open} onClose={onClose} title="Submit Feedback">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -149,16 +149,16 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
               {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
             </select></div>
         </div>
-        <label className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-primary-50 transition-colors"
-          style={{ borderColor: '#fae3a3', background: '#fefaf0' }}>
+        <label className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-primary-500/10 transition-colors"
+          style={{ borderColor: 'rgba(200,30,69,0.3)', background: 'rgba(255,255,255,0.05)' }}>
           <input type="checkbox" checked={form.is_anonymous}
             onChange={e => setForm(f => ({ ...f, is_anonymous: e.target.checked }))}
             className="w-4 h-4 accent-indigo-600" />
           <div>
-            <p className="text-slate-800 text-xs font-medium">Submit anonymously</p>
-            <p className="text-slate-500 text-xs">Your name won't be visible to administrators</p>
+            <p className="text-white text-xs font-medium">Submit anonymously</p>
+            <p className="text-slate-400 text-xs">Your name won't be visible to administrators</p>
           </div>
-          <Shield className="w-4 h-4 text-indigo-500 ml-auto shrink-0" />
+          <Shield className="w-4 h-4 text-indigo-400 ml-auto shrink-0" />
         </label>
         <div className="flex gap-3 pt-1">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
@@ -196,18 +196,18 @@ export default function FeedbackPage() {
       {/* Notification banner if any feedback got a status update */}
       {notifiedCount > 0 && (
         <div className="flex items-center gap-3 p-4 rounded-xl mb-4"
-          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>
-          <Bell className="w-4 h-4 text-emerald-400 shrink-0" />
-          <p className="text-emerald-300 text-xs leading-relaxed">
+          style={{ background: 'rgba(200,30,69,0.1)', border: '1px solid rgba(200,30,69,0.3)' }}>
+          <Bell className="w-4 h-4 text-primary-400 shrink-0" />
+          <p className="text-primary-300 text-xs leading-relaxed">
             {notifiedCount} of your feedback item{notifiedCount !== 1 ? 's have' : ' has'} received a response from an administrator.
           </p>
         </div>
       )}
 
       <div className="flex items-start gap-3 p-4 rounded-xl mb-6"
-        style={{ background: '#fefaf0', border: '1px solid #fae3a3' }}>
-        <Shield className="w-4 h-4 text-indigo-600 mt-0.5 shrink-0" />
-        <p className="text-indigo-800 text-xs leading-relaxed">
+        style={{ background: 'rgba(200,30,69,0.1)', border: '1px solid rgba(200,30,69,0.3)' }}>
+        <Shield className="w-4 h-4 text-primary-400 mt-0.5 shrink-0" />
+        <p className="text-slate-300 text-xs leading-relaxed">
           Your feedback is reviewed by CUEA administrators. You may submit anonymously. All feedback is treated with confidentiality.
         </p>
       </div>

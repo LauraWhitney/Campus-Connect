@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Bell, MessageSquare, Calendar, Users, MapPin, Mail, RefreshCw, CheckCheck } from 'lucide-react'
+import { Bell, MessageSquare, Calendar, Users, MapPin, Mail, RefreshCw, CheckCheck, Loader2 } from 'lucide-react'
 import { notificationsAPI, type AdminNotification } from '../../api/admin'
 import { PageHeader, EmptyState, Pagination, TableSkeleton } from '../../components/ui/index'
 import toast from 'react-hot-toast'
@@ -29,6 +29,9 @@ export default function NotificationsPage() {
   const [pages, setPages]     = useState(1)
   const [total, setTotal]     = useState(0)
   const [unread, setUnread]   = useState(0)
+  const [replyingId, setReplyingId] = useState<number | null>(null)
+  const [replyText, setReplyText]   = useState('')
+  const [sending, setSending]       = useState(false)
 
   const load = useCallback(async (p = page, silent = false) => {
     if (!silent) setLoading(true)
@@ -67,6 +70,20 @@ export default function NotificationsPage() {
     } catch { toast.error('Failed to update notifications') }
   }
 
+  const handleSendReply = async (id: number) => {
+    if (!replyText.trim()) return toast.error('Write a reply first')
+    setSending(true)
+    try {
+      const updated = await notificationsAPI.reply(id, replyText.trim())
+      setItems(it => it.map(n => n.id === id ? updated : n))
+      setReplyingId(null)
+      setReplyText('')
+      toast.success('Reply sent')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to send reply')
+    } finally { setSending(false) }
+  }
+
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
       <PageHeader
@@ -97,25 +114,63 @@ export default function NotificationsPage() {
             {items.map(n => {
               const meta = TYPE_META[n.type] ?? TYPE_META.system
               return (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => !n.is_read && handleMarkRead(n.id)}
-                  className={`w-full text-left card p-4 flex items-start gap-3 transition-all ${n.is_read ? 'opacity-70' : ''}`}
-                >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white"
-                    style={{ background: meta.gradient }}>
-                    {meta.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-white text-sm font-semibold truncate">{n.title}</p>
-                      {!n.is_read && <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" />}
+                <div key={n.id} className={`card p-4 transition-all ${n.is_read ? 'opacity-70' : ''}`}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => !n.is_read && handleMarkRead(n.id)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !n.is_read) handleMarkRead(n.id) }}
+                    className="w-full text-left flex items-start gap-3 cursor-pointer"
+                  >
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white"
+                      style={{ background: meta.gradient }}>
+                      {meta.icon}
                     </div>
-                    <p className="text-surface-400 text-xs mt-0.5 leading-relaxed">{n.message}</p>
-                    <p className="text-surface-500 text-[11px] mt-1.5">{formatTime(n.created_at)}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-white text-sm font-semibold truncate">{n.title}</p>
+                        {!n.is_read && <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" />}
+                      </div>
+                      <p className="text-surface-400 text-xs mt-0.5 leading-relaxed">{n.message}</p>
+                      <p className="text-surface-500 text-[11px] mt-1.5">{formatTime(n.created_at)}</p>
+                    </div>
                   </div>
-                </button>
+
+                  {n.admin_reply ? (
+                    <div className="mt-3 ml-12 rounded-lg p-3"
+                      style={{ background: 'rgba(200,30,69,0.08)', border: '1px solid rgba(200,30,69,0.2)' }}>
+                      <p className="text-primary-300 text-[11px] font-semibold mb-1">Your reply</p>
+                      <p className="text-surface-300 text-xs leading-relaxed">{n.admin_reply}</p>
+                    </div>
+                  ) : n.can_reply ? (
+                    replyingId === n.id ? (
+                      <div className="mt-3 ml-12 space-y-2">
+                        <textarea
+                          className="input min-h-[70px] resize-none text-xs"
+                          value={replyText}
+                          onChange={e => setReplyText(e.target.value)}
+                          placeholder="Write a reply…"
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => handleSendReply(n.id)} disabled={sending}
+                            className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5">
+                            {sending && <Loader2 className="w-3 h-3 animate-spin" />} Send Reply
+                          </button>
+                          <button type="button" onClick={() => { setReplyingId(null); setReplyText('') }}
+                            className="btn-secondary text-xs px-3 py-1.5">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => { setReplyingId(n.id); setReplyText('') }}
+                        className="mt-2 ml-12 text-primary-300 text-xs font-medium hover:text-primary-200 transition-colors">
+                        Reply
+                      </button>
+                    )
+                  ) : null}
+                </div>
               )
             })}
           </div>
