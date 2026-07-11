@@ -3,6 +3,7 @@ import { Users, Trash2, Shield, Search } from 'lucide-react'
 import { usersAPI } from '../../api/admin'
 import type { User } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, ConfirmDialog, Modal } from '../../components/ui/index'
+import { TestDataCleanup } from '../../components/ui/TestDataCleanup'
 import toast from 'react-hot-toast'
 
 const ROLE_BADGE: Record<string, string> = {
@@ -11,9 +12,9 @@ const ROLE_BADGE: Record<string, string> = {
 
 // Gradient index per role for avatar — borrows student palette
 const ROLE_GRADIENT: Record<string, string> = {
-  admin:    'linear-gradient(135deg, #6366f1, #8b5cf6)',
-  lecturer: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-  student:  'linear-gradient(135deg, #8b5cf6, #a855f7)',
+  admin:    'linear-gradient(135deg, #c81e45, #d4af37)',
+  lecturer: 'linear-gradient(135deg, #3b82f6, #c81e45)',
+  student:  'linear-gradient(135deg, #d4af37, #a855f7)',
 }
 
 export default function UsersPage() {
@@ -23,20 +24,29 @@ export default function UsersPage() {
   const [pages, setPages]     = useState(1)
   const [total, setTotal]     = useState(0)
   const [query, setQuery]     = useState('')
+  const [faculty, setFaculty] = useState('')
+  const [faculties, setFaculties] = useState<string[]>([])
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [roleTarget, setRoleTarget]     = useState<User | null>(null)
   const [newRole, setNewRole]           = useState('')
 
-  const load = async (p = page) => {
+  const load = async (p = page, fac = faculty) => {
     setLoading(true)
     try {
-      const res = await usersAPI.getAll(p)
+      const res = await usersAPI.getAll(p, '', fac)
       setUsers(res.data); setPages(res.pages); setTotal(res.total)
     } catch { toast.error('Unable to load users.') }
     finally { setLoading(false) }
   }
 
-  useEffect(() => { load(page) }, [page])
+  useEffect(() => {
+    usersAPI.getFaculties().then(setFaculties).catch(() => {})
+  }, [])
+
+  // Faculty filter is applied server-side (works correctly with pagination);
+  // changing it resets to page 1 so results and page count stay in sync.
+  useEffect(() => { setPage(1); load(1, faculty) }, [faculty])
+  useEffect(() => { load(page, faculty) }, [page])
 
   const results = useMemo(() => {
     if (!query.trim()) return users
@@ -61,12 +71,23 @@ export default function UsersPage() {
 
   return (
     <div className="max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="User Management" subtitle={`${total} registered user${total !== 1 ? 's' : ''}`} />
+      <PageHeader title="User Management" subtitle={`${total} registered user${total !== 1 ? 's' : ''}`}
+        action={<TestDataCleanup />} />
 
-      <div className="relative mb-5">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        <input className="input pl-10" placeholder="Search by name, email, role or faculty…"
-          value={query} onChange={e => setQuery(e.target.value)} />
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500 pointer-events-none" />
+          <input className="input pl-10" placeholder="Search by name, email, role or faculty…"
+            value={query} onChange={e => setQuery(e.target.value)} />
+        </div>
+        <div className="sm:w-64">
+          <label htmlFor="facultyFilter" className="sr-only">Filter by faculty</label>
+          <select id="facultyFilter" className="input" value={faculty}
+            onChange={e => setFaculty(e.target.value)}>
+            <option value="">All Faculties</option>
+            {faculties.map(f => <option key={f} value={f}>{f}</option>)}
+          </select>
+        </div>
       </div>
 
       {loading ? <TableSkeleton cols={6} rows={8} /> : results.length === 0 ? (
@@ -76,7 +97,7 @@ export default function UsersPage() {
         <>
           <Table>
             <thead>
-              <tr className="border-b border-slate-100">
+              <tr className="border-b border-surface-700/40">
                 <th className="th">Name</th>
                 <th className="th">Email</th>
                 <th className="th">Role</th>
@@ -98,22 +119,22 @@ export default function UsersPage() {
                       <span className="truncate max-w-[120px]">{u.name}</span>
                     </div>
                   </td>
-                  <td className="td text-slate-500 truncate max-w-[160px]">{u.email}</td>
+                  <td className="td text-surface-400 truncate max-w-[160px]">{u.email}</td>
                   <td className="td"><span className={ROLE_BADGE[u.role] ?? 'badge-surface'}>{u.role}</span></td>
-                  <td className="td text-slate-500 hidden sm:table-cell max-w-[140px] truncate">{u.faculty ?? '—'}</td>
-                  <td className="td text-slate-500 hidden md:table-cell">{u.year_of_study ? `Year ${u.year_of_study}` : '—'}</td>
-                  <td className="td text-slate-400 hidden lg:table-cell">
+                  <td className="td text-surface-400 hidden sm:table-cell max-w-[140px] truncate">{u.faculty ?? '—'}</td>
+                  <td className="td text-surface-400 hidden md:table-cell">{u.year_of_study ? `Year ${u.year_of_study}` : '—'}</td>
+                  <td className="td text-surface-500 hidden lg:table-cell">
                     {new Date(u.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="td">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => { setRoleTarget(u); setNewRole(u.role) }}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                        className="p-1.5 rounded-lg text-surface-500 hover:text-primary-400 hover:bg-primary-500/10 transition-colors"
                         title="Change role" aria-label={`Change role for ${u.name}`}>
                         <Shield className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => setDeleteTarget(u)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        className="p-1.5 rounded-lg text-surface-500 hover:text-red-500 hover:bg-red-500/10 transition-colors"
                         title="Delete user" aria-label={`Delete ${u.name}`}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -131,8 +152,8 @@ export default function UsersPage() {
         title="Delete User" message={`Permanently delete "${deleteTarget?.name}" (${deleteTarget?.email})? This cannot be undone.`} danger />
 
       <Modal open={!!roleTarget} onClose={() => setRoleTarget(null)} title="Change User Role" size="sm">
-        <p className="text-slate-600 text-sm mb-4">
-          Update role for <span className="text-slate-900 font-medium">{roleTarget?.name}</span>
+        <p className="text-surface-300 text-sm mb-4">
+          Update role for <span className="text-white font-medium">{roleTarget?.name}</span>
         </p>
         <select className="input mb-5" value={newRole} onChange={e => setNewRole(e.target.value)}
           aria-label={`New role for ${roleTarget?.name}`}>

@@ -9,20 +9,20 @@ import type { DashboardStats } from '../../types'
 
 // Same gradient palette as student DashboardPage
 const CARD_GRADIENTS = [
-  { bg: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', shadow: '0 8px 24px rgba(59,130,246,0.35)'  },
-  { bg: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', shadow: '0 8px 24px rgba(99,102,241,0.35)'  },
-  { bg: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(139,92,246,0.35)'  },
-  { bg: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', shadow: '0 8px 24px rgba(59,130,246,0.30)'  },
-  { bg: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(99,102,241,0.30)'  },
-  { bg: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', shadow: '0 8px 24px rgba(139,92,246,0.30)'  },
-  { bg: 'linear-gradient(135deg, #06b6d4 0%, #6366f1 100%)', shadow: '0 8px 24px rgba(6,182,212,0.30)'   },
+  { bg: 'linear-gradient(135deg, #3b82f6 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(59,130,246,0.35)'  },
+  { bg: 'linear-gradient(135deg, #c81e45 0%, #d4af37 100%)', shadow: '0 8px 24px rgba(200,30,69,0.35)'  },
+  { bg: 'linear-gradient(135deg, #d4af37 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(212,175,55,0.35)'  },
+  { bg: 'linear-gradient(135deg, #3b82f6 0%, #d4af37 100%)', shadow: '0 8px 24px rgba(59,130,246,0.30)'  },
+  { bg: 'linear-gradient(135deg, #c81e45 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(200,30,69,0.30)'  },
+  { bg: 'linear-gradient(135deg, #d4af37 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(212,175,55,0.30)'  },
+  { bg: 'linear-gradient(135deg, #06b6d4 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(6,182,212,0.30)'   },
 ]
 
-const CHART_COLORS = ['#6366f1', '#8b5cf6', '#3b82f6', '#06b6d4', '#a855f7', '#ec4899']
+const CHART_COLORS = ['#c81e45', '#d4af37', '#3b82f6', '#06b6d4', '#a855f7', '#ec4899']
 
 const TOOLTIP_STYLE = {
   backgroundColor: '#ffffff',
-  border: '1px solid rgba(99,102,241,0.2)',
+  border: '1px solid rgba(200,30,69,0.2)',
   borderRadius: '10px',
   color: '#0f172a',
   fontSize: '12px',
@@ -61,7 +61,15 @@ function StatsSkeleton() {
   )
 }
 
-const ROLE_BADGE: Record<string, string> = { admin: 'badge-brand', lecturer: 'badge-blue', student: 'badge-surface' }
+// The "Recently Registered Users" table sits on a light card (unlike the
+// rest of this dark-themed app), so it needs its own light-appropriate
+// badge colors — the shared badge-* classes elsewhere are tuned for dark
+// backgrounds and read poorly on white.
+const ROLE_BADGE_LIGHT: Record<string, string> = {
+  admin:    'bg-primary-100 text-primary-700 border-primary-200',
+  lecturer: 'bg-blue-100 text-blue-700 border-blue-200',
+  student:  'bg-slate-100 text-slate-600 border-slate-200',
+}
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -91,8 +99,8 @@ export default function DashboardPage() {
       {/* ── Hero header — same indigo→purple gradient as student greeting card ── */}
       <div className="rounded-2xl p-6 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
-          boxShadow: '0 12px 40px rgba(99,102,241,0.4)',
+          background: 'linear-gradient(135deg, #a0002a 0%, #b8912a 50%, #9333ea 100%)',
+          boxShadow: '0 12px 40px rgba(200,30,69,0.4)',
         }}>
         <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/10 blur-2xl pointer-events-none" />
         <div className="absolute -left-6 -bottom-6 w-32 h-32 rounded-full bg-white/10 blur-2xl pointer-events-none" />
@@ -134,7 +142,7 @@ export default function DashboardPage() {
               <BarChart data={overviewData} barSize={28}>
                 <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(99,102,241,0.06)' }} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(200,30,69,0.06)' }} />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {overviewData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                 </Bar>
@@ -149,7 +157,7 @@ export default function DashboardPage() {
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={feedbackPie} cx="50%" cy="45%" innerRadius={50} outerRadius={75} paddingAngle={4} dataKey="value">
-                  <Cell fill="#6366f1" />
+                  <Cell fill="#c81e45" />
                   <Cell fill="#10b981" />
                 </Pie>
                 <Legend formatter={(v) => <span style={{ color: '#64748b', fontSize: 12 }}>{v}</span>} />
@@ -162,7 +170,7 @@ export default function DashboardPage() {
 
       {/* ── Recent users ── */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="font-display text-base font-semibold text-slate-900">Recently Registered Users</h3>
           <ArrowRight className="w-4 h-4 text-slate-400" />
         </div>
@@ -182,28 +190,28 @@ export default function DashboardPage() {
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="th">Name</th>
-                <th className="th">Email</th>
-                <th className="th">Role</th>
-                <th className="th hidden sm:table-cell">Faculty</th>
-                <th className="th hidden md:table-cell">Joined</th>
+              <tr className="border-b border-slate-200">
+                <th className="th text-slate-500">Name</th>
+                <th className="th text-slate-500">Email</th>
+                <th className="th text-slate-500">Role</th>
+                <th className="th text-slate-500 hidden sm:table-cell">Faculty</th>
+                <th className="th text-slate-500 hidden md:table-cell">Joined</th>
               </tr>
             </thead>
             <tbody>
               {(stats?.recent_users ?? []).map(u => (
-                <tr key={u.id} className="table-row">
+                <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                   <td className="td font-medium text-slate-900">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+                        style={{ background: 'linear-gradient(135deg,#c81e45,#d4af37)' }}>
                         <span className="text-white text-[10px] font-bold">{u.name.charAt(0).toUpperCase()}</span>
                       </div>
                       {u.name}
                     </div>
                   </td>
                   <td className="td text-slate-500">{u.email}</td>
-                  <td className="td"><span className={ROLE_BADGE[u.role] ?? 'badge-surface'}>{u.role}</span></td>
+                  <td className="td"><span className={`badge ${ROLE_BADGE_LIGHT[u.role] ?? ROLE_BADGE_LIGHT.student}`}>{u.role}</span></td>
                   <td className="td text-slate-500 hidden sm:table-cell">{u.faculty ?? '—'}</td>
                   <td className="td text-slate-400 hidden md:table-cell">
                     {new Date(u.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}

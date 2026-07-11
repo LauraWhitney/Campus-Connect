@@ -40,13 +40,13 @@ const STATUS_STYLE: Record<string, { bg: string; text: string; border: string }>
   Resolved: { bg: '#d1fae5', text: '#065f46', border: '#6ee7b7' },
 }
 const CAT_GRADIENT: Record<string, string> = {
-  Academic:       'linear-gradient(135deg,#3b82f6,#6366f1)',
+  Academic:       'linear-gradient(135deg,#3b82f6,#c81e45)',
   Facilities:     'linear-gradient(135deg,#10b981,#06b6d4)',
-  Administration: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-  Clubs:          'linear-gradient(135deg,#8b5cf6,#a855f7)',
+  Administration: 'linear-gradient(135deg,#c81e45,#d4af37)',
+  Clubs:          'linear-gradient(135deg,#d4af37,#a855f7)',
   Events:         'linear-gradient(135deg,#f59e0b,#ef4444)',
   Spiritual:      'linear-gradient(135deg,#f59e0b,#fbbf24)',
-  Hostel:         'linear-gradient(135deg,#ec4899,#8b5cf6)',
+  Hostel:         'linear-gradient(135deg,#ec4899,#d4af37)',
   Other:          'linear-gradient(135deg,#64748b,#475569)',
 }
 
@@ -56,7 +56,7 @@ function FeedbackCard({ item }: { item: Feedback }) {
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in"
-      style={{ background: '#1e1b4b' }}>
+      style={{ background: '#2e000b' }}>
       <div className="h-1.5" style={{ background: gradient }} />
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
@@ -150,7 +150,7 @@ function SubmitFeedbackModal({ open, onClose, onCreated }: { open: boolean; onCl
             </select></div>
         </div>
         <label className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-primary-50 transition-colors"
-          style={{ borderColor: '#c7d2fe', background: '#eef2ff' }}>
+          style={{ borderColor: '#fae3a3', background: '#fefaf0' }}>
           <input type="checkbox" checked={form.is_anonymous}
             onChange={e => setForm(f => ({ ...f, is_anonymous: e.target.checked }))}
             className="w-4 h-4 accent-indigo-600" />
@@ -205,7 +205,7 @@ export default function FeedbackPage() {
       )}
 
       <div className="flex items-start gap-3 p-4 rounded-xl mb-6"
-        style={{ background: '#eef2ff', border: '1px solid #c7d2fe' }}>
+        style={{ background: '#fefaf0', border: '1px solid #fae3a3' }}>
         <Shield className="w-4 h-4 text-indigo-600 mt-0.5 shrink-0" />
         <p className="text-indigo-800 text-xs leading-relaxed">
           Your feedback is reviewed by CUEA administrators. You may submit anonymously. All feedback is treated with confidentiality.

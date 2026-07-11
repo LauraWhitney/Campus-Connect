@@ -29,7 +29,7 @@ function LostFoundCard({ item, currentUserId, onClaim, onMarkFound, onDelete }: 
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in"
-      style={{ background: '#1e1b4b' }}>
+      style={{ background: '#2e000b' }}>
       <div className="h-1.5" style={{ background: s.gradient }} />
       {item.image && (
         <div className="h-32 overflow-hidden">
@@ -81,7 +81,7 @@ function LostFoundCard({ item, currentUserId, onClaim, onMarkFound, onDelete }: 
           {!item.isClaimed && item.status === "Found" && (
             <button onClick={() => onClaim(item._id)}
               className="w-full py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2"
-              style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc' }}>
+              style={{ background: 'rgba(200,30,69,0.2)', border: '1px solid rgba(200,30,69,0.4)', color: '#f5cd6b' }}>
               <CheckCircle2 className="w-3.5 h-3.5" /> Mark as Claimed
             </button>
           )}
@@ -150,7 +150,7 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
           <label className={lbl}>Photo <span className="text-slate-400">(optional)</span></label>
           <div onClick={() => fileRef.current?.click()}
             className="w-full h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition-colors overflow-hidden"
-            style={{ borderColor: previewUrl ? 'transparent' : '#c7d2fe', background: previewUrl ? 'transparent' : '#eef2ff' }}>
+            style={{ borderColor: previewUrl ? 'transparent' : '#fae3a3', background: previewUrl ? 'transparent' : '#fefaf0' }}>
             {previewUrl ? (
               <img src={previewUrl} alt="preview" className="w-full h-full object-cover rounded-xl" />
             ) : (

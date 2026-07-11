@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Calendar, Trash2, Users, Search, BarChart2, User, UserCheck, UserX, Loader2 } from 'lucide-react'
+import { Calendar, Trash2, Users, Search, BarChart2, User, UserCheck, UserX, Loader2, CheckCircle2, XCircle } from 'lucide-react'
 import { eventsAPI } from '../../api/admin'
 import type { Event } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, ConfirmDialog, Modal } from '../../components/ui/index'
@@ -16,6 +16,16 @@ const CAT_BADGE: Record<string, string> = {
   'Staff Development': 'badge-surface',
 }
 
+const APPROVAL_BADGE: Record<string, string> = {
+  pending: 'badge-yellow', approved: 'badge-green', rejected: 'badge-red',
+}
+const APPROVAL_TABS = [
+  { label: 'All',      value: '' },
+  { label: 'Pending',  value: 'pending' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Rejected', value: 'rejected' },
+]
+
 export default function EventsPage() {
   const [events, setEvents]             = useState<Event[]>([])
   const [loading, setLoading]           = useState(true)
@@ -23,6 +33,7 @@ export default function EventsPage() {
   const [pages, setPages]               = useState(1)
   const [total, setTotal]               = useState(0)
   const [query, setQuery]               = useState('')
+  const [approvalFilter, setApprovalFilter] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Event | null>(null)
   const [rsvpTarget, setRsvpTarget]     = useState<Event | null>(null)
   const [rsvpData, setRsvpData]         = useState<any>(null)
@@ -31,17 +42,21 @@ export default function EventsPage() {
   const [attendanceTarget, setAttendanceTarget] = useState<Event | null>(null)
   const [attendanceData, setAttendanceData]     = useState<any>(null)
   const [attendanceLoading, setAttendanceLoading] = useState(false)
+  const [rejectTarget, setRejectTarget] = useState<Event | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [reviewLoading, setReviewLoading] = useState(false)
 
-  const load = async (p = page) => {
+  const load = async (p = page, approval = approvalFilter) => {
     setLoading(true)
     try {
-      const res = await eventsAPI.getAll(p)
+      const res = await eventsAPI.getAll(p, approval)
       setEvents(res.data); setPages(res.pages); setTotal(res.total)
     } catch { toast.error('Unable to load events.') }
     finally { setLoading(false) }
   }
 
-  useEffect(() => { load(page) }, [page])
+  useEffect(() => { setPage(1); load(1, approvalFilter) }, [approvalFilter])
+  useEffect(() => { load(page, approvalFilter) }, [page])
 
   const results = useMemo(() => {
     if (!query.trim()) return events
@@ -51,6 +66,28 @@ export default function EventsPage() {
       e.organizer.toLowerCase().includes(q) || e.category.toLowerCase().includes(q)
     )
   }, [events, query])
+
+  const handleApprove = async (event: Event) => {
+    setReviewLoading(true)
+    try {
+      await eventsAPI.approveEvent(event.id)
+      toast.success(`"${event.title}" approved`)
+      load(page)
+    } catch { toast.error('Failed to approve event') }
+    finally { setReviewLoading(false) }
+  }
+
+  const handleReject = async () => {
+    if (!rejectTarget) return
+    setReviewLoading(true)
+    try {
+      await eventsAPI.rejectEvent(rejectTarget.id, rejectReason)
+      toast.success(`"${rejectTarget.title}" rejected`)
+      setRejectTarget(null); setRejectReason('')
+      load(page)
+    } catch { toast.error('Failed to reject event') }
+    finally { setReviewLoading(false) }
+  }
 
   const handleDelete = async () => {
     if (!deleteTarget) return
@@ -113,7 +150,7 @@ export default function EventsPage() {
       key: 'title', label: 'Event',
       render: (_: any, row: Event) => (
         <div>
-          <p className="font-medium text-surface-900 text-sm">{row.title}</p>
+          <p className="font-medium text-white text-sm">{row.title}</p>
           <p className="text-surface-500 text-xs">{row.date} · {row.time}</p>
           {row.creator && (
             <p className="text-surface-400 text-xs flex items-center gap-1 mt-0.5">
@@ -127,12 +164,25 @@ export default function EventsPage() {
       key: 'category', label: 'Category',
       render: (v: string) => <span className={`badge ${CAT_BADGE[v] ?? 'badge-surface'}`}>{v}</span>,
     },
-    { key: 'venue', label: 'Venue', render: (v: string) => <span className="text-sm text-surface-600 truncate max-w-[120px] block">{v}</span> },
+    {
+      key: 'approval_status', label: 'Approval',
+      render: (v: string, row: Event) => (
+        <div>
+          <span className={APPROVAL_BADGE[v] ?? 'badge-surface'}>{v}</span>
+          {v === 'rejected' && row.rejection_reason && (
+            <p className="text-red-300/80 text-[10px] mt-1 max-w-[140px] truncate" title={row.rejection_reason}>
+              {row.rejection_reason}
+            </p>
+          )}
+        </div>
+      ),
+    },
+    { key: 'venue', label: 'Venue', render: (v: string) => <span className="text-sm text-surface-300 truncate max-w-[120px] block">{v}</span> },
     {
       key: 'rsvp_count', label: 'RSVPs',
       render: (v: number, row: Event) => (
         <div className="flex items-center gap-1.5">
-          <span className="font-semibold text-surface-900">{v ?? 0}</span>
+          <span className="font-semibold text-white">{v ?? 0}</span>
           {row.capacity && <span className="text-surface-400 text-xs">/ {row.capacity}</span>}
         </div>
       ),
@@ -141,16 +191,28 @@ export default function EventsPage() {
       key: 'actions', label: '',
       render: (_: any, row: Event) => (
         <div className="flex items-center gap-2">
+          {row.approval_status === 'pending' && (
+            <>
+              <button onClick={() => handleApprove(row)} disabled={reviewLoading}
+                className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-40" title="Approve event">
+                <CheckCircle2 className="w-4 h-4" />
+              </button>
+              <button onClick={() => { setRejectTarget(row); setRejectReason('') }} disabled={reviewLoading}
+                className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40" title="Reject event">
+                <XCircle className="w-4 h-4" />
+              </button>
+            </>
+          )}
           <button onClick={() => openRsvps(row)}
-            className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors" title="View RSVPs">
+            className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-500/10 transition-colors" title="View RSVPs">
             <Users className="w-4 h-4" />
           </button>
           <button onClick={() => openAttendance(row)}
-            className="p-1.5 rounded-lg text-surface-500 hover:bg-surface-100 transition-colors" title="Attendance">
+            className="p-1.5 rounded-lg text-surface-400 hover:bg-white/10 transition-colors" title="Attendance">
             <BarChart2 className="w-4 h-4" />
           </button>
           <button onClick={() => setDeleteTarget(row)}
-            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Delete">
+            className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors" title="Delete">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -161,6 +223,20 @@ export default function EventsPage() {
   return (
     <div>
       <PageHeader title="Events" subtitle={`${total} total events`} />
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {APPROVAL_TABS.map(tab => (
+          <button key={tab.value} type="button" onClick={() => setApprovalFilter(tab.value)}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              approvalFilter === tab.value
+                ? 'text-white'
+                : 'text-surface-400 border border-surface-600/40 hover:border-primary-500/40 hover:text-primary-400'
+            }`}
+            style={approvalFilter === tab.value ? { background: 'linear-gradient(90deg,#c81e45,#d4af37)' } : {}}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       <div className="mb-4 relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 pointer-events-none" />
@@ -187,28 +263,28 @@ export default function EventsPage() {
               <p className="text-surface-500 text-sm mb-3">{rsvpData.approved_count} approved / {rsvpData.pending_count} pending total</p>
               <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                 {rsvpData.requests?.map((u: any) => (
-                  <div key={u.id} className="flex items-center justify-between p-2.5 rounded-lg bg-surface-50 border border-surface-200 gap-2">
+                  <div key={u.id} className="flex items-center justify-between p-2.5 rounded-lg bg-surface-700/30 border border-surface-600/40 gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-surface-900 truncate">{u.user_name}</p>
+                      <p className="text-sm font-medium text-white truncate">{u.user_name}</p>
                       <p className="text-xs text-surface-500 truncate">{u.user_email}</p>
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
-                      u.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                      u.status === 'rejected' ? 'bg-red-50 text-red-600 border-red-200' :
-                      'bg-amber-50 text-amber-700 border-amber-200'
+                      u.status === 'approved' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' :
+                      u.status === 'rejected' ? 'bg-red-500/15 text-red-300 border-red-500/30' :
+                      'bg-amber-500/15 text-amber-300 border-amber-500/30'
                     }`}>{u.status}</span>
                     {u.status === 'pending' && (
                       <div className="flex gap-1">
                         <button onClick={() => handleApproveRsvp(u.id)}
                           disabled={rsvpActionLoading === u.id}
-                          className="p-1.5 rounded text-emerald-600 hover:bg-emerald-50 transition-colors" title="Approve">
+                          className="p-1.5 rounded text-emerald-600 hover:bg-emerald-500/10 transition-colors" title="Approve">
                           {rsvpActionLoading === u.id
                             ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             : <UserCheck className="w-3.5 h-3.5" />}
                         </button>
                         <button onClick={() => handleRejectRsvp(u.id)}
                           disabled={rsvpActionLoading === u.id}
-                          className="p-1.5 rounded text-red-500 hover:bg-red-50 transition-colors" title="Reject">
+                          className="p-1.5 rounded text-red-500 hover:bg-red-500/10 transition-colors" title="Reject">
                           <UserX className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -230,12 +306,12 @@ export default function EventsPage() {
           ) : attendanceData ? (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-center">
-                  <p className="text-2xl font-bold text-indigo-700">{attendanceData.rsvp_count}</p>
-                  <p className="text-xs text-indigo-500 mt-1">RSVPs</p>
+                <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-center">
+                  <p className="text-2xl font-bold text-indigo-300">{attendanceData.rsvp_count}</p>
+                  <p className="text-xs text-indigo-400 mt-1">RSVPs</p>
                 </div>
-                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-center">
-                  <p className="text-2xl font-bold text-emerald-700">{attendanceData.checked_in_count}</p>
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                  <p className="text-2xl font-bold text-emerald-300">{attendanceData.checked_in_count}</p>
                   <p className="text-xs text-emerald-500 mt-1">Checked In</p>
                 </div>
               </div>
@@ -252,6 +328,28 @@ export default function EventsPage() {
         onClose={() => setDeleteTarget(null)}
         danger
       />
+
+      {/* Reject event modal — reason is passed to the owner in their notification */}
+      <Modal open={!!rejectTarget} onClose={() => { setRejectTarget(null); setRejectReason('') }}
+        title="Reject Event" size="sm">
+        <p className="text-surface-300 text-sm mb-3">
+          Reject <span className="text-white font-medium">{rejectTarget?.title}</span>? The organiser will be
+          notified and can edit and resubmit it.
+        </p>
+        <label htmlFor="rejectReason" className="block text-xs text-surface-400 mb-1.5 font-medium">
+          Reason (optional, shown to the organiser)
+        </label>
+        <textarea id="rejectReason" className="input min-h-[80px] resize-none mb-5"
+          value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+          placeholder="e.g. Venue already booked at that time — please choose another slot." />
+        <div className="flex gap-3">
+          <button onClick={() => { setRejectTarget(null); setRejectReason('') }} className="btn-secondary flex-1">Cancel</button>
+          <button onClick={handleReject} disabled={reviewLoading}
+            className="flex-1 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-red-500/20 border border-red-500/40 text-red-300 hover:bg-red-500/30 disabled:opacity-40">
+            Reject Event
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }

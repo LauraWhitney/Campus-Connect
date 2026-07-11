@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Calendar, ShoppingBag,
-  UserCheck, Search, MessageSquare, LogOut, GraduationCap, X, Activity,
+  UserCheck, Search, MessageSquare, LogOut, GraduationCap, X, Activity, Bell,
 } from 'lucide-react'
 import { useAdminAuth } from '../../context/AuthContext'
 import clsx from 'clsx'
@@ -15,6 +15,7 @@ const NAV = [
   { to: '/lost-found',  icon: Search,          label: 'Lost & Found'  },
   { to: '/feedback',    icon: MessageSquare,   label: 'Feedback'      },
   { to: '/activity',    icon: Activity,        label: 'Activity Logs' },
+  { to: '/notifications', icon: Bell,          label: 'Notifications' },
 ]
 
 export default function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -34,19 +35,19 @@ export default function AdminSidebar({ open, onClose }: { open: boolean; onClose
           open ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0 lg:static lg:z-auto',
         )}
-        style={{ background: 'linear-gradient(180deg, #0a0e1a 0%, #0f172a 50%, #1e1b4b 100%)' }}
+        style={{ background: 'linear-gradient(180deg, #0a0e1a 0%, #0f172a 50%, #2e000b 100%)' }}
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/5">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+              style={{ background: 'linear-gradient(135deg,#c81e45,#d4af37)' }}>
               <GraduationCap className="w-4 h-4 text-white" />
             </div>
             <div>
               <p className="text-white text-[11px] font-bold font-display leading-tight">CUEA Campus Connect</p>
               <p className="text-[10px] font-semibold leading-tight mt-0.5"
-                style={{ background: 'linear-gradient(90deg,#6366f1,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                style={{ background: 'linear-gradient(90deg,#c81e45,#e9ba3f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 Admin Panel
               </p>
             </div>
@@ -72,7 +73,7 @@ export default function AdminSidebar({ open, onClose }: { open: boolean; onClose
         <div className="px-3 py-4 border-t border-white/5">
           <div className="flex items-center gap-3 px-3 py-2 mb-1">
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+              style={{ background: 'linear-gradient(135deg,#c81e45,#d4af37)' }}>
               <span className="text-white text-xs font-bold">{user?.name?.charAt(0).toUpperCase()}</span>
             </div>
             <div className="min-w-0">

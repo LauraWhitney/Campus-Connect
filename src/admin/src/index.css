@@ -4,9 +4,16 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    /* Tells the browser to render native controls (select/option popups,
+       date pickers, scrollbars, checkboxes) in dark mode — without this,
+       an open <select> dropdown list defaults to a light OS popup while
+       still inheriting our white text, making the options unreadable. */
+    color-scheme: dark;
+  }
   body {
-    /* Dark indigo background for admin — readable, not harsh */
+    /* Dark maroon-tinted background for admin — CUEA brand, readable not harsh */
     background: #0f0e1a;
     @apply text-white font-body antialiased;
     min-height: 100vh;
@@ -16,22 +23,22 @@
 
 @layer components {
   .card {
-    background: #1e1b4b;
+    background: #2e000b;
     @apply border border-indigo-900/60 rounded-2xl shadow-sm
            transition-all duration-300 hover:border-indigo-500/40;
   }
   .btn-primary {
     @apply text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200
            hover:scale-[1.02] active:scale-[0.98] text-sm;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #c81e45, #d4af37);
   }
-  .btn-primary:hover { box-shadow: 0 0 20px rgba(99,102,241,0.4); }
+  .btn-primary:hover { box-shadow: 0 0 20px rgba(200,30,69,0.4); }
   .btn-secondary {
     @apply border text-indigo-300 font-medium px-5 py-2.5
            rounded-xl transition-all duration-200 text-sm;
-    border-color: rgba(99,102,241,0.4);
+    border-color: rgba(200,30,69,0.4);
   }
-  .btn-secondary:hover { background: rgba(99,102,241,0.1); }
+  .btn-secondary:hover { background: rgba(200,30,69,0.1); }
   .btn-danger {
     @apply border border-red-500/40 text-red-400 font-medium px-5 py-2.5
            rounded-xl hover:bg-red-500/10 transition-all duration-200 text-sm;
@@ -43,7 +50,7 @@
   }
   .nav-link.active {
     @apply bg-white/15 text-white;
-    border-left: 2px solid #6366f1;
+    border-left: 2px solid #c81e45;
   }
   .input {
     background: rgba(255,255,255,0.05);
@@ -51,6 +58,14 @@
            text-white placeholder:text-indigo-400 text-sm focus:outline-none
            focus:border-indigo-500/70 focus:ring-2 focus:ring-indigo-500/20
            transition-all duration-200;
+  }
+  /* Explicit solid background for the dropdown popup itself — color-scheme:
+     dark (set globally in html) covers the rest, but Chrome/Edge respect
+     this directly and it lets the popup match our actual brand color
+     instead of a generic browser dark gray. */
+  select.input option {
+    background-color: #1a0007;
+    color: #ffffff;
   }
   .badge        { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border; }
   .badge-brand  { @apply badge bg-indigo-500/20  text-indigo-300  border-indigo-500/30;  }
@@ -65,18 +80,18 @@
 
   /* Table rows — dark but readable */
   .table-row {
-    border-bottom: 1px solid rgba(99,102,241,0.15);
+    border-bottom: 1px solid rgba(200,30,69,0.15);
     transition: background 0.15s;
   }
-  .table-row:hover { background: rgba(99,102,241,0.08); }
+  .table-row:hover { background: rgba(200,30,69,0.08); }
 
-  .th { @apply text-left text-xs font-semibold uppercase tracking-wider px-4 py-3; color: #a5b4fc; }
+  .th { @apply text-left text-xs font-semibold uppercase tracking-wider px-4 py-3; color: #f5cd6b; }
   .td { @apply px-4 py-3 text-sm; color: #cbd5e1; }
 }
 
 @layer utilities {
   .text-brand-gradient {
-    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    background: linear-gradient(90deg, #c81e45, #d4af37);
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   }
   .scrollbar-hidden { scrollbar-width: none; }

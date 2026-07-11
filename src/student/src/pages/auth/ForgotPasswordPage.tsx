@@ -77,12 +77,12 @@ export default function ForgotPasswordPage() {
   return (
     <div
       className={containerCls}
-      style={{ background: 'linear-gradient(160deg, #020617 0%, #0f172a 45%, #1e1b4b 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #020617 0%, #0f172a 45%, #2e000b 100%)' }}
     >
 
       <div
         className="absolute top-20 left-1/4 w-72 h-72 rounded-full blur-3xl pointer-events-none"
-        style={{ background: 'rgba(99,102,241,0.08)' }}
+        style={{ background: 'rgba(200,30,69,0.08)' }}
       />
 
       <div className="relative w-full max-w-sm animate-slide-up">
@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
         <div className="flex flex-col items-center mb-8">
           <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-brand-lg"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+            style={{ background: 'linear-gradient(135deg, #c81e45, #d4af37)' }}
           >
             <GraduationCap className="w-7 h-7 text-white" />
           </div>
@@ -162,8 +162,8 @@ export default function ForgotPasswordPage() {
             <div
               className="flex items-center gap-2 p-3 rounded-xl mb-5"
               style={{
-                background: 'rgba(99,102,241,0.1)',
-                border: '1px solid rgba(99,102,241,0.25)'
+                background: 'rgba(200,30,69,0.1)',
+                border: '1px solid rgba(200,30,69,0.25)'
               }}
             >
               <code className="text-primary-300 text-xs flex-1 break-all">

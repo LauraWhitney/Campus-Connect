@@ -4,6 +4,7 @@ import { clubsAPI } from '../../api/clubs'
 import type { Club, ClubCategory } from '../../types'
 import { EmptyState, LoadingGrid, PageHeader, FilterBar } from '../../components/ui/index'
 import Modal from '../../components/ui/Modal'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 const CATEGORIES: string[] = [
@@ -18,14 +19,14 @@ const CATEGORY_EMOJI: Record<string, string> = {
 }
 
 const CAT_GRADIENT: Record<string, string> = {
-  Academic: 'linear-gradient(135deg,#3b82f6,#6366f1)',
+  Academic: 'linear-gradient(135deg,#3b82f6,#c81e45)',
   Sports: 'linear-gradient(135deg,#10b981,#06b6d4)',
   Arts: 'linear-gradient(135deg,#a855f7,#ec4899)',
   'Catholic Ministry': 'linear-gradient(135deg,#f59e0b,#ef4444)',
-  Technology: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-  'Law Society': 'linear-gradient(135deg,#0ea5e9,#6366f1)',
+  Technology: 'linear-gradient(135deg,#c81e45,#d4af37)',
+  'Law Society': 'linear-gradient(135deg,#0ea5e9,#c81e45)',
   'Music & Performing Arts': 'linear-gradient(135deg,#ec4899,#f59e0b)',
-  'Community Service': 'linear-gradient(135deg,#8b5cf6,#a855f7)',
+  'Community Service': 'linear-gradient(135deg,#d4af37,#a855f7)',
   Science: 'linear-gradient(135deg,#14b8a6,#3b82f6)',
 }
 
@@ -33,9 +34,10 @@ const CAT_GRADIENT: Record<string, string> = {
 function JoinFormModal({ club, open, onClose, onJoined }: {
   club: Club; open: boolean; onClose: () => void; onJoined: () => void
 }) {
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
-    full_name: '', course: '', year_of_study: '', phone_number: '', admission_number: '',
+    full_name: '', course: '', year_of_study: '', phone_number: '',
   })
   const set = (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -83,8 +85,12 @@ function JoinFormModal({ club, open, onClose, onJoined }: {
           </div>
         </div>
         <div>
-          <label className={lbl}>Admission Number</label>
-          <input className="input" value={form.admission_number} onChange={set('admission_number')} required placeholder="e.g. CUEA/2022/0001" />
+          <label className={lbl}>University Email</label>
+          <div className="input flex items-center gap-2 opacity-80 cursor-not-allowed">
+            <Mail className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
+            <span className="truncate">{user?.email}</span>
+          </div>
+          <p className="text-slate-500 text-[11px] mt-1">Used to identify you to the club — no admission number needed.</p>
         </div>
         <div className="flex gap-3 pt-2">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
@@ -137,7 +143,7 @@ function MembersModal({ club, onClose }: { club: Club; onClose: () => void }) {
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-white text-xs font-medium">{r.full_name}</p>
-                    <p className="text-indigo-300 text-[10px]">{r.user_email} · Adm: {r.admission_number}</p>
+                    <p className="text-indigo-300 text-[10px]">{r.user_email}</p>
                     <p className="text-slate-400 text-[10px]">{r.course}, Yr {r.year_of_study} · {r.phone_number}</p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
@@ -184,7 +190,7 @@ function ClubCard({ club, onLeave, onDelete, onShowMembers, onJoin }: {
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in"
-      style={{ background: '#1e1b4b' }}>
+      style={{ background: '#2e000b' }}>
       <div className="h-1.5" style={{ background: gradient }} />
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-start gap-3">
@@ -205,7 +211,7 @@ function ClubCard({ club, onLeave, onDelete, onShowMembers, onJoin }: {
             </div>
             {club.isOwner && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold mt-0.5"
-                style={{ background: 'rgba(99,102,241,0.3)', color: '#a5b4fc' }}>YOUR CLUB</span>
+                style={{ background: 'rgba(200,30,69,0.3)', color: '#f5cd6b' }}>YOUR CLUB</span>
             )}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium mt-1 text-white/80 border border-white/20"
               style={{ background: 'rgba(255,255,255,0.1)' }}>
@@ -243,7 +249,7 @@ function ClubCard({ club, onLeave, onDelete, onShowMembers, onJoin }: {
         {club.isOwner && (
           <button type="button" onClick={() => onShowMembers(club)}
             className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold"
-            style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc' }}>
+            style={{ background: 'rgba(200,30,69,0.2)', border: '1px solid rgba(200,30,69,0.4)', color: '#f5cd6b' }}>
             <Users className="w-3.5 h-3.5" /> Manage Members ({club.memberCount})
           </button>
         )}
@@ -254,7 +260,7 @@ function ClubCard({ club, onLeave, onDelete, onShowMembers, onJoin }: {
             onClick={() => { setLoading(true); onLeave(club._id) }}
             disabled={loading}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mt-1"
-            style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc' }}>
+            style={{ background: 'rgba(200,30,69,0.2)', border: '1px solid rgba(200,30,69,0.4)', color: '#f5cd6b' }}>
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             ✓ Member — Leave Club
           </button>

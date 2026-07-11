@@ -7,31 +7,39 @@ export default {
   theme: {
     extend: {
       colors: {
+        // ── CUEA brand palette ──────────────────────────
+        // Maroon (#A0002A) is CUEA's official site theme-color; gold pairs
+        // with it for the classic Catholic-university crest look.
+        //
+        // `indigo` and `violet` are overridden (not just `primary`/
+        // `secondary`) because most of the app's existing markup uses the
+        // literal Tailwind palette names directly (bg-indigo-500,
+        // text-violet-300, etc.) rather than the custom tokens below — this
+        // way every one of those classes is re-themed for free.
         primary: {
-          50:  '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+          50:  '#fdf2f4', 100: '#fce4e9', 200: '#f8c9d3', 300: '#f09eb1',
+          400: '#e35c7d', 500: '#c81e45', 600: '#a0002a', 700: '#800022',
+          800: '#660019', 900: '#4d0013', 950: '#2e000b',
         },
         secondary: {
-          50:  '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
-          950: '#2e1065',
+          50:  '#fefaf0', 100: '#fdf3d6', 200: '#fae3a3', 300: '#f5cd6b',
+          400: '#e9ba3f', 500: '#d4af37', 600: '#b8912a', 700: '#967420',
+          800: '#755916', 900: '#5c440f', 950: '#332508',
+        },
+        indigo: {
+          50:  '#fdf2f4', 100: '#fce4e9', 200: '#f8c9d3', 300: '#f09eb1',
+          400: '#e35c7d', 500: '#c81e45', 600: '#a0002a', 700: '#800022',
+          800: '#660019', 900: '#4d0013', 950: '#2e000b',
+        },
+        violet: {
+          50:  '#fefaf0', 100: '#fdf3d6', 200: '#fae3a3', 300: '#f5cd6b',
+          400: '#e9ba3f', 500: '#d4af37', 600: '#b8912a', 700: '#967420',
+          800: '#755916', 900: '#5c440f', 950: '#332508',
+        },
+        purple: {
+          50:  '#fefaf0', 100: '#fdf3d6', 200: '#fae3a3', 300: '#f5cd6b',
+          400: '#e9ba3f', 500: '#d4af37', 600: '#b8912a', 700: '#967420',
+          800: '#755916', 900: '#5c440f', 950: '#332508',
         },
         surface: {
           50:  '#f8fafc',
@@ -53,13 +61,13 @@ export default {
         mono:    ['"JetBrains Mono"', 'monospace'],
       },
       backgroundImage: {
-        'brand-gradient':   'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-        'brand-gradient-h': 'linear-gradient(90deg,  #6366f1 0%, #8b5cf6 100%)',
-        'hero-gradient':    'linear-gradient(160deg, #020617 0%, #0f172a 40%, #1e1b4b 70%, #312e81 100%)',
+        'brand-gradient':   'linear-gradient(135deg, #c81e45 0%, #d4af37 100%)',
+        'brand-gradient-h': 'linear-gradient(90deg,  #c81e45 0%, #d4af37 100%)',
+        'hero-gradient':    'linear-gradient(160deg, #020617 0%, #0f172a 40%, #2e000b 70%, #4d0013 100%)',
       },
       boxShadow: {
-        brand:      '0 0 20px rgba(99, 102, 241, 0.35)',
-        'brand-lg': '0 0 40px rgba(139, 92, 246, 0.4)',
+        brand:      '0 0 20px rgba(200, 30, 69, 0.35)',
+        'brand-lg': '0 0 40px rgba(212, 175, 55, 0.4)',
         card:       '0 2px 16px rgba(15, 23, 42, 0.18)',
       },
       animation: {

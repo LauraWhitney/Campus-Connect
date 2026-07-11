@@ -28,7 +28,7 @@
     @apply text-white font-semibold px-6 py-2.5 rounded-xl
            hover:shadow-brand-lg transition-all duration-200
            hover:scale-[1.02] active:scale-[0.98] text-sm;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #c81e45, #d4af37);
   }
   .btn-secondary {
     @apply border border-primary-400 text-primary-600 font-medium px-6 py-2.5
@@ -42,7 +42,7 @@
   }
   .nav-link.active {
     @apply bg-white/15 text-white;
-    border-left: 2px solid #6366f1;
+    border-left: 2px solid #c81e45;
   }
 
   /* Input */
@@ -73,10 +73,10 @@
 
 @layer utilities {
   .bg-brand-gradient {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #c81e45, #d4af37);
   }
   .text-brand-gradient {
-    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    background: linear-gradient(90deg, #c81e45, #d4af37);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

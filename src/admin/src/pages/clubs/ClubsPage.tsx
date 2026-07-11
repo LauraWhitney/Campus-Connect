@@ -63,18 +63,18 @@ export default function ClubsPage() {
       key: 'name', label: 'Club',
       render: (_: any, row: Club) => (
         <div>
-          <p className="font-medium text-surface-900 text-sm">{row.name}</p>
+          <p className="font-medium text-white text-sm">{row.name}</p>
           <p className="text-surface-500 text-xs">{row.category}</p>
           {row.registration_number && <p className="text-surface-400 text-xs">Reg: {row.registration_number}</p>}
         </div>
       ),
     },
-    { key: 'president', label: 'President', render: (v: string) => <span className="text-sm text-surface-700">{v}</span> },
+    { key: 'president', label: 'President', render: (v: string) => <span className="text-sm text-surface-200">{v}</span> },
     {
       key: 'member_count', label: 'Members',
       render: (v: number, row: Club) => (
         <button onClick={() => openMembers(row)}
-          className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-800 font-semibold text-sm transition-colors">
+          className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-300 font-semibold text-sm transition-colors">
           <Users className="w-3.5 h-3.5" /> {v}
         </button>
       ),
@@ -82,7 +82,7 @@ export default function ClubsPage() {
     {
       key: 'meeting_location', label: 'Location',
       render: (v: string) => v ? (
-        <div className="flex items-center gap-1 text-surface-600 text-xs">
+        <div className="flex items-center gap-1 text-surface-300 text-xs">
           <MapPin className="w-3 h-3" /> {v}
         </div>
       ) : <span className="text-surface-400 text-xs">—</span>,
@@ -91,7 +91,7 @@ export default function ClubsPage() {
       key: 'actions', label: '',
       render: (_: any, row: Club) => (
         <button onClick={() => setDeleteTarget(row)}
-          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+          className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
           <Trash2 className="w-4 h-4" />
         </button>
       ),
@@ -128,12 +128,12 @@ export default function ClubsPage() {
               <p className="text-surface-500 text-sm mb-3">{membersData.member_count} approved · {membersData.pending_count} pending</p>
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {membersData.requests?.filter((r:any)=>r.status==="approved").map((u: any) => (
-                  <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-surface-50 border border-surface-200">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                      <span className="text-indigo-700 text-xs font-bold">{u.name[0]}</span>
+                  <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-surface-700/30 border border-surface-600/40">
+                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+                      <span className="text-indigo-300 text-xs font-bold">{u.name[0]}</span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-surface-900">{u.name}</p>
+                      <p className="text-sm font-medium text-white">{u.name}</p>
                       <p className="text-xs text-surface-500">{u.email}</p>
                     </div>
                   </div>

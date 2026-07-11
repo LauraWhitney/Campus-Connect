@@ -43,7 +43,7 @@ export const lostFoundAPI = {
 
   /** Update a Lost item to Found status */
   markFound: async (id: string): Promise<LostFoundItem> => {
-    const { data } = await api.patch(`/lost-found/${id}/found`)
+    const { data } = await api.patch(`/lost-found/${id}/found`, { status: 'Found' })
     return normalise(data)
   },
 

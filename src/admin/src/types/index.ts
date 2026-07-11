@@ -23,6 +23,9 @@ export interface Event {
   rsvp_count: number
   created_by?: number
   creator?: { id: number; name: string; email: string } | null
+  approval_status: 'pending' | 'approved' | 'rejected'
+  rejection_reason?: string | null
+  reviewed_at?: string | null
   created_at: string
 }
 
@@ -85,7 +88,7 @@ export interface Feedback {
   is_anonymous: boolean
   status: 'Pending' | 'Reviewed' | 'Resolved'
   notified: boolean
-  submitted_by?: number | null
+  submitted_by?: { id: number; name: string } | null
   submitter?: { id: number; name: string } | null
   resolved_by?: number | null
   resolved_at?: string | null

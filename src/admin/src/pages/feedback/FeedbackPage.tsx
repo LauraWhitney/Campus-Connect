@@ -9,13 +9,13 @@ const STATUS_BADGE: Record<string, string> = {
   Pending: 'badge-yellow', Reviewed: 'badge-blue', Resolved: 'badge-green',
 }
 const CAT_GRADIENT: Record<string, string> = {
-  Academic:       'linear-gradient(135deg,#3b82f6,#6366f1)',
+  Academic:       'linear-gradient(135deg,#3b82f6,#c81e45)',
   Facilities:     'linear-gradient(135deg,#10b981,#06b6d4)',
-  Administration: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-  Clubs:          'linear-gradient(135deg,#8b5cf6,#a855f7)',
+  Administration: 'linear-gradient(135deg,#c81e45,#d4af37)',
+  Clubs:          'linear-gradient(135deg,#d4af37,#a855f7)',
   Events:         'linear-gradient(135deg,#f59e0b,#ef4444)',
   Spiritual:      'linear-gradient(135deg,#f59e0b,#fbbf24)',
-  Hostel:         'linear-gradient(135deg,#ec4899,#8b5cf6)',
+  Hostel:         'linear-gradient(135deg,#ec4899,#d4af37)',
   Other:          'linear-gradient(135deg,#94a3b8,#64748b)',
 }
 
@@ -61,7 +61,7 @@ export default function FeedbackPage() {
         <>
           <Table>
             <thead>
-              <tr className="border-b border-slate-100">
+              <tr className="border-b border-surface-700/40">
                 <th className="th">Title</th>
                 <th className="th hidden sm:table-cell">Category</th>
                 <th className="th hidden md:table-cell">Department</th>
@@ -88,36 +88,36 @@ export default function FeedbackPage() {
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full shrink-0"
                         style={{ background: CAT_GRADIENT[fb.category] ?? CAT_GRADIENT.Other }} />
-                      <span className="text-slate-600 text-xs">{fb.category}</span>
+                      <span className="text-surface-300 text-xs">{fb.category}</span>
                     </div>
                   </td>
-                  <td className="td text-slate-500 hidden md:table-cell max-w-[130px] truncate">{fb.department}</td>
+                  <td className="td text-surface-400 hidden md:table-cell max-w-[130px] truncate">{fb.department}</td>
                   <td className="td">
                     <span className={STATUS_BADGE[fb.status] ?? 'badge-surface'}>{fb.status}</span>
                   </td>
-                  <td className="td text-slate-500 hidden lg:table-cell">
+                  <td className="td text-surface-400 hidden lg:table-cell">
                     {fb.is_anonymous
-                      ? <span className="italic text-slate-400">Anonymous</span>
+                      ? <span className="italic text-surface-500">Anonymous</span>
                       : fb.submitted_by?.name ?? '—'}
                   </td>
                   <td className="td hidden lg:table-cell">
                     {fb.resolved_at
-                      ? <span className="text-slate-400 text-xs">
+                      ? <span className="text-surface-500 text-xs">
                           {new Date(fb.resolved_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                         </span>
-                      : <span className="text-slate-600 text-xs">—</span>}
+                      : <span className="text-surface-300 text-xs">—</span>}
                   </td>
-                  <td className="td text-slate-400 hidden lg:table-cell">
+                  <td className="td text-surface-500 hidden lg:table-cell">
                     {new Date(fb.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="td">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setViewTarget(fb)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="View details">
+                        className="p-1.5 rounded-lg text-surface-500 hover:text-primary-400 hover:bg-primary-500/10 transition-colors" title="View details">
                         <Eye className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => { setStatusTarget(fb); setNewStatus(fb.status) }}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="Update status">
+                        className="p-1.5 rounded-lg text-surface-500 hover:text-primary-400 hover:bg-primary-500/10 transition-colors" title="Update status">
                         <ChevronDown className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -135,48 +135,48 @@ export default function FeedbackPage() {
         {viewTarget && (
           <div className="space-y-4">
             <div>
-              <p className="text-xs text-slate-500 mb-1 font-medium">Title</p>
-              <p className="text-slate-900 font-semibold">{viewTarget.title}</p>
+              <p className="text-xs text-surface-400 mb-1 font-medium">Title</p>
+              <p className="text-white font-semibold">{viewTarget.title}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 mb-1 font-medium">Description</p>
-              <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{viewTarget.description}</p>
+              <p className="text-xs text-surface-400 mb-1 font-medium">Description</p>
+              <p className="text-surface-200 text-sm leading-relaxed whitespace-pre-wrap">{viewTarget.description}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-slate-500 mb-1 font-medium">Category</p>
+                <p className="text-xs text-surface-400 mb-1 font-medium">Category</p>
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full"
                     style={{ background: CAT_GRADIENT[viewTarget.category] ?? CAT_GRADIENT.Other }} />
-                  <span className="text-slate-700 text-sm">{viewTarget.category}</span>
+                  <span className="text-surface-200 text-sm">{viewTarget.category}</span>
                 </div>
               </div>
               <div>
-                <p className="text-xs text-slate-500 mb-1 font-medium">Department</p>
-                <p className="text-slate-700 text-sm">{viewTarget.department}</p>
+                <p className="text-xs text-surface-400 mb-1 font-medium">Department</p>
+                <p className="text-surface-200 text-sm">{viewTarget.department}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 mb-1 font-medium">Status</p>
+                <p className="text-xs text-surface-400 mb-1 font-medium">Status</p>
                 <span className={STATUS_BADGE[viewTarget.status]}>{viewTarget.status}</span>
               </div>
               <div>
-                <p className="text-xs text-slate-500 mb-1 font-medium">From</p>
-                <p className="text-slate-700 text-sm">
+                <p className="text-xs text-surface-400 mb-1 font-medium">From</p>
+                <p className="text-surface-200 text-sm">
                   {viewTarget.is_anonymous
-                    ? <span className="italic text-slate-400">Anonymous</span>
+                    ? <span className="italic text-surface-500">Anonymous</span>
                     : viewTarget.submitted_by?.name ?? '—'}
                 </p>
               </div>
               {viewTarget.resolved_at && (
                 <div>
-                  <p className="text-xs text-slate-500 mb-1 font-medium">Resolved At</p>
-                  <p className="text-slate-700 text-sm">
+                  <p className="text-xs text-surface-400 mb-1 font-medium">Resolved At</p>
+                  <p className="text-surface-200 text-sm">
                     {new Date(viewTarget.resolved_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
               )}
               <div>
-                <p className="text-xs text-slate-500 mb-1 font-medium">Student Notified</p>
+                <p className="text-xs text-surface-400 mb-1 font-medium">Student Notified</p>
                 <span className={viewTarget.notified ? 'badge-green' : 'badge-surface'}>
                   {viewTarget.notified ? 'Yes' : 'No'}
                 </span>
@@ -192,10 +192,10 @@ export default function FeedbackPage() {
 
       {/* Status change modal */}
       <Modal open={!!statusTarget} onClose={() => setStatusTarget(null)} title="Update Feedback Status" size="sm">
-        <p className="text-slate-600 text-sm mb-4">
-          Update status for: <span className="text-slate-900 font-medium">{statusTarget?.title}</span>
+        <p className="text-surface-300 text-sm mb-4">
+          Update status for: <span className="text-white font-medium">{statusTarget?.title}</span>
         </p>
-        <p className="text-slate-500 text-xs mb-3">
+        <p className="text-surface-400 text-xs mb-3">
           Setting this will mark the student as notified and, if Resolved, record the timestamp.
         </p>
         <select className="input mb-5" value={newStatus} onChange={e => setNewStatus(e.target.value)}

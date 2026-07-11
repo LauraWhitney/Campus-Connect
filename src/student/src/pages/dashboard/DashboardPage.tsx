@@ -10,12 +10,12 @@ import type { Event, MarketplaceItem, Club } from '../../types'
 // ── Alternating blue→purple card gradients ─────────────
 // Even index = blue-leaning, Odd index = purple-leaning
 const CARD_GRADIENTS = [
-  { bg: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', shadow: '0 8px 24px rgba(59,130,246,0.35)'  }, // blue→indigo
-  { bg: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', shadow: '0 8px 24px rgba(99,102,241,0.35)' }, // indigo→purple
-  { bg: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(139,92,246,0.35)' }, // purple→violet
-  { bg: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', shadow: '0 8px 24px rgba(59,130,246,0.30)'  }, // blue→purple
-  { bg: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(99,102,241,0.30)' }, // indigo→violet
-  { bg: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', shadow: '0 8px 24px rgba(139,92,246,0.30)' }, // purple→indigo
+  { bg: 'linear-gradient(135deg, #3b82f6 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(59,130,246,0.35)'  }, // blue→indigo
+  { bg: 'linear-gradient(135deg, #c81e45 0%, #d4af37 100%)', shadow: '0 8px 24px rgba(200,30,69,0.35)' }, // indigo→purple
+  { bg: 'linear-gradient(135deg, #d4af37 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(212,175,55,0.35)' }, // purple→violet
+  { bg: 'linear-gradient(135deg, #3b82f6 0%, #d4af37 100%)', shadow: '0 8px 24px rgba(59,130,246,0.30)'  }, // blue→purple
+  { bg: 'linear-gradient(135deg, #c81e45 0%, #a855f7 100%)', shadow: '0 8px 24px rgba(200,30,69,0.30)' }, // indigo→violet
+  { bg: 'linear-gradient(135deg, #d4af37 0%, #c81e45 100%)', shadow: '0 8px 24px rgba(212,175,55,0.30)' }, // purple→indigo
 ]
 
 interface StatCardProps {
@@ -106,8 +106,8 @@ export default function DashboardPage() {
       <div
         className="rounded-2xl p-7 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)',
-          boxShadow: '0 12px 40px rgba(99,102,241,0.4)',
+          background: 'linear-gradient(135deg, #a0002a 0%, #b8912a 50%, #9333ea 100%)',
+          boxShadow: '0 12px 40px rgba(200,30,69,0.4)',
         }}
       >
         {/* Decorative blobs */}

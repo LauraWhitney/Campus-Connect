@@ -12,6 +12,8 @@ function normalise(e: any): Event {
     isCreator: e.is_creator ?? false,
     creatorName: e.creator_name ?? null,
     createdBy: e.created_by,
+    approvalStatus: e.approval_status ?? 'approved',
+    rejectionReason: e.rejection_reason ?? null,
     createdAt: e.created_at,
   }
 }
@@ -43,6 +45,12 @@ export const eventsAPI = {
 
   create: async (eventData: Partial<Event>): Promise<Event> => {
     const { data } = await api.post('/events', eventData)
+    return normalise(data)
+  },
+
+  /** Edit an event. If it had been rejected, this automatically resubmits it for review. */
+  update: async (id: string, eventData: Partial<Event>): Promise<Event> => {
+    const { data } = await api.put(`/events/${id}`, eventData)
     return normalise(data)
   },
 

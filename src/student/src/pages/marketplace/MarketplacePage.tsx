@@ -16,15 +16,15 @@ const CONDITIONS: ItemCondition[] = ['New', 'Like New', 'Good', 'Fair']
 const COND_STYLE: Record<string, { bg: string; text: string; border: string }> = {
   New:        { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
   'Like New': { bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' },
-  Good:       { bg: '#e0e7ff', text: '#3730a3', border: '#c7d2fe' },
+  Good:       { bg: '#fdf3d6', text: '#660019', border: '#fae3a3' },
   Fair:       { bg: '#f1f5f9', text: '#475569', border: '#e2e8f0' },
 }
 const CAT_GRADIENT: Record<string, string> = {
-  Books: 'linear-gradient(135deg,#3b82f6,#6366f1)', Electronics: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-  Clothing: 'linear-gradient(135deg,#ec4899,#8b5cf6)', Stationery: 'linear-gradient(135deg,#f59e0b,#ef4444)',
-  Accommodation: 'linear-gradient(135deg,#10b981,#06b6d4)', 'Notes/Handouts': 'linear-gradient(135deg,#0ea5e9,#6366f1)',
-  'Lab Equipment': 'linear-gradient(135deg,#14b8a6,#3b82f6)', 'Hostel Items': 'linear-gradient(135deg,#8b5cf6,#ec4899)',
-  Other: 'linear-gradient(135deg,#8b5cf6,#a855f7)',
+  Books: 'linear-gradient(135deg,#3b82f6,#c81e45)', Electronics: 'linear-gradient(135deg,#c81e45,#d4af37)',
+  Clothing: 'linear-gradient(135deg,#ec4899,#d4af37)', Stationery: 'linear-gradient(135deg,#f59e0b,#ef4444)',
+  Accommodation: 'linear-gradient(135deg,#10b981,#06b6d4)', 'Notes/Handouts': 'linear-gradient(135deg,#0ea5e9,#c81e45)',
+  'Lab Equipment': 'linear-gradient(135deg,#14b8a6,#3b82f6)', 'Hostel Items': 'linear-gradient(135deg,#d4af37,#ec4899)',
+  Other: 'linear-gradient(135deg,#d4af37,#a855f7)',
 }
 
 function ItemCard({ item, currentUserId, onMarkSold, onMarkUnsold, onDelete }: {
@@ -42,7 +42,7 @@ function ItemCard({ item, currentUserId, onMarkSold, onMarkUnsold, onDelete }: {
 
   return (
     <div className={`rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in ${item.isSold ? 'opacity-70' : ''}`}
-      style={{ background: '#1e1b4b' }}>
+      style={{ background: '#2e000b' }}>
       <div className="h-1.5" style={{ background: gradient }} />
       {/* Item photo */}
       {item.images && item.images.length > 0 && (
@@ -114,7 +114,7 @@ function ItemCard({ item, currentUserId, onMarkSold, onMarkUnsold, onDelete }: {
               {!isMySelling && (
                 <a href={`mailto:${item.seller.email}?subject=Re: ${item.title}`}
                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all"
-                  style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.3)' }}>
+                  style={{ background: 'rgba(200,30,69,0.2)', color: '#f5cd6b', border: '1px solid rgba(200,30,69,0.3)' }}>
                   <Mail className="w-3.5 h-3.5" /> Contact
                 </a>
               )}
@@ -123,7 +123,7 @@ function ItemCard({ item, currentUserId, onMarkSold, onMarkUnsold, onDelete }: {
             isMySelling && (
               <button onClick={() => { setLoading(true); onMarkUnsold(item._id) }} disabled={loading}
                 className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all"
-                style={{ background: 'rgba(99,102,241,0.1)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.2)' }}>
+                style={{ background: 'rgba(200,30,69,0.1)', color: '#f5cd6b', border: '1px solid rgba(200,30,69,0.2)' }}>
                 {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />} Relist
               </button>
             )
@@ -193,7 +193,7 @@ function CreateItemModal({ open, onClose, onCreated }: { open: boolean; onClose:
           <label className={lbl}>Photo <span className="text-slate-400">(optional)</span></label>
           <div onClick={() => fileRef.current?.click()}
             className="w-full h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition-colors overflow-hidden"
-            style={{ borderColor: previewUrl ? 'transparent' : '#c7d2fe', background: previewUrl ? 'transparent' : '#eef2ff' }}>
+            style={{ borderColor: previewUrl ? 'transparent' : '#fae3a3', background: previewUrl ? 'transparent' : '#fefaf0' }}>
             {previewUrl ? (
               <img src={previewUrl} alt="preview" className="w-full h-full object-cover rounded-xl" />
             ) : (

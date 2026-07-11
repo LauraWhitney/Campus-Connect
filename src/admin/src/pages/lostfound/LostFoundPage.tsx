@@ -60,7 +60,7 @@ export default function LostFoundPage() {
         <>
           <Table>
             <thead>
-              <tr className="border-b border-slate-100">
+              <tr className="border-b border-surface-700/40">
                 <th className="th">Item</th>
                 <th className="th">Status</th>
                 <th className="th hidden sm:table-cell">Location</th>
@@ -78,32 +78,32 @@ export default function LostFoundPage() {
                   <td className="td">
                     <span className={STATUS_BADGE[item.status] ?? 'badge-surface'}>{item.status}</span>
                   </td>
-                  <td className="td text-slate-500 hidden sm:table-cell max-w-[130px] truncate">{item.location}</td>
-                  <td className="td text-slate-500 hidden md:table-cell">
+                  <td className="td text-surface-400 hidden sm:table-cell max-w-[130px] truncate">{item.location}</td>
+                  <td className="td text-surface-400 hidden md:table-cell">
                     {new Date(item.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                   </td>
-                  <td className="td text-slate-500 hidden md:table-cell">{item.reporter?.name ?? 'Anonymous'}</td>
+                  <td className="td text-surface-400 hidden md:table-cell">{item.reporter?.name ?? 'Anonymous'}</td>
                   <td className="td hidden lg:table-cell">
                     {item.claimer
                       ? (
                         <div>
-                          <span className="text-slate-400 text-xs">{item.claimer.name}</span>
+                          <span className="text-surface-500 text-xs">{item.claimer.name}</span>
                           {item.claimed_at && (
-                            <p className="text-slate-600 text-[10px]">
+                            <p className="text-surface-300 text-[10px]">
                               {new Date(item.claimed_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                             </p>
                           )}
                         </div>
                       )
-                      : <span className="text-slate-600 text-xs">—</span>}
+                      : <span className="text-surface-300 text-xs">—</span>}
                   </td>
-                  <td className="td text-slate-500 hidden lg:table-cell max-w-[130px] truncate">{item.contact}</td>
+                  <td className="td text-surface-400 hidden lg:table-cell max-w-[130px] truncate">{item.contact}</td>
                   <td className="td">
                     <div className="flex items-center justify-end gap-1">
                       {/* Lost → Found */}
                       {item.status === 'Lost' && (
                         <button onClick={() => handleMarkFound(item)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 transition-colors"
+                          className="p-1.5 rounded-lg text-surface-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
                           title="Mark as Found">
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -111,7 +111,7 @@ export default function LostFoundPage() {
                       {/* Found → Claimed */}
                       {!item.is_claimed && (
                         <button onClick={() => setClaimTarget(item)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                          className="p-1.5 rounded-lg text-surface-500 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
                           title="Mark as Claimed">
                           <CheckCircle className="w-3.5 h-3.5" />
                         </button>

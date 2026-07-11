@@ -28,20 +28,20 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: 'linear-gradient(160deg, #020617 0%, #0f172a 45%, #1e1b4b 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #020617 0%, #0f172a 45%, #2e000b 100%)' }}
     >
       {/* Decorative blobs */}
       <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl pointer-events-none"
-        style={{ background: 'rgba(99,102,241,0.08)' }} />
+        style={{ background: 'rgba(200,30,69,0.08)' }} />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none"
-        style={{ background: 'rgba(139,92,246,0.07)' }} />
+        style={{ background: 'rgba(212,175,55,0.07)' }} />
 
       <div className="relative w-full max-w-sm animate-slide-up">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-brand-lg"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+            style={{ background: 'linear-gradient(135deg, #c81e45, #d4af37)' }}
           >
             <ShieldCheck className="w-8 h-8 text-white" />
           </div>
@@ -52,7 +52,7 @@ export default function LoginPage() {
         <div className="bg-surface-800/70 backdrop-blur-md border border-surface-700/40 rounded-2xl p-7 shadow-card">
           {/* Restricted banner */}
           <div className="flex items-center gap-2 p-3 rounded-xl mb-5"
-            style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)' }}>
+            style={{ background: 'rgba(200,30,69,0.1)', border: '1px solid rgba(200,30,69,0.25)' }}>
             <ShieldCheck className="w-4 h-4 text-primary-400 shrink-0" />
             <p className="text-primary-300 text-xs">Restricted to administrators only</p>
           </div>
@@ -82,7 +82,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-surface-700 text-xs mt-4">
+        <p className="text-center text-surface-400 text-xs mt-4">
           Campus Connect · Administration
         </p>
       </div>

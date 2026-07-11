@@ -71,7 +71,7 @@ export default function MarketplacePage() {
               onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
           )}
           <div>
-            <p className="font-medium text-surface-900 text-sm">{row.title}</p>
+            <p className="font-medium text-white text-sm">{row.title}</p>
             <p className="text-surface-500 text-xs">{row.category} · {row.condition}</p>
             {row.contact && <p className="text-surface-400 text-xs">{row.contact}</p>}
           </div>
@@ -80,9 +80,9 @@ export default function MarketplacePage() {
     },
     {
       key: 'price', label: 'Price',
-      render: (v: number) => <span className="font-semibold text-surface-900 text-sm">KES {Number(v).toLocaleString()}</span>,
+      render: (v: number) => <span className="font-semibold text-white text-sm">KES {Number(v).toLocaleString()}</span>,
     },
-    { key: 'seller', label: 'Seller', render: (_: any, row: MarketplaceItem) => <span className="text-xs text-surface-600">{row.seller.name}</span> },
+    { key: 'seller', label: 'Seller', render: (_: any, row: MarketplaceItem) => <span className="text-xs text-surface-300">{row.seller.name}</span> },
     {
       key: 'is_sold', label: 'Status',
       render: (v: boolean) => v
@@ -95,16 +95,16 @@ export default function MarketplacePage() {
         <div className="flex items-center gap-2">
           {!row.is_sold
             ? <button onClick={() => handleMarkSold(row)}
-                className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors" title="Mark Sold">
+                className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-500/10 transition-colors" title="Mark Sold">
                 <CheckCircle2 className="w-4 h-4" />
               </button>
             : <button onClick={() => handleMarkUnsold(row)}
-                className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors" title="Relist">
+                className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-500/10 transition-colors" title="Relist">
                 <RotateCcw className="w-4 h-4" />
               </button>
           }
           <button onClick={() => setDeleteTarget(row)}
-            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+            className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>

@@ -49,9 +49,15 @@ export const statsAPI = {
 
 // ── Users ─────────────────────────────────────────────
 export const usersAPI = {
-  getAll: async (page = 1, search = ''): Promise<PaginatedResponse<User>> => {
-    const { data } = await api.get('/admin/users', { params: { page, search: search || undefined } })
+  getAll: async (page = 1, search = '', faculty = ''): Promise<PaginatedResponse<User>> => {
+    const { data } = await api.get('/admin/users', {
+      params: { page, search: search || undefined, faculty: faculty || undefined },
+    })
     return data
+  },
+  getFaculties: async (): Promise<string[]> => {
+    const { data } = await api.get('/admin/faculties')
+    return data.faculties
   },
   updateRole: async (id: number, role: string) => {
     await api.patch(`/admin/users/${id}/role`, { role })
@@ -63,8 +69,8 @@ export const usersAPI = {
 
 // ── Events ────────────────────────────────────────────
 export const eventsAPI = {
-  getAll: async (page = 1): Promise<PaginatedResponse<Event>> => {
-    const { data } = await api.get('/events', { params: { page } })
+  getAll: async (page = 1, approvalStatus = ''): Promise<PaginatedResponse<Event>> => {
+    const { data } = await api.get('/events', { params: { page, approval_status: approvalStatus || undefined } })
     return { ...data, data: data.data.map(normaliseEvent) }
   },
   getRsvps: async (id: number) => {
@@ -78,6 +84,14 @@ export const eventsAPI = {
   rejectRsvp: async (eventId: number, rsvpId: number) => {
     const { data } = await api.patch(`/events/${eventId}/rsvps/${rsvpId}`, { action: 'reject' })
     return data
+  },
+  approveEvent: async (eventId: number) => {
+    const { data } = await api.patch(`/events/${eventId}/approval`, { action: 'approve' })
+    return normaliseEvent(data)
+  },
+  rejectEvent: async (eventId: number, reason?: string) => {
+    const { data } = await api.patch(`/events/${eventId}/approval`, { action: 'reject', reason })
+    return normaliseEvent(data)
   },
   getAttendance: async (id: number) => {
     const { data } = await api.get(`/events/${id}/attendance`)
@@ -145,7 +159,7 @@ export const lostFoundAPI = {
     return data
   },
   markFound: async (id: number): Promise<LostFoundItem> => {
-    const { data } = await api.patch(`/lost-found/${id}/found`)
+    const { data } = await api.patch(`/lost-found/${id}/found`, { status: 'Found' })
     return data
   },
   delete: async (id: number) => {
@@ -171,6 +185,47 @@ export const activityAPI = {
     const { data } = await api.get('/admin/activity', {
       params: { page, action: action || undefined },
     })
+    return data
+  },
+}
+
+// ── Admin Notifications ───────────────────────────────
+export interface AdminNotification {
+  id: number
+  type: string
+  title: string
+  message: string
+  link?: string | null
+  is_read: boolean
+  created_at: string
+}
+
+export const notificationsAPI = {
+  getAll: async (page = 1, unreadOnly = false): Promise<PaginatedResponse<AdminNotification> & { unread_count: number }> => {
+    const { data } = await api.get('/admin/notifications', { params: { page, unread_only: unreadOnly || undefined } })
+    return data
+  },
+  unreadCount: async (): Promise<number> => {
+    const { data } = await api.get('/admin/notifications/unread-count')
+    return data.unread_count
+  },
+  markRead: async (id: number) => {
+    const { data } = await api.patch(`/admin/notifications/${id}/read`)
+    return data
+  },
+  markAllRead: async () => {
+    await api.patch('/admin/notifications/read-all')
+  },
+}
+
+// ── Test data cleanup (development only) ──────────────
+export const cleanupAPI = {
+  preview: async (): Promise<{ count: number; users: { id: number; name: string; email: string }[] }> => {
+    const { data } = await api.get('/admin/dev/test-accounts-preview')
+    return data
+  },
+  run: async (): Promise<{ message: string; deleted: { id: number; email: string }[] }> => {
+    const { data } = await api.post('/admin/dev/cleanup-test-data', { confirm: 'DELETE TEST DATA' })
     return data
   },
 }

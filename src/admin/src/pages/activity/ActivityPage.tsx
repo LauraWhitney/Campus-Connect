@@ -17,33 +17,33 @@ const ACTION_META: Record<string, {
 }> = {
   // Auth
   'user.register':          { icon: <UserPlus    className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Registered',        gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
-  'user.login':             { icon: <LogIn       className="w-3.5 h-3.5" />, badgeCls: 'badge-brand',   label: 'Login',             gradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)' },
+  'user.login':             { icon: <LogIn       className="w-3.5 h-3.5" />, badgeCls: 'badge-brand',   label: 'Login',             gradient: 'linear-gradient(135deg,#c81e45,#d4af37)' },
   'user.delete':            { icon: <Trash2      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Deleted',           gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
-  'role.update':            { icon: <Edit3       className="w-3.5 h-3.5" />, badgeCls: 'badge-purple',  label: 'Role Updated',      gradient: 'linear-gradient(135deg,#8b5cf6,#a855f7)' },
+  'role.update':            { icon: <Edit3       className="w-3.5 h-3.5" />, badgeCls: 'badge-purple',  label: 'Role Updated',      gradient: 'linear-gradient(135deg,#d4af37,#a855f7)' },
   // Events
-  'event.create':           { icon: <Calendar    className="w-3.5 h-3.5" />, badgeCls: 'badge-blue',    label: 'Event Created',     gradient: 'linear-gradient(135deg,#3b82f6,#6366f1)' },
+  'event.create':           { icon: <Calendar    className="w-3.5 h-3.5" />, badgeCls: 'badge-blue',    label: 'Event Created',     gradient: 'linear-gradient(135deg,#3b82f6,#c81e45)' },
   'event.delete':           { icon: <Trash2      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Event Deleted',     gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
   'event.rsvp_add':         { icon: <Calendar    className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'RSVP\'d',           gradient: 'linear-gradient(135deg,#10b981,#3b82f6)' },
   'event.rsvp_cancel':      { icon: <Calendar    className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'RSVP Cancelled',    gradient: 'linear-gradient(135deg,#f59e0b,#ef4444)' },
   'event.checkin':          { icon: <Calendar    className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Checked In',        gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
   // Marketplace
-  'marketplace.list':       { icon: <ShoppingBag className="w-3.5 h-3.5" />, badgeCls: 'badge-brand',   label: 'Listed Item',       gradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)' },
+  'marketplace.list':       { icon: <ShoppingBag className="w-3.5 h-3.5" />, badgeCls: 'badge-brand',   label: 'Listed Item',       gradient: 'linear-gradient(135deg,#c81e45,#d4af37)' },
   'marketplace.sold':       { icon: <ShoppingBag className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Item Sold',         gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
-  'marketplace.unsold':     { icon: <ShoppingBag className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'Relisted',          gradient: 'linear-gradient(135deg,#f59e0b,#8b5cf6)' },
+  'marketplace.unsold':     { icon: <ShoppingBag className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'Relisted',          gradient: 'linear-gradient(135deg,#f59e0b,#d4af37)' },
   'marketplace.delete':     { icon: <Trash2      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Listing Removed',   gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
   // Clubs
-  'club.create':            { icon: <Users       className="w-3.5 h-3.5" />, badgeCls: 'badge-brand',   label: 'Club Created',      gradient: 'linear-gradient(135deg,#8b5cf6,#a855f7)' },
+  'club.create':            { icon: <Users       className="w-3.5 h-3.5" />, badgeCls: 'badge-brand',   label: 'Club Created',      gradient: 'linear-gradient(135deg,#d4af37,#a855f7)' },
   'club.join':              { icon: <Users       className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Joined Club',       gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
   'club.leave':             { icon: <Users       className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'Left Club',         gradient: 'linear-gradient(135deg,#f59e0b,#ef4444)' },
   'club.delete':            { icon: <Trash2      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Club Deleted',      gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
   // Lost & Found
   'lostfound.report':       { icon: <MapPin      className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'Item Reported',     gradient: 'linear-gradient(135deg,#f59e0b,#ef4444)' },
   'lostfound.claim':        { icon: <MapPin      className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Item Claimed',      gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
-  'lostfound.found':        { icon: <MapPin      className="w-3.5 h-3.5" />, badgeCls: 'badge-blue',    label: 'Marked Found',      gradient: 'linear-gradient(135deg,#3b82f6,#6366f1)' },
+  'lostfound.found':        { icon: <MapPin      className="w-3.5 h-3.5" />, badgeCls: 'badge-blue',    label: 'Marked Found',      gradient: 'linear-gradient(135deg,#3b82f6,#c81e45)' },
   'lostfound.delete':       { icon: <Trash2      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Report Removed',    gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
   // Feedback
-  'feedback.submit':        { icon: <MessageSquare className="w-3.5 h-3.5" />, badgeCls: 'badge-brand', label: 'Feedback Submitted', gradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)' },
-  'feedback.status_update': { icon: <Edit3       className="w-3.5 h-3.5" />, badgeCls: 'badge-purple',  label: 'Status Updated',    gradient: 'linear-gradient(135deg,#8b5cf6,#a855f7)' },
+  'feedback.submit':        { icon: <MessageSquare className="w-3.5 h-3.5" />, badgeCls: 'badge-brand', label: 'Feedback Submitted', gradient: 'linear-gradient(135deg,#c81e45,#d4af37)' },
+  'feedback.status_update': { icon: <Edit3       className="w-3.5 h-3.5" />, badgeCls: 'badge-purple',  label: 'Status Updated',    gradient: 'linear-gradient(135deg,#d4af37,#a855f7)' },
   'feedback.delete':        { icon: <Trash2      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Feedback Deleted',  gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
 }
 
@@ -112,7 +112,7 @@ export default function ActivityPage() {
       {/* Filters row */}
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500 pointer-events-none" />
           <input className="input pl-10" placeholder="Search by email, action or detail…"
             value={query} onChange={e => setQuery(e.target.value)} />
         </div>
@@ -137,7 +137,7 @@ export default function ActivityPage() {
         <>
           <Table>
             <thead>
-              <tr className="border-b border-slate-100">
+              <tr className="border-b border-surface-700/40">
                 <th className="th">Action</th>
                 <th className="th">User</th>
                 <th className="th hidden md:table-cell">Detail</th>
@@ -163,21 +163,21 @@ export default function ActivityPage() {
                           style={{ background: meta.gradient }}>
                           <User className="w-3 h-3 text-white" />
                         </div>
-                        <span className="text-slate-700 text-xs truncate max-w-[140px]">
+                        <span className="text-surface-200 text-xs truncate max-w-[140px]">
                           {log.user_email ?? 'Anonymous'}
                         </span>
                       </div>
                     </td>
                     {/* Detail */}
-                    <td className="td hidden md:table-cell text-slate-500 max-w-[220px] truncate text-xs">
+                    <td className="td hidden md:table-cell text-surface-400 max-w-[220px] truncate text-xs">
                       {log.detail ?? '—'}
                     </td>
                     {/* IP */}
-                    <td className="td hidden lg:table-cell text-slate-400 font-mono text-xs">
+                    <td className="td hidden lg:table-cell text-surface-500 font-mono text-xs">
                       {log.ip_address ?? '—'}
                     </td>
                     {/* Time */}
-                    <td className="td text-slate-400 text-xs whitespace-nowrap">
+                    <td className="td text-surface-500 text-xs whitespace-nowrap">
                       {formatTime(log.created_at)}
                     </td>
                   </tr>

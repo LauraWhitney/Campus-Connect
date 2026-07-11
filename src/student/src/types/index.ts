@@ -50,6 +50,8 @@ export interface Event {
   isCreator?: boolean
   creatorName?: string | null
   createdBy?: string | number
+  approvalStatus?: 'pending' | 'approved' | 'rejected'
+  rejectionReason?: string | null
   createdAt: string
 }
 
@@ -135,6 +137,19 @@ export interface Feedback {
   submittedBy?: Pick<User, '_id' | 'name'> | null
   resolvedAt?: string | null
   createdAt: string
+}
+
+// ── Notifications ─────────────────────────────────────
+export type NotificationType = 'feedback' | 'event' | 'club' | 'lostfound' | 'contact' | 'system'
+
+export interface AppNotification {
+  id: number
+  type: NotificationType
+  title: string
+  message: string
+  link?: string | null
+  is_read: boolean
+  created_at: string
 }
 
 // ── API responses ─────────────────────────────────────

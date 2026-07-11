@@ -25,13 +25,12 @@ export const clubsAPI = {
     return normalise(data)
   },
 
-  /** Submit a join request with membership form data */
+  /** Submit a join request with membership form data (university email is taken from the account, not the form) */
   join: async (id: string, formData?: {
     course: string
     year_of_study: number
     full_name: string
     phone_number: string
-    admission_number: string
   }) => {
     const { data } = await api.post(`/clubs/${id}/join`, formData ?? {})
     return data   // { action, member_count }

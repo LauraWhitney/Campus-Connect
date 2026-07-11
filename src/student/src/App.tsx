@@ -12,6 +12,7 @@ import MarketplacePage from './pages/marketplace/MarketplacePage'
 import ClubsPage from './pages/clubs/ClubsPage'
 import LostFoundPage from './pages/lostfound/LostFoundPage'
 import FeedbackPage from './pages/feedback/FeedbackPage'
+import NotificationsPage from './pages/notifications/NotificationsPage'
 
 // ── Guards ─────────────────────────────────────────────
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -32,7 +33,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function FullScreenLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center"
-      style={{ background: 'linear-gradient(160deg,#020617,#0f172a,#1e1b4b)' }}>
+      style={{ background: 'linear-gradient(160deg,#020617,#0f172a,#2e000b)' }}>
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 rounded-full border-2 border-indigo-700 border-t-indigo-400 animate-spin" />
         <p className="text-indigo-300 text-sm font-medium">Loading CUEA Campus Connect…</p>
@@ -61,6 +62,7 @@ function AppRoutes() {
         <Route path="clubs"       element={<ClubsPage />} />
         <Route path="lost-found"  element={<LostFoundPage />} />
         <Route path="feedback"    element={<FeedbackPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
       </Route>
 
       {/* ── Convenience redirects — old /dashboard URLs still work ── */}
@@ -86,14 +88,14 @@ export default function App() {
           position="top-right"
           toastOptions={{
             style: {
-              background: '#1e1b4b',
+              background: '#2e000b',
               color: '#fff',
-              border: '1px solid rgba(99,102,241,0.3)',
+              border: '1px solid rgba(200,30,69,0.3)',
               fontFamily: '"Inter", sans-serif',
               fontSize: '14px',
             },
-            success: { iconTheme: { primary: '#6366f1', secondary: '#fff' } },
-            error:   { iconTheme: { primary: '#f87171', secondary: '#1e1b4b' } },
+            success: { iconTheme: { primary: '#c81e45', secondary: '#fff' } },
+            error:   { iconTheme: { primary: '#f87171', secondary: '#2e000b' } },
           }}
         />
       </BrowserRouter>

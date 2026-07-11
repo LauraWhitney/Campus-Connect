@@ -29,17 +29,17 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: 'linear-gradient(160deg, #020617 0%, #0f172a 45%, #1e1b4b 100%)' }}>
+      style={{ background: 'linear-gradient(160deg, #020617 0%, #0f172a 45%, #2e000b 100%)' }}>
 
       <div className="absolute top-20 left-1/4 w-72 h-72 rounded-full blur-3xl pointer-events-none"
-        style={{ background: 'rgba(99,102,241,0.08)' }} />
+        style={{ background: 'rgba(200,30,69,0.08)' }} />
       <div className="absolute bottom-20 right-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none"
-        style={{ background: 'rgba(139,92,246,0.07)' }} />
+        style={{ background: 'rgba(212,175,55,0.07)' }} />
 
       <div className="relative w-full max-w-sm animate-slide-up">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-brand-lg"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+            style={{ background: 'linear-gradient(135deg, #c81e45, #d4af37)' }}>
             <GraduationCap className="w-7 h-7 text-white" />
           </div>
           <h1 className="font-display text-2xl font-bold text-white">CUEA Campus Connect</h1>
@@ -60,7 +60,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs text-surface-400 mb-1.5 font-medium">Email address</label>
-              <input type="email" className="input" placeholder="you@students.cuea.ac.ke"
+              <input type="email" className="input" placeholder="registration number@.cuea.edu"
                 value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div>

@@ -11,6 +11,7 @@ import ClubsPage from './pages/clubs/ClubsPage'
 import LostFoundPage from './pages/lostfound/LostFoundPage'
 import FeedbackPage from './pages/feedback/FeedbackPage'
 import ActivityPage from './pages/activity/ActivityPage'
+import NotificationsPage from './pages/notifications/NotificationsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAdminAuth()
@@ -52,6 +53,7 @@ function AppRoutes() {
         <Route path="lost-found"  element={<LostFoundPage />} />
         <Route path="feedback"    element={<FeedbackPage />} />
         <Route path="activity"    element={<ActivityPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
       </Route>
     </Routes>
   )
@@ -66,14 +68,14 @@ export default function App() {
           position="top-right"
           toastOptions={{
             style: {
-              background: '#1e1b4b',
+              background: '#2e000b',
               color: '#fff',
-              border: '1px solid rgba(99,102,241,0.3)',
+              border: '1px solid rgba(200,30,69,0.3)',
               fontFamily: '"Inter", sans-serif',
               fontSize: '14px',
             },
-            success: { iconTheme: { primary: '#6366f1', secondary: '#fff' } },
-            error:   { iconTheme: { primary: '#f87171', secondary: '#1e1b4b' } },
+            success: { iconTheme: { primary: '#c81e45', secondary: '#fff' } },
+            error:   { iconTheme: { primary: '#f87171', secondary: '#2e000b' } },
           }}
         />
       </BrowserRouter>

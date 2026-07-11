@@ -1,10 +1,9 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Search, CheckCircle2, Trash2, ChevronDown, ChevronUp, UserCheck, UserX } from 'lucide-react'
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Search, CheckCircle2, Trash2, UserCheck, UserX } from 'lucide-react'
 import { eventsAPI } from '../../api/events'
 import type { Event, EventCategory } from '../../types'
 import { EmptyState, LoadingGrid, PageHeader, FilterBar } from '../../components/ui/index'
 import Modal from '../../components/ui/Modal'
-import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 const CATEGORIES: string[] = [
@@ -13,16 +12,16 @@ const CATEGORIES: string[] = [
 ]
 
 const CAT_GRADIENT: Record<string, { bg: string; badge: string }> = {
-  Academic:         { bg: 'linear-gradient(135deg,#3b82f6,#6366f1)', badge: 'bg-blue-100 text-blue-700 border-blue-200' },
+  Academic:         { bg: 'linear-gradient(135deg,#3b82f6,#c81e45)', badge: 'bg-blue-100 text-blue-700 border-blue-200' },
   Sports:           { bg: 'linear-gradient(135deg,#10b981,#06b6d4)', badge: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  Cultural:         { bg: 'linear-gradient(135deg,#8b5cf6,#a855f7)', badge: 'bg-violet-100 text-violet-700 border-violet-200' },
+  Cultural:         { bg: 'linear-gradient(135deg,#d4af37,#a855f7)', badge: 'bg-violet-100 text-violet-700 border-violet-200' },
   Spiritual:        { bg: 'linear-gradient(135deg,#f59e0b,#ef4444)', badge: 'bg-amber-100 text-amber-700 border-amber-200' },
-  Career:           { bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
-  Social:           { bg: 'linear-gradient(135deg,#ec4899,#8b5cf6)', badge: 'bg-pink-100 text-pink-700 border-pink-200' },
-  Convocation:      { bg: 'linear-gradient(135deg,#0ea5e9,#6366f1)', badge: 'bg-sky-100 text-sky-700 border-sky-200' },
+  Career:           { bg: 'linear-gradient(135deg,#c81e45,#d4af37)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+  Social:           { bg: 'linear-gradient(135deg,#ec4899,#d4af37)', badge: 'bg-pink-100 text-pink-700 border-pink-200' },
+  Convocation:      { bg: 'linear-gradient(135deg,#0ea5e9,#c81e45)', badge: 'bg-sky-100 text-sky-700 border-sky-200' },
   'Staff Development': { bg: 'linear-gradient(135deg,#14b8a6,#3b82f6)', badge: 'bg-teal-100 text-teal-700 border-teal-200' },
 }
-const DEFAULT_GRADIENT = { bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' }
+const DEFAULT_GRADIENT = { bg: 'linear-gradient(135deg,#c81e45,#d4af37)', badge: 'bg-indigo-100 text-indigo-700 border-indigo-200' }
 
 // ── RSVP Manage Panel (for event creator) ────────────
 function RsvpManagePanel({ event, onClose }: { event: Event; onClose: () => void }) {
@@ -90,12 +89,13 @@ function RsvpManagePanel({ event, onClose }: { event: Event; onClose: () => void
   )
 }
 
-function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps }: {
+function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps, onEdit }: {
   event: Event
   onRsvp: (id: string) => void
   onCheckIn: (id: string) => void
   onDelete: (id: string) => void
   onManageRsvps: (event: Event) => void
+  onEdit: (event: Event) => void
 }) {
   const [rsvpLoading, setRsvpLoading]       = useState(false)
   const [checkinLoading, setCheckinLoading] = useState(false)
@@ -107,7 +107,7 @@ function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps }: {
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in"
-      style={{ background: '#1e1b4b' }}>
+      style={{ background: '#2e000b' }}>
       <div className="h-1.5 w-full" style={{ background: g.bg }} />
 
       <div className="p-5 flex flex-col gap-3">
@@ -123,8 +123,15 @@ function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps }: {
               <p className="text-indigo-300 text-xs mt-0.5">{event.organizer}</p>
               {event.isCreator && (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold mt-0.5"
-                  style={{ background: 'rgba(99,102,241,0.3)', color: '#a5b4fc' }}>
+                  style={{ background: 'rgba(200,30,69,0.3)', color: '#f5cd6b' }}>
                   YOUR EVENT
+                </span>
+              )}
+              {event.isCreator && event.approvalStatus && event.approvalStatus !== 'approved' && (
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold mt-0.5 ml-1 ${
+                  event.approvalStatus === 'rejected' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'
+                }`}>
+                  {event.approvalStatus === 'rejected' ? 'REJECTED' : 'AWAITING APPROVAL'}
                 </span>
               )}
             </div>
@@ -162,11 +169,27 @@ function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps }: {
           </div>
         </div>
 
+        {/* Rejected: show reason + let owner edit and resubmit */}
+        {event.isCreator && event.approvalStatus === 'rejected' && (
+          <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            {event.rejectionReason && (
+              <p className="text-red-300 text-[11px] leading-relaxed">
+                <span className="font-semibold">Admin feedback:</span> {event.rejectionReason}
+              </p>
+            )}
+            <button onClick={() => onEdit(event)}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold"
+              style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
+              Edit &amp; Resubmit
+            </button>
+          </div>
+        )}
+
         {/* Creator: manage RSVPs */}
         {event.isCreator && (
           <button onClick={() => onManageRsvps(event)}
             className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold"
-            style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc' }}>
+            style={{ background: 'rgba(200,30,69,0.2)', border: '1px solid rgba(200,30,69,0.4)', color: '#f5cd6b' }}>
             <Users className="w-3.5 h-3.5" />
             Manage RSVPs ({event.rsvpCount} approved{event.pendingRsvpCount ? `, ${event.pendingRsvpCount} pending` : ''})
           </button>
@@ -220,12 +243,31 @@ function EventCard({ event, onRsvp, onCheckIn, onDelete, onManageRsvps }: {
   )
 }
 
-function CreateEventModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+function CreateEventModal({ open, onClose, onCreated, editEvent }: {
+  open: boolean; onClose: () => void; onCreated: () => void; editEvent?: Event | null
+}) {
+  const isEdit = !!editEvent
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     title: '', description: '', category: 'Academic' as EventCategory,
     date: '', time: '', venue: '', organizer: '', capacity: '',
   })
+
+  // Populate the form when opening in edit mode (or reset when creating fresh)
+  useEffect(() => {
+    if (!open) return
+    if (editEvent) {
+      setForm({
+        title: editEvent.title, description: editEvent.description,
+        category: editEvent.category, date: editEvent.date, time: editEvent.time,
+        venue: editEvent.venue, organizer: editEvent.organizer,
+        capacity: editEvent.capacity ? String(editEvent.capacity) : '',
+      })
+    } else {
+      setForm({ title: '', description: '', category: 'Academic', date: '', time: '', venue: '', organizer: '', capacity: '' })
+    }
+  }, [open, editEvent])
+
   const set = (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm(f => ({ ...f, [k]: e.target.value }))
@@ -234,13 +276,18 @@ function CreateEventModal({ open, onClose, onCreated }: { open: boolean; onClose
     e.preventDefault()
     setLoading(true)
     try {
-      await eventsAPI.create({ ...form, capacity: form.capacity ? Number(form.capacity) : undefined })
-      toast.success('Event created!')
+      const payload = { ...form, capacity: form.capacity ? Number(form.capacity) : undefined }
+      if (isEdit && editEvent) {
+        await eventsAPI.update(editEvent._id, payload)
+        toast.success('Event updated and resubmitted for approval!')
+      } else {
+        await eventsAPI.create(payload)
+        toast.success('Event submitted for approval!')
+      }
       onCreated()
       onClose()
-      setForm({ title: '', description: '', category: 'Academic', date: '', time: '', venue: '', organizer: '', capacity: '' })
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || 'Failed to create event'
+      const msg = err?.response?.data?.detail || `Failed to ${isEdit ? 'update' : 'create'} event`
       toast.error(msg)
     }
     finally { setLoading(false) }
@@ -248,7 +295,7 @@ function CreateEventModal({ open, onClose, onCreated }: { open: boolean; onClose
 
   const labelCls = 'block text-xs text-slate-600 mb-1.5 font-medium'
   return (
-    <Modal open={open} onClose={onClose} title="Create Event" size="md">
+    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit & Resubmit Event' : 'Create Event'} size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="ev-title" className={labelCls}>Title</label>
@@ -291,7 +338,7 @@ function CreateEventModal({ open, onClose, onCreated }: { open: boolean; onClose
         <div className="flex gap-3 pt-2">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
           <button type="submit" disabled={loading} className="btn-primary flex-1 flex items-center justify-center gap-2">
-            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Create Event
+            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />} {isEdit ? 'Resubmit Event' : 'Create Event'}
           </button>
         </div>
       </form>
@@ -304,6 +351,7 @@ export default function EventsPage() {
   const [loading, setLoading]         = useState(true)
   const [filter, setFilter]           = useState('All')
   const [showModal, setShowModal]     = useState(false)
+  const [editTarget, setEditTarget]   = useState<Event | null>(null)
   const [query, setQuery]             = useState('')
   const [manageEvent, setManageEvent] = useState<Event | null>(null)
 
@@ -381,11 +429,13 @@ export default function EventsPage() {
             <EventCard key={e._id} event={e}
               onRsvp={handleRsvp} onCheckIn={handleCheckIn}
               onDelete={handleDelete} onManageRsvps={setManageEvent}
+              onEdit={setEditTarget}
             />
           ))}
         </div>
       )}
       <CreateEventModal open={showModal} onClose={() => setShowModal(false)} onCreated={load} />
+      <CreateEventModal open={!!editTarget} onClose={() => setEditTarget(null)} onCreated={load} editEvent={editTarget} />
       {manageEvent && <RsvpManagePanel event={manageEvent} onClose={() => { setManageEvent(null); load() }} />}
     </div>
   )
