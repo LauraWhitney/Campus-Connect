@@ -61,7 +61,10 @@ class ClubMembershipRequest(Base):
     year_of_study   = Column(Integer, nullable=False)
     full_name       = Column(String(120), nullable=False)
     phone_number    = Column(String(30), nullable=False)
-    admission_number= Column(String(50), nullable=False)
+    # ── Deprecated: replaced by the member's @cuea.edu email (see user.email) ──
+    # Kept nullable for backward compatibility with existing rows; no longer
+    # collected from the join form or required by the API.
+    admission_number= Column(String(50), nullable=True)
     status          = Column(PgEnum(MembershipStatus), default=MembershipStatus.pending, nullable=False)
     created_at      = Column(DateTime(timezone=True), server_default=func.now())
     updated_at      = Column(DateTime(timezone=True), onupdate=func.now())

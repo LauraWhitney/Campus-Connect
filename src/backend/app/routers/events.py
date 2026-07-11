@@ -1,14 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from typing import Optional, List
 import math
 from datetime import datetime, timezone
 
 from app.core.database import get_db
 from app.core.security import get_current_user, require_admin
+from app.core.notify import notify_user, notify_admins
 from app.models.user import User
-from app.models.event import Event, EventAttendance, EventRSVP, RSVPStatus
+from app.models.event import Event, EventAttendance, EventRSVP, RSVPStatus, EventApprovalStatus
 from app.models.activity_log import ActivityLog
 from app.schemas.schemas import EventCreate, EventOut, EventListResponse, AttendanceOut
 
@@ -43,6 +44,7 @@ def _event_out(event: Event, current_user: Optional[User]) -> dict:
 
     return {
         **{c.name: getattr(event, c.name) for c in event.__table__.columns},
+        "approval_status": event.approval_status.value if hasattr(event.approval_status, "value") else event.approval_status,
         "rsvp_count":    approved_count,
         "pending_rsvp_count": pending_count,
         "has_rsvped":    has_rsvped,
@@ -56,12 +58,28 @@ def _event_out(event: Event, current_user: Optional[User]) -> dict:
 def list_events(
     page: int = Query(1, ge=1),
     category: Optional[str] = None,
+    approval_status: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     query = db.query(Event)
     if category:
         query = query.filter(Event.category == category)
+
+    if current_user.role.value == "admin":
+        # Admins can filter by approval status; default shows everything.
+        if approval_status:
+            query = query.filter(Event.approval_status == approval_status)
+    else:
+        # Students/lecturers see all approved events, plus their own
+        # pending/rejected submissions so they can track and resubmit them.
+        query = query.filter(
+            or_(
+                Event.approval_status == EventApprovalStatus.approved,
+                Event.created_by == current_user.id,
+            )
+        )
+
     total  = query.count()
     events = query.order_by(Event.date.asc()).offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).all()
     return {
@@ -111,6 +129,96 @@ def create_event(
     db.add(event)
     db.flush()
     _log(db, "event.create", f"Created event: {event.title}", current_user)
+    notify_admins(
+        db, "event", "New event awaiting approval",
+        f"{current_user.name} submitted '{event.title}' for review.",
+        link="/events",
+    )
+    db.commit()
+    db.refresh(event)
+    return _event_out(event, current_user)
+
+
+# ── Approval workflow (admin approves/rejects; owner edits + resubmits) ──
+
+@router.patch("/{event_id}/approval")
+def review_event(
+    event_id: int,
+    payload: dict,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    """Admin approves or rejects an event. payload: {action: 'approve'|'reject', reason?: str}"""
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    action = payload.get("action")
+    if action == "approve":
+        event.approval_status  = EventApprovalStatus.approved
+        event.rejection_reason = None
+        event.reviewed_by      = current_admin.id
+        event.reviewed_at      = datetime.now(timezone.utc)
+        _log(db, "event.approve", f"Approved event: {event.title}", current_admin)
+        if event.created_by:
+            notify_user(db, event.created_by, "event", "Event approved",
+                        f"Your event '{event.title}' was approved and is now live.", link="/app/events")
+    elif action == "reject":
+        reason = (payload.get("reason") or "").strip()
+        event.approval_status  = EventApprovalStatus.rejected
+        event.rejection_reason = reason or None
+        event.reviewed_by      = current_admin.id
+        event.reviewed_at      = datetime.now(timezone.utc)
+        _log(db, "event.reject", f"Rejected event: {event.title}" + (f" — {reason}" if reason else ""), current_admin)
+        if event.created_by:
+            msg = f"Your event '{event.title}' was rejected."
+            if reason:
+                msg += f" Reason: {reason}"
+            msg += " You can edit and resubmit it."
+            notify_user(db, event.created_by, "event", "Event rejected", msg, link="/app/events")
+    else:
+        raise HTTPException(status_code=422, detail="action must be 'approve' or 'reject'")
+
+    db.commit()
+    db.refresh(event)
+    return _event_out(event, current_admin)
+
+
+@router.put("/{event_id}", response_model=EventOut)
+def update_event(
+    event_id: int,
+    payload: EventCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Owner edits their event. If it had been rejected, editing automatically
+    resubmits it for admin review (approval_status → pending), preserving the
+    review history (reviewed_by/reviewed_at are cleared, but the prior
+    rejection reason stays visible in the activity log).
+    """
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    if event.created_by != current_user.id and current_user.role.value != "admin":
+        raise HTTPException(status_code=403, detail="Only the event creator can edit this event")
+
+    was_rejected = event.approval_status == EventApprovalStatus.rejected
+
+    for field, value in payload.model_dump().items():
+        setattr(event, field, value)
+
+    if was_rejected:
+        event.approval_status  = EventApprovalStatus.pending
+        event.rejection_reason = None
+        event.reviewed_by      = None
+        event.reviewed_at      = None
+        _log(db, "event.resubmit", f"Resubmitted event for review: {event.title}", current_user)
+        notify_admins(db, "event", "Event resubmitted for approval",
+                      f"{current_user.name} edited and resubmitted '{event.title}'.", link="/events")
+    else:
+        _log(db, "event.update", f"Updated event: {event.title}", current_user)
+
     db.commit()
     db.refresh(event)
     return _event_out(event, current_user)

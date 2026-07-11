@@ -6,6 +6,7 @@ import math
 
 from app.core.database import get_db
 from app.core.security import get_current_user, require_admin
+from app.core.notify import notify_user
 from app.models.user import User
 from app.models.club import Club, ClubMembershipRequest, MembershipStatus
 from app.models.activity_log import ActivityLog
@@ -113,7 +114,7 @@ def request_membership(
 ):
     """
     Submit a membership request (or cancel it / leave).
-    payload for join: { course, year_of_study, full_name, phone_number, admission_number }
+    payload for join: { course, year_of_study, full_name, phone_number }
     payload for leave/cancel: {} (if already member or pending)
     """
     club = db.query(Club).filter(Club.id == club_id).first()
@@ -136,8 +137,9 @@ def request_membership(
         member_count = sum(1 for r in club.membership_requests if r.status == MembershipStatus.approved)
         return {"action": "left", "member_count": member_count}
     else:
-        # Validate required fields
-        required = ["course", "year_of_study", "full_name", "phone_number", "admission_number"]
+        # Validate required fields — admission number replaced by the
+        # member's @cuea.edu email, which we already have from their account.
+        required = ["course", "year_of_study", "full_name", "phone_number"]
         missing  = [f for f in required if not payload.get(f)]
         if missing:
             raise HTTPException(
@@ -151,7 +153,6 @@ def request_membership(
             year_of_study=int(payload["year_of_study"]),
             full_name=str(payload["full_name"]),
             phone_number=str(payload["phone_number"]),
-            admission_number=str(payload["admission_number"]),
             status=MembershipStatus.pending,
         )
         db.add(req)
@@ -185,12 +186,11 @@ def get_club_members(
                 "id":               r.id,
                 "user_id":          r.user_id,
                 "user_name":        r.user.name if r.user else None,
-                "user_email":       r.user.email if r.user else None,
+                "user_email":       r.user.email if r.user else None,  # university email replaces admission number
                 "course":           r.course,
                 "year_of_study":    r.year_of_study,
                 "full_name":        r.full_name,
                 "phone_number":     r.phone_number,
-                "admission_number": r.admission_number,
                 "status":           r.status,
                 "created_at":       r.created_at,
             }
@@ -226,9 +226,19 @@ def approve_reject_membership(
         if req.user and req.user not in club.members:
             club.members.append(req.user)
         _log(db, "club.approve_member", f"Approved {req.user.email if req.user else request_id} for {club.name}", current_user)
+        if req.user_id:
+            notify_user(db, req.user_id, "club",
+                        "Club membership approved",
+                        f"Your request to join '{club.name}' was approved.",
+                        link="/app/clubs")
     elif action == "reject":
         req.status = MembershipStatus.rejected
         _log(db, "club.reject_member", f"Rejected {req.user.email if req.user else request_id} for {club.name}", current_user)
+        if req.user_id:
+            notify_user(db, req.user_id, "club",
+                        "Club membership rejected",
+                        f"Your request to join '{club.name}' was rejected.",
+                        link="/app/clubs")
     else:
         raise HTTPException(status_code=422, detail="action must be 'approve' or 'reject'")
 

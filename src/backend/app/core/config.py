@@ -22,6 +22,20 @@ class Settings(BaseSettings):
     upload_dir: str = "uploads"
     max_file_size_mb: int = 5
 
+    # ── Outgoing email (Contact Us delivery) ───────────
+    # All optional — if smtp_host is blank, emails are logged instead of sent
+    # so the app keeps working out of the box in dev/test environments.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = True
+    mail_from: str = "no-reply@cuea.edu"
+    admin_contact_email: str = "admin@cuea.edu"
+
+    # ── Environment (guards destructive dev-only endpoints) ─
+    environment: str = "development"  # "development" | "production"
+
     @property
     def origins_list(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",")]

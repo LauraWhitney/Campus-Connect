@@ -18,6 +18,7 @@ from app.models import user, event, marketplace, club, lost_found, feedback  # n
 from app.models.event import EventAttendance, EventRSVP  # noqa: F401
 from app.models.club import ClubMembershipRequest  # noqa: F401
 from app.models import activity_log  # noqa: F401
+from app.models import notification, contact_message  # noqa: F401
 
 from app.routers import (
     auth,
@@ -27,6 +28,8 @@ from app.routers import (
     lost_found as lf_router,
     feedback as fb_router,
     admin as admin_router,
+    notifications as notifications_router,
+    contact as contact_router,
 )
 from app.routers import activity as activity_router
 
@@ -95,6 +98,9 @@ app.include_router(lf_router.router,          prefix="/api")
 app.include_router(fb_router.router,          prefix="/api")
 app.include_router(admin_router.router,       prefix="/api")
 app.include_router(activity_router.router,    prefix="/api")
+app.include_router(notifications_router.router,       prefix="/api")
+app.include_router(notifications_router.admin_router,  prefix="/api")
+app.include_router(contact_router.router,     prefix="/api")
 
 
 # ── Image upload endpoint ──────────────────────────────

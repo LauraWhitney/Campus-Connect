@@ -24,6 +24,12 @@ class RSVPStatus(str, enum.Enum):
     rejected = "rejected"
 
 
+class EventApprovalStatus(str, enum.Enum):
+    pending  = "pending"   # awaiting admin review
+    approved = "approved"  # visible to all students
+    rejected = "rejected"  # hidden from students; owner may edit + resubmit
+
+
 # Many-to-many: users ↔ events (RSVP) - now using separate model for approval
 event_rsvp = Table(
     "event_rsvps",
@@ -49,7 +55,15 @@ class Event(Base):
     created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    creator = relationship("User", foreign_keys=[created_by])
+    # ── Approval workflow ──────────────────────────────
+    approval_status   = Column(PgEnum(EventApprovalStatus), default=EventApprovalStatus.pending, nullable=False)
+    rejection_reason  = Column(String(500), nullable=True)
+    reviewed_by        = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at         = Column(DateTime(timezone=True), nullable=True)
+    updated_at          = Column(DateTime(timezone=True), onupdate=func.now())
+
+    creator  = relationship("User", foreign_keys=[created_by])
+    reviewer = relationship("User", foreign_keys=[reviewed_by])
     rsvps   = relationship("User", secondary=event_rsvp, backref="rsvped_events")
     rsvp_requests = relationship("EventRSVP", back_populates="event", cascade="all, delete-orphan")
 

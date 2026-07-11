@@ -4,12 +4,15 @@ from sqlalchemy import func
 
 from app.core.database import get_db
 from app.core.security import require_admin
-from app.models.user import User, UserRole
+from app.core.config import settings
+from app.models.user import User, UserRole, CUEA_FACULTIES
 from app.models.event import Event
 from app.models.marketplace import MarketplaceItem
 from app.models.club import Club
 from app.models.lost_found import LostFoundItem
 from app.models.feedback import Feedback, FeedbackStatus
+from app.models.activity_log import ActivityLog
+from app.models.notification import Notification
 from app.schemas.schemas import UserOut
 import math
 
@@ -46,14 +49,31 @@ def get_stats(db: Session = Depends(get_db), _=Depends(require_admin)):
 
 
 # ── User management ────────────────────────────────────
+@router.get("/faculties")
+def list_faculties(_=Depends(require_admin)):
+    """CUEA faculty options — used to populate the faculty filter dropdown."""
+    return {"faculties": CUEA_FACULTIES}
+
+
 @router.get("/users")
-def list_users(page: int = 1, search: str = None, db: Session = Depends(get_db), _=Depends(require_admin)):
+def list_users(
+    page: int = 1,
+    search: str = None,
+    faculty: str = None,
+    role: str = None,
+    db: Session = Depends(get_db),
+    _=Depends(require_admin),
+):
     query = db.query(User)
     if search:
         q = f"%{search}%"
         query = query.filter(
             User.name.ilike(q) | User.email.ilike(q)
         )
+    if faculty:
+        query = query.filter(User.faculty == faculty)
+    if role:
+        query = query.filter(User.role == role)
     total = query.count()
     users = (
         query
@@ -142,3 +162,69 @@ def seed_admin(payload: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(admin)
     return {"message": f"Admin account created for {email}. You can now log in at http://localhost:5174"}
+
+
+# ── Test data cleanup (development only) ───────────────
+# Deletes accounts (and their cascaded data — clubs, events, feedback, etc.
+# all use ondelete="CASCADE"/"SET NULL" foreign keys) whose email matches a
+# recognisable test pattern. Refuses to run outside development and requires
+# an explicit confirmation phrase to avoid accidental data loss.
+TEST_EMAIL_PATTERNS = ["%test%", "%example.com", "%@test.cuea.edu"]
+
+
+@router.get("/dev/test-accounts-preview")
+def preview_test_accounts(db: Session = Depends(get_db), _=Depends(require_admin)):
+    """List accounts that *would* be deleted by the cleanup, without deleting anything."""
+    if settings.environment != "development":
+        raise HTTPException(status_code=403, detail="Test data cleanup is disabled outside development.")
+
+    query = db.query(User)
+    from sqlalchemy import or_
+    query = query.filter(or_(*[User.email.ilike(p) for p in TEST_EMAIL_PATTERNS]))
+    users = query.all()
+    return {
+        "count": len(users),
+        "users": [{"id": u.id, "name": u.name, "email": u.email} for u in users],
+    }
+
+
+@router.post("/dev/cleanup-test-data")
+def cleanup_test_data(payload: dict, db: Session = Depends(get_db), current_admin=Depends(require_admin)):
+    """
+    Permanently delete test accounts (emails containing 'test', @example.com,
+    or @test.cuea.edu) and everything cascaded from them.
+
+    Requires:
+      - settings.environment == "development" (hard block in production)
+      - payload.confirm == "DELETE TEST DATA" (exact phrase, prevents accidental calls)
+    """
+    if settings.environment != "development":
+        raise HTTPException(
+            status_code=403,
+            detail="Test data cleanup is disabled in production for safety.",
+        )
+
+    if payload.get("confirm") != "DELETE TEST DATA":
+        raise HTTPException(
+            status_code=400,
+            detail='Confirmation required. Send {"confirm": "DELETE TEST DATA"} to proceed.',
+        )
+
+    from sqlalchemy import or_
+    query = db.query(User).filter(or_(*[User.email.ilike(p) for p in TEST_EMAIL_PATTERNS]))
+    users = query.all()
+    # Never delete the acting admin, even if their email happens to match.
+    users = [u for u in users if u.id != current_admin.id]
+
+    deleted = [{"id": u.id, "email": u.email} for u in users]
+    for u in users:
+        db.delete(u)  # cascades to their events/clubs/feedback/etc. via FK ondelete rules
+
+    db.add(ActivityLog(
+        user_id=current_admin.id, user_email=current_admin.email,
+        action="admin.test_data_cleanup",
+        detail=f"Deleted {len(deleted)} test account(s)",
+    ))
+    db.commit()
+
+    return {"message": f"Deleted {len(deleted)} test account(s) and their associated data.", "deleted": deleted}

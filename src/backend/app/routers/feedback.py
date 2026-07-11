@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from app.core.database import get_db
 from app.core.security import get_current_user, require_admin
+from app.core.notify import notify_user
 from app.models.user import User
 from app.models.feedback import Feedback, FeedbackStatus
 from app.models.activity_log import ActivityLog
@@ -131,6 +132,24 @@ def update_status(
     _log(db, "feedback.status_update",
          f"Admin {current_user.email} changed feedback #{feedback_id} "
          f"'{fb.title}' from {old_status} → {new_status}", current_user)
+
+    # ── Notify the submitter (unless they submitted anonymously) ──
+    if fb.submitted_by:
+        STATUS_COPY = {
+            "Reviewed": "has been reviewed by the administration",
+            "Resolved": "has been marked as resolved",
+            "Pending":  "status was reset to pending",
+        }
+        detail = STATUS_COPY.get(new_status, f"was updated to {new_status}")
+        notify_user(
+            db,
+            user_id=fb.submitted_by,
+            type_="feedback",
+            title=f"Feedback {new_status.lower()}",
+            message=f"Your feedback '{fb.title}' {detail}.",
+            link="/app/feedback",
+        )
+
     db.commit()
     db.refresh(fb)
     return _fb_out(fb)
