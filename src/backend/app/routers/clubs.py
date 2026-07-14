@@ -64,14 +64,12 @@ def list_clubs(
         if approval_status:
             query = query.filter(Club.approval_status == approval_status)
     else:
-        # Students/lecturers see approved + pending clubs (so people can find
-        # and join a club while it's still awaiting admin review), plus
-        # their own rejected submissions so they can track them.
+        # Students/lecturers see only approved clubs, plus their own
+        # pending/rejected submissions so they can track them. A club stays
+        # hidden from everyone else until an admin approves it.
         query = query.filter(
             or_(
-                Club.approval_status.in_(
-                    [ClubApprovalStatus.approved, ClubApprovalStatus.pending]
-                ),
+                Club.approval_status == ClubApprovalStatus.approved,
                 Club.created_by == current_user.id,
             )
         )
@@ -96,6 +94,13 @@ def get_club(
 ):
     club = db.query(Club).filter(Club.id == club_id).first()
     if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+    is_visible = (
+        club.approval_status == ClubApprovalStatus.approved
+        or club.created_by == current_user.id
+        or current_user.role.value == "admin"
+    )
+    if not is_visible:
         raise HTTPException(status_code=404, detail="Club not found")
     return _club_out(club, current_user)
 
@@ -208,6 +213,11 @@ def request_membership(
         member_count = sum(1 for r in club.membership_requests if r.status == MembershipStatus.approved)
         return {"action": "left", "member_count": member_count}
     else:
+        if club.approval_status != ClubApprovalStatus.approved:
+            raise HTTPException(
+                status_code=400,
+                detail="This club is awaiting admin approval and can't accept membership requests yet."
+            )
         # Validate required fields — admission number replaced by the
         # member's @cuea.edu email, which we already have from their account.
         required = ["course", "year_of_study", "full_name", "phone_number"]

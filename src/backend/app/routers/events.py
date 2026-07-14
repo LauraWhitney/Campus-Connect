@@ -71,14 +71,12 @@ def list_events(
         if approval_status:
             query = query.filter(Event.approval_status == approval_status)
     else:
-        # Students/lecturers see approved + pending events (so people can find
-        # and RSVP to an event while it's still awaiting admin review), plus
-        # their own rejected submissions so they can track and resubmit them.
+        # Students/lecturers see only approved events, plus their own
+        # pending/rejected submissions so they can track and resubmit them.
+        # An event stays hidden from everyone else until an admin approves it.
         query = query.filter(
             or_(
-                Event.approval_status.in_(
-                    [EventApprovalStatus.approved, EventApprovalStatus.pending]
-                ),
+                Event.approval_status == EventApprovalStatus.approved,
                 Event.created_by == current_user.id,
             )
         )
@@ -101,6 +99,13 @@ def get_event(
 ):
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    is_visible = (
+        event.approval_status == EventApprovalStatus.approved
+        or event.created_by == current_user.id
+        or current_user.role.value == "admin"
+    )
+    if not is_visible:
         raise HTTPException(status_code=404, detail="Event not found")
     return _event_out(event, current_user)
 
@@ -258,6 +263,11 @@ def request_rsvp(
         approved_count = sum(1 for r in event.rsvp_requests if r.status == RSVPStatus.approved)
         return {"action": "cancelled", "rsvp_count": approved_count}
     else:
+        if event.approval_status != EventApprovalStatus.approved:
+            raise HTTPException(
+                status_code=400,
+                detail="This event is awaiting admin approval and can't accept RSVPs yet."
+            )
         # Check capacity
         approved_count = sum(1 for r in event.rsvp_requests if r.status == RSVPStatus.approved)
         if event.capacity and approved_count >= event.capacity:
