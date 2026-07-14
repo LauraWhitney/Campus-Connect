@@ -1,14 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func
+from sqlalchemy import and_, or_, func
 from typing import Optional
 import math
+from datetime import datetime, timezone
 
 from app.core.database import get_db
 from app.core.security import get_current_user, require_admin
-from app.core.notify import notify_user
+from app.core.notify import notify_user, notify_admins
 from app.models.user import User
-from app.models.club import Club, ClubMembershipRequest, MembershipStatus
+from app.models.club import Club, ClubMembershipRequest, MembershipStatus, ClubApprovalStatus
 from app.models.activity_log import ActivityLog
 from app.schemas.schemas import ClubCreate, ClubOut, ClubListResponse
 
@@ -38,6 +39,7 @@ def _club_out(club: Club, current_user: Optional[User]) -> dict:
 
     return {
         **{c.name: getattr(club, c.name) for c in club.__table__.columns},
+        "approval_status": club.approval_status.value if hasattr(club.approval_status, "value") else club.approval_status,
         "member_count": approved_count,
         "is_member":    is_member,
         "has_pending":  has_pending,
@@ -49,12 +51,31 @@ def _club_out(club: Club, current_user: Optional[User]) -> dict:
 def list_clubs(
     page:     int            = Query(1, ge=1),
     category: Optional[str] = None,
+    approval_status: Optional[str] = None,
     db:       Session        = Depends(get_db),
     current_user: User       = Depends(get_current_user),
 ):
     query = db.query(Club)
     if category:
         query = query.filter(Club.category == category)
+
+    if current_user.role.value == "admin":
+        # Admins can filter by approval status; default shows everything.
+        if approval_status:
+            query = query.filter(Club.approval_status == approval_status)
+    else:
+        # Students/lecturers see approved + pending clubs (so people can find
+        # and join a club while it's still awaiting admin review), plus
+        # their own rejected submissions so they can track them.
+        query = query.filter(
+            or_(
+                Club.approval_status.in_(
+                    [ClubApprovalStatus.approved, ClubApprovalStatus.pending]
+                ),
+                Club.created_by == current_user.id,
+            )
+        )
+
     total = query.count()
     clubs = (
         query.order_by(Club.name.asc())
@@ -100,9 +121,59 @@ def create_club(
     db.add(club)
     db.flush()
     _log(db, "club.create", f"Created club: {club.name}", current_user)
+    notify_admins(
+        db, "club", "New club awaiting approval",
+        f"{current_user.name} registered '{club.name}' for review.",
+        user_id=current_user.id,
+        link="/clubs",
+    )
     db.commit()
     db.refresh(club)
     return _club_out(club, current_user)
+
+
+# ── Approval workflow (admin approves/rejects club registration) ──
+
+@router.patch("/{club_id}/approval")
+def review_club(
+    club_id: int,
+    payload: dict,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    """Admin approves or rejects a club. payload: {action: 'approve'|'reject', reason?: str}"""
+    club = db.query(Club).filter(Club.id == club_id).first()
+    if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+
+    action = payload.get("action")
+    if action == "approve":
+        club.approval_status  = ClubApprovalStatus.approved
+        club.rejection_reason = None
+        club.reviewed_by      = current_admin.id
+        club.reviewed_at      = datetime.now(timezone.utc)
+        _log(db, "club.approve", f"Approved club: {club.name}", current_admin)
+        if club.created_by:
+            notify_user(db, club.created_by, "club", "Club approved",
+                        f"Your club '{club.name}' was approved and is now live.", link="/app/clubs")
+    elif action == "reject":
+        reason = (payload.get("reason") or "").strip()
+        club.approval_status  = ClubApprovalStatus.rejected
+        club.rejection_reason = reason or None
+        club.reviewed_by      = current_admin.id
+        club.reviewed_at      = datetime.now(timezone.utc)
+        _log(db, "club.reject", f"Rejected club: {club.name}" + (f" — {reason}" if reason else ""), current_admin)
+        if club.created_by:
+            msg = f"Your club '{club.name}' was rejected."
+            if reason:
+                msg += f" Reason: {reason}"
+            notify_user(db, club.created_by, "club", "Club rejected", msg, link="/app/clubs")
+    else:
+        raise HTTPException(status_code=422, detail="action must be 'approve' or 'reject'")
+
+    db.commit()
+    db.refresh(club)
+    return _club_out(club, current_admin)
 
 
 @router.post("/{club_id}/join")

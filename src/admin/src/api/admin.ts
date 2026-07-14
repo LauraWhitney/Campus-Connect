@@ -122,14 +122,19 @@ export const marketplaceAPI = {
 }
 
 // ── Clubs ─────────────────────────────────────────────
+function normaliseClub(c: any): Club {
+  return {
+    ...c,
+    member_count: c.member_count ?? 0,
+    meeting_location: c.meeting_location ?? null,
+    approval_status: c.approval_status ?? 'approved',
+  }
+}
+
 export const clubsAPI = {
-  getAll: async (page = 1): Promise<PaginatedResponse<Club>> => {
-    const { data } = await api.get('/clubs', { params: { page } })
-    return { ...data, data: data.data.map((c: any) => ({
-      ...c,
-      member_count: c.member_count ?? 0,
-      meeting_location: c.meeting_location ?? null,
-    })) }
+  getAll: async (page = 1, approvalStatus = ''): Promise<PaginatedResponse<Club>> => {
+    const { data } = await api.get('/clubs', { params: { page, approval_status: approvalStatus || undefined } })
+    return { ...data, data: data.data.map(normaliseClub) }
   },
   getMembers: async (id: number) => {
     const { data } = await api.get(`/clubs/${id}/members`)
@@ -142,6 +147,14 @@ export const clubsAPI = {
   rejectMember: async (clubId: number, requestId: number) => {
     const { data } = await api.patch(`/clubs/${clubId}/members/${requestId}`, { action: 'reject' })
     return data
+  },
+  approveClub: async (clubId: number) => {
+    const { data } = await api.patch(`/clubs/${clubId}/approval`, { action: 'approve' })
+    return normaliseClub(data)
+  },
+  rejectClub: async (clubId: number, reason?: string) => {
+    const { data } = await api.patch(`/clubs/${clubId}/approval`, { action: 'reject', reason })
+    return normaliseClub(data)
   },
   delete: async (id: number) => {
     await api.delete(`/clubs/${id}`)

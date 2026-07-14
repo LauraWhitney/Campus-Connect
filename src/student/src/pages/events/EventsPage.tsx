@@ -275,6 +275,10 @@ function CreateEventModal({ open, onClose, onCreated, editEvent }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (form.date < new Date().toISOString().split('T')[0]) {
+      toast.error('Event date cannot be in the past')
+      return
+    }
     setLoading(true)
     try {
       const payload = { ...form, capacity: form.capacity ? Number(form.capacity) : undefined }

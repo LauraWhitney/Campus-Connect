@@ -58,6 +58,9 @@ export interface Club {
   registration_number?: string
   member_count: number
   created_by?: number
+  approval_status: 'pending' | 'approved' | 'rejected'
+  rejection_reason?: string | null
+  reviewed_at?: string | null
   created_at: string
 }
 

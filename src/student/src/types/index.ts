@@ -97,6 +97,8 @@ export interface Club {
   hasPending?: boolean
   isOwner?: boolean
   logo?: string
+  approvalStatus?: 'pending' | 'approved' | 'rejected'
+  rejectionReason?: string | null
   createdAt: string
 }
 

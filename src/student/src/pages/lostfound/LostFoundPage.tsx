@@ -128,6 +128,10 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (form.date > new Date().toISOString().split('T')[0]) {
+      toast.error('Date cannot be in the future')
+      return
+    }
     setLoading(true)
     try {
       await lostFoundAPI.create({ ...form, image: uploadedUrl ?? undefined })
@@ -173,7 +177,7 @@ function ReportModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
               <option value="Lost">Lost</option><option value="Found">Found</option>
             </select></div>
           <div><label htmlFor="lf-date" className={lbl}>Date</label>
-            <input id="lf-date" className="input" type="date" value={form.date} onChange={set('date')} required /></div>
+            <input id="lf-date" className="input" type="date" value={form.date} onChange={set('date')} required max={new Date().toISOString().split('T')[0]} /></div>
         </div>
         <div><label htmlFor="lf-loc" className={lbl}>Location on Campus</label>
           <input id="lf-loc" className="input" value={form.location} onChange={set('location')} required placeholder="e.g. CUEA Library, Gate B" maxLength={200} /></div>

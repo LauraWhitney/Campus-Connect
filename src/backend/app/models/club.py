@@ -22,6 +22,12 @@ class MembershipStatus(str, enum.Enum):
     rejected = "rejected"
 
 
+class ClubApprovalStatus(str, enum.Enum):
+    pending  = "pending"   # awaiting admin review
+    approved = "approved"  # confirmed by admin
+    rejected = "rejected"  # rejected; owner may re-register
+
+
 club_members = Table(
     "club_members",
     Base.metadata,
@@ -45,7 +51,15 @@ class Club(Base):
     created_by       = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
 
+    # ── Approval workflow ──────────────────────────────
+    approval_status  = Column(PgEnum(ClubApprovalStatus), default=ClubApprovalStatus.pending, nullable=False)
+    rejection_reason = Column(String(500), nullable=True)
+    reviewed_by      = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at      = Column(DateTime(timezone=True), nullable=True)
+    updated_at       = Column(DateTime(timezone=True), onupdate=func.now())
+
     creator          = relationship("User", foreign_keys=[created_by])
+    reviewer         = relationship("User", foreign_keys=[reviewed_by])
     members          = relationship("User", secondary=club_members, backref="clubs_joined")
     membership_requests = relationship("ClubMembershipRequest", back_populates="club", cascade="all, delete-orphan")
 

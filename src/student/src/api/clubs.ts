@@ -11,6 +11,8 @@ function normalise(c: any): Club {
     isOwner: c.is_owner ?? false,
     meetingSchedule: c.meeting_schedule,
     meetingLocation: c.meeting_location,
+    approvalStatus: c.approval_status ?? 'approved',
+    rejectionReason: c.rejection_reason ?? null,
   }
 }
 

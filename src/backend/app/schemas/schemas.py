@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 
 from app.models.user import CUEA_FACULTIES, CUEA_EMAIL_DOMAINS
@@ -116,6 +116,17 @@ class EventCreate(BaseModel):
     def capacity_positive(cls, v: Optional[int]) -> Optional[int]:
         if v is not None and v < 1:
             raise ValueError("Capacity must be at least 1")
+        return v
+
+    @field_validator("date")
+    @classmethod
+    def date_not_past(cls, v: str) -> str:
+        try:
+            parsed = date.fromisoformat(v)
+        except ValueError:
+            raise ValueError("Date must be a valid ISO date (YYYY-MM-DD)")
+        if parsed < date.today():
+            raise ValueError("Event date cannot be in the past")
         return v
 
 
@@ -252,6 +263,9 @@ class ClubOut(BaseModel):
     is_member:        bool = False
     has_pending:      bool = False
     is_owner:         bool = False
+    approval_status:  str  = "approved"
+    rejection_reason: Optional[str] = None
+    reviewed_at:      Optional[datetime] = None
     created_at:       datetime
     model_config = {"from_attributes": True}
 
@@ -277,6 +291,17 @@ class LostFoundCreate(BaseModel):
         if not v.strip():
             raise ValueError("Field cannot be blank")
         return v.strip()
+
+    @field_validator("date")
+    @classmethod
+    def date_not_future(cls, v: str) -> str:
+        try:
+            parsed = date.fromisoformat(v)
+        except ValueError:
+            raise ValueError("Date must be a valid ISO date (YYYY-MM-DD)")
+        if parsed > date.today():
+            raise ValueError("Date cannot be in the future")
+        return v
 
 
 class ReporterOut(BaseModel):

@@ -213,6 +213,13 @@ function ClubCard({ club, onLeave, onDelete, onShowMembers, onJoin }: {
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold mt-0.5"
                 style={{ background: 'rgba(200,30,69,0.3)', color: '#f5cd6b' }}>YOUR CLUB</span>
             )}
+            {club.isOwner && club.approvalStatus && club.approvalStatus !== 'approved' && (
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold mt-0.5 ml-1 ${
+                club.approvalStatus === 'rejected' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'
+              }`}>
+                {club.approvalStatus === 'rejected' ? 'REJECTED' : 'AWAITING APPROVAL'}
+              </span>
+            )}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium mt-1 text-white/80 border border-white/20"
               style={{ background: 'rgba(255,255,255,0.1)' }}>
               {club.category}
@@ -221,6 +228,14 @@ function ClubCard({ club, onLeave, onDelete, onShowMembers, onJoin }: {
         </div>
 
         <p className="text-slate-300 text-xs line-clamp-2 leading-relaxed">{club.description}</p>
+
+        {club.isOwner && club.approvalStatus === 'rejected' && club.rejectionReason && (
+          <div className="rounded-xl p-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <p className="text-red-300 text-[11px] leading-relaxed">
+              <span className="font-semibold">Admin feedback:</span> {club.rejectionReason}
+            </p>
+          </div>
+        )}
 
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-indigo-300 text-xs">
@@ -306,7 +321,7 @@ function CreateClubModal({ open, onClose, onCreated }: { open: boolean; onClose:
     setLoading(true)
     try {
       await clubsAPI.create(form)
-      toast.success('Club created!')
+      toast.success('Club submitted for approval!')
       onCreated()
       onClose()
       setForm({ name: '', description: '', category: 'Academic', president: '', email: '', meeting_schedule: '', meeting_location: '' })

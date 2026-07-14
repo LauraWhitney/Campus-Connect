@@ -71,11 +71,14 @@ def list_events(
         if approval_status:
             query = query.filter(Event.approval_status == approval_status)
     else:
-        # Students/lecturers see all approved events, plus their own
-        # pending/rejected submissions so they can track and resubmit them.
+        # Students/lecturers see approved + pending events (so people can find
+        # and RSVP to an event while it's still awaiting admin review), plus
+        # their own rejected submissions so they can track and resubmit them.
         query = query.filter(
             or_(
-                Event.approval_status == EventApprovalStatus.approved,
+                Event.approval_status.in_(
+                    [EventApprovalStatus.approved, EventApprovalStatus.pending]
+                ),
                 Event.created_by == current_user.id,
             )
         )

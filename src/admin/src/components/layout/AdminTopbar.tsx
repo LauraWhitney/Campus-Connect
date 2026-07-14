@@ -36,6 +36,8 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
   const [open, setOpen]     = useState(false)
   const [unread, setUnread] = useState(0)
   const [recent, setRecent] = useState<AdminNotification[]>([])
+  const [loadingRecent, setLoadingRecent] = useState(true)
+  const [recentError, setRecentError]     = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   const refresh = async () => {
@@ -46,15 +48,22 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
   }
 
   const loadRecent = async () => {
+    setLoadingRecent(true)
     try {
       const res = await notificationsAPI.getAll(1)
       setRecent(res.data.slice(0, 5))
       setUnread(res.unread_count)
-    } catch { /* silent */ }
+      setRecentError(false)
+    } catch {
+      setRecentError(true)
+    } finally {
+      setLoadingRecent(false)
+    }
   }
 
   useEffect(() => {
     refresh()
+    loadRecent()
     const id = setInterval(refresh, POLL_MS)
     return () => clearInterval(id)
   }, [])
@@ -116,7 +125,11 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
                   {unread > 0 && <span className="text-[10px] text-indigo-300 font-medium">{unread} unread</span>}
                 </div>
                 <div className="max-h-80 overflow-y-auto scrollbar-hidden">
-                  {recent.length === 0 ? (
+                  {loadingRecent && recent.length === 0 ? (
+                    <p className="text-surface-400 text-xs px-4 py-6 text-center">Loading…</p>
+                  ) : recentError && recent.length === 0 ? (
+                    <p className="text-surface-400 text-xs px-4 py-6 text-center">Couldn't load notifications.</p>
+                  ) : recent.length === 0 ? (
                     <p className="text-surface-400 text-xs px-4 py-6 text-center">You're all caught up.</p>
                   ) : (
                     recent.map(n => (
