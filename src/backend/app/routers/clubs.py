@@ -11,6 +11,7 @@ from app.core.notify import notify_user, notify_admins
 from app.models.user import User
 from app.models.club import Club, ClubMembershipRequest, MembershipStatus, ClubApprovalStatus
 from app.models.activity_log import ActivityLog
+from app.models.approval_review import ApprovalReview
 from app.schemas.schemas import ClubCreate, ClubOut, ClubListResponse
 
 router = APIRouter(prefix="/clubs", tags=["clubs"])
@@ -44,6 +45,7 @@ def _club_out(club: Club, current_user: Optional[User]) -> dict:
         "is_member":    is_member,
         "has_pending":  has_pending,
         "is_owner":     is_owner,
+        "reviewer_name": club.reviewer.name if club.reviewer else None,
     }
 
 
@@ -146,12 +148,16 @@ def review_club(
     db: Session = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
-    """Admin approves or rejects a club. payload: {action: 'approve'|'reject', reason?: str}"""
+    """Admin approves or rejects a club — can be called again to reverse an
+    earlier decision. payload: {action: 'approve'|'reject', reason?: str}"""
     club = db.query(Club).filter(Club.id == club_id).first()
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
 
     action = payload.get("action")
+    previous_status = club.approval_status.value
+    reason = None
+
     if action == "approve":
         club.approval_status  = ClubApprovalStatus.approved
         club.rejection_reason = None
@@ -162,9 +168,9 @@ def review_club(
             notify_user(db, club.created_by, "club", "Club approved",
                         f"Your club '{club.name}' was approved and is now live.", link="/app/clubs")
     elif action == "reject":
-        reason = (payload.get("reason") or "").strip()
+        reason = (payload.get("reason") or "").strip() or None
         club.approval_status  = ClubApprovalStatus.rejected
-        club.rejection_reason = reason or None
+        club.rejection_reason = reason
         club.reviewed_by      = current_admin.id
         club.reviewed_at      = datetime.now(timezone.utc)
         _log(db, "club.reject", f"Rejected club: {club.name}" + (f" — {reason}" if reason else ""), current_admin)
@@ -176,9 +182,38 @@ def review_club(
     else:
         raise HTTPException(status_code=422, detail="action must be 'approve' or 'reject'")
 
+    db.add(ApprovalReview(
+        entity_type="club", entity_id=club.id, action=action,
+        previous_status=previous_status, new_status=club.approval_status.value,
+        reason=reason, reviewed_by=current_admin.id,
+    ))
     db.commit()
     db.refresh(club)
     return _club_out(club, current_admin)
+
+
+@router.get("/{club_id}/approval-history")
+def get_club_approval_history(
+    club_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    reviews = (
+        db.query(ApprovalReview)
+        .filter(ApprovalReview.entity_type == "club", ApprovalReview.entity_id == club_id)
+        .order_by(ApprovalReview.reviewed_at.desc())
+        .all()
+    )
+    return [
+        {
+            "id": r.id, "action": r.action,
+            "previous_status": r.previous_status, "new_status": r.new_status,
+            "reason": r.reason,
+            "reviewed_by": r.reviewer.name if r.reviewer else None,
+            "reviewed_at": r.reviewed_at,
+        }
+        for r in reviews
+    ]
 
 
 @router.post("/{club_id}/join")

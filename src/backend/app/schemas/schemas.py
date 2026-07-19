@@ -150,6 +150,8 @@ class EventOut(BaseModel):
     created_by:          Optional[int] = None
     approval_status:     str  = "approved"
     rejection_reason:    Optional[str] = None
+    reviewed_by:         Optional[int] = None
+    reviewer_name:       Optional[str] = None
     reviewed_at:         Optional[datetime] = None
     created_at:          datetime
 
@@ -268,6 +270,8 @@ class ClubOut(BaseModel):
     is_owner:         bool = False
     approval_status:  str  = "approved"
     rejection_reason: Optional[str] = None
+    reviewed_by:      Optional[int] = None
+    reviewer_name:    Optional[str] = None
     reviewed_at:      Optional[datetime] = None
     created_at:       datetime
     model_config = {"from_attributes": True}

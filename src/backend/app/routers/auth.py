@@ -3,15 +3,19 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 import secrets
 import hashlib
+from typing import Optional
 from datetime import datetime, timezone, timedelta
 
 from app.core.database import get_db
+from app.core.config import settings
+from app.core.email_utils import send_email
 from app.core.security import (
     hash_password, verify_password, create_access_token,
     get_current_user, validate_password_strength, sanitize_string,
 )
 from app.models.user import User, CUEA_EMAIL_DOMAINS, CUEA_FACULTIES
 from app.models.activity_log import ActivityLog
+from app.models.password_reset_token import PasswordResetToken
 from app.schemas.schemas import UserRegister, UserLogin, TokenResponse, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -21,9 +25,6 @@ _login_attempts: dict[str, list] = {}
 MAX_ATTEMPTS = 5
 WINDOW_SECS  = 300
 
-# ── In-memory password reset tokens ───────────────────
-# { token_hash: { user_id, expires_at } }
-_reset_tokens: dict[str, dict] = {}
 RESET_EXPIRE_MINUTES = 30
 
 
@@ -118,6 +119,7 @@ def me(current_user: User = Depends(get_current_user)):
 # ── Forgot password — request reset ───────────────────
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+    app_url: Optional[str] = None
 
 
 @router.post("/forgot-password")
@@ -125,25 +127,35 @@ def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db
     email = payload.email.lower().strip()
     user  = db.query(User).filter(User.email == email).first()
 
-    # Always return 200 — don't reveal whether email exists
+    # Always return the same message — don't reveal whether the email exists
+    generic_response = {"message": "If that email is registered, a reset link has been sent."}
     if not user:
-        return {"message": "If that email is registered, a reset token has been generated."}
+        return generic_response
 
-    # Generate a secure token
+    # Generate a secure token, stored hashed so a DB leak can't be replayed
     raw_token   = secrets.token_urlsafe(32)
     token_hash  = hashlib.sha256(raw_token.encode()).hexdigest()
     expires_at  = datetime.now(timezone.utc) + timedelta(minutes=RESET_EXPIRE_MINUTES)
 
-    # Store (in production use DB table; here in-memory for prototype)
-    _reset_tokens[token_hash] = {"user_id": user.id, "expires_at": expires_at}
+    db.add(PasswordResetToken(user_id=user.id, token_hash=token_hash, expires_at=expires_at))
+    db.commit()
 
-    # In production this would be emailed. For the prototype, return it directly
-    # so you can test without an email server.
-    return {
-        "message": "Reset token generated. In production this is emailed.",
-        "reset_token": raw_token,   # remove this line in production
-        "expires_in_minutes": RESET_EXPIRE_MINUTES,
-    }
+    # Only trust the caller's origin if it's one of our known frontends —
+    # otherwise an attacker could get us to email a link to an arbitrary site.
+    app_url = (payload.app_url or "").rstrip("/")
+    origin = app_url if app_url in settings.origins_list else settings.origins_list[0]
+    reset_link = f"{origin}/forgot-password?token={raw_token}"
+    send_email(
+        user.email,
+        "Reset your Campus Connect password",
+        f"Hi {user.name},\n\n"
+        f"Click the link below to reset your Campus Connect password. "
+        f"This link expires in {RESET_EXPIRE_MINUTES} minutes.\n\n"
+        f"{reset_link}\n\n"
+        f"If you didn't request this, you can safely ignore this email.",
+    )
+
+    return generic_response
 
 
 # ── Reset password — confirm with token ───────────────
@@ -155,25 +167,26 @@ class ResetPasswordRequest(BaseModel):
 @router.post("/reset-password")
 def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
     token_hash = hashlib.sha256(payload.token.encode()).hexdigest()
-    record     = _reset_tokens.get(token_hash)
+    record = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token_hash == token_hash
+    ).first()
 
-    if not record:
+    if not record or record.used_at is not None:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
 
-    if datetime.now(timezone.utc) > record["expires_at"]:
-        del _reset_tokens[token_hash]
+    if datetime.now(timezone.utc) > record.expires_at:
         raise HTTPException(status_code=400, detail="Reset token has expired. Please request a new one.")
 
     pw_errors = validate_password_strength(payload.new_password)
     if pw_errors:
         raise HTTPException(status_code=422, detail="Password too weak: " + ", ".join(pw_errors))
 
-    user = db.query(User).filter(User.id == record["user_id"]).first()
+    user = db.query(User).filter(User.id == record.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
 
     user.password_hash = hash_password(payload.new_password)
-    del _reset_tokens[token_hash]
+    record.used_at = datetime.now(timezone.utc)
     db.commit()
 
     return {"message": "Password reset successfully. You can now log in."}

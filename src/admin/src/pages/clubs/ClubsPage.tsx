@@ -1,9 +1,15 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Users, Trash2, Search, MapPin, CheckCircle2, XCircle } from 'lucide-react'
+import { Users, Trash2, Search, MapPin, CheckCircle2, XCircle, History } from 'lucide-react'
 import { clubsAPI } from '../../api/admin'
-import type { Club } from '../../types'
+import type { Club, ApprovalHistoryEntry } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, ConfirmDialog, Modal } from '../../components/ui/index'
 import toast from 'react-hot-toast'
+
+function formatDateTime(d: string) {
+  return new Date(d).toLocaleString(undefined, {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+}
 
 const APPROVAL_BADGE: Record<string, string> = {
   pending: 'badge-yellow', approved: 'badge-green', rejected: 'badge-red',
@@ -30,6 +36,9 @@ export default function ClubsPage() {
   const [rejectTarget, setRejectTarget]   = useState<Club | null>(null)
   const [rejectReason, setRejectReason]   = useState('')
   const [reviewLoading, setReviewLoading] = useState(false)
+  const [historyTarget, setHistoryTarget]   = useState<Club | null>(null)
+  const [historyData, setHistoryData]       = useState<ApprovalHistoryEntry[] | null>(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   const load = async (p = page, approval = approvalFilter) => {
     setLoading(true)
@@ -84,6 +93,17 @@ export default function ClubsPage() {
     } catch { toast.error('Failed to delete club.') }
   }
 
+  const openHistory = async (club: Club) => {
+    setHistoryTarget(club)
+    setHistoryData(null)
+    setHistoryLoading(true)
+    try {
+      const data = await clubsAPI.getApprovalHistory(club.id)
+      setHistoryData(data)
+    } catch { toast.error('Failed to load approval history') }
+    finally { setHistoryLoading(false) }
+  }
+
   const openMembers = async (club: Club) => {
     setMembersTarget(club)
     setMembersData(null)
@@ -117,6 +137,11 @@ export default function ClubsPage() {
               {row.rejection_reason}
             </p>
           )}
+          {row.reviewer_name && (
+            <p className="text-surface-500 text-[10px] mt-1">
+              By {row.reviewer_name}{row.reviewed_at ? ` · ${formatDateTime(row.reviewed_at)}` : ''}
+            </p>
+          )}
         </div>
       ),
     },
@@ -141,18 +166,20 @@ export default function ClubsPage() {
       key: 'actions', label: '',
       render: (_: any, row: Club) => (
         <div className="flex items-center gap-2">
-          {row.approval_status === 'pending' && (
-            <>
-              <button onClick={() => handleApprove(row)} disabled={reviewLoading}
-                className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-40" title="Approve club">
-                <CheckCircle2 className="w-4 h-4" />
-              </button>
-              <button onClick={() => { setRejectTarget(row); setRejectReason('') }} disabled={reviewLoading}
-                className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40" title="Reject club">
-                <XCircle className="w-4 h-4" />
-              </button>
-            </>
-          )}
+          <button onClick={() => handleApprove(row)} disabled={reviewLoading || row.approval_status === 'approved'}
+            className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-40"
+            title={row.approval_status === 'approved' ? 'Already approved' : 'Approve club'}>
+            <CheckCircle2 className="w-4 h-4" />
+          </button>
+          <button onClick={() => { setRejectTarget(row); setRejectReason('') }} disabled={reviewLoading || row.approval_status === 'rejected'}
+            className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+            title={row.approval_status === 'rejected' ? 'Already rejected' : 'Reject club'}>
+            <XCircle className="w-4 h-4" />
+          </button>
+          <button onClick={() => openHistory(row)}
+            className="p-1.5 rounded-lg text-surface-400 hover:bg-white/10 transition-colors" title="Approval history">
+            <History className="w-4 h-4" />
+          </button>
           <button onClick={() => setDeleteTarget(row)}
             className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors" title="Delete">
             <Trash2 className="w-4 h-4" />
@@ -219,6 +246,33 @@ export default function ClubsPage() {
               </div>
             </div>
           ) : null}
+        </Modal>
+      )}
+
+      {/* Approval History Modal */}
+      {historyTarget && (
+        <Modal open={!!historyTarget} onClose={() => setHistoryTarget(null)}
+          title={`Approval History — ${historyTarget.name}`} size="md">
+          {historyLoading ? (
+            <div className="py-8 text-center text-surface-500 text-sm">Loading history…</div>
+          ) : !historyData || historyData.length === 0 ? (
+            <p className="text-surface-500 text-sm text-center py-6">No approval decisions recorded yet.</p>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+              {historyData.map(h => (
+                <div key={h.id} className="p-3 rounded-lg bg-surface-700/30 border border-surface-600/40">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={h.action === 'approve' ? 'badge-green' : 'badge-red'}>
+                      {h.previous_status} → {h.new_status}
+                    </span>
+                    <span className="text-surface-500 text-xs whitespace-nowrap">{formatDateTime(h.reviewed_at)}</span>
+                  </div>
+                  <p className="text-surface-400 text-xs mt-1.5">By {h.reviewed_by ?? 'Unknown admin'}</p>
+                  {h.reason && <p className="text-surface-300 text-xs mt-1">"{h.reason}"</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </Modal>
       )}
 

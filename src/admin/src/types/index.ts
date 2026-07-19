@@ -25,6 +25,8 @@ export interface Event {
   creator?: { id: number; name: string; email: string } | null
   approval_status: 'pending' | 'approved' | 'rejected'
   rejection_reason?: string | null
+  reviewed_by?: number | null
+  reviewer_name?: string | null
   reviewed_at?: string | null
   created_at: string
 }
@@ -60,8 +62,20 @@ export interface Club {
   created_by?: number
   approval_status: 'pending' | 'approved' | 'rejected'
   rejection_reason?: string | null
+  reviewed_by?: number | null
+  reviewer_name?: string | null
   reviewed_at?: string | null
   created_at: string
+}
+
+export interface ApprovalHistoryEntry {
+  id: number
+  action: 'approve' | 'reject'
+  previous_status: string
+  new_status: string
+  reason?: string | null
+  reviewed_by?: string | null
+  reviewed_at: string
 }
 
 export interface LostFoundItem {

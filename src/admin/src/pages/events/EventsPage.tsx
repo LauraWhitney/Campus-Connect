@@ -1,9 +1,23 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Calendar, Trash2, Users, Search, BarChart2, User, UserCheck, UserX, Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { Calendar, Trash2, Users, Search, BarChart2, User, UserCheck, UserX, Loader2, CheckCircle2, XCircle, History } from 'lucide-react'
 import { eventsAPI } from '../../api/admin'
-import type { Event } from '../../types'
+import type { Event, ApprovalHistoryEntry } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination, ConfirmDialog, Modal } from '../../components/ui/index'
 import toast from 'react-hot-toast'
+
+// Locked only once a decision has actually been made — a never-reviewed
+// ("pending") event must stay approvable/rejectable even past its date,
+// or it would get stuck forever with no way to resolve it.
+function isLockedPastEvent(event: Event) {
+  const isPast = event.date < new Date().toISOString().split('T')[0]
+  return isPast && event.approval_status !== 'pending'
+}
+
+function formatDateTime(d: string) {
+  return new Date(d).toLocaleString(undefined, {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+}
 
 const CAT_BADGE: Record<string, string> = {
   Academic:            'badge-blue',
@@ -45,6 +59,9 @@ export default function EventsPage() {
   const [rejectTarget, setRejectTarget] = useState<Event | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [reviewLoading, setReviewLoading] = useState(false)
+  const [historyTarget, setHistoryTarget]   = useState<Event | null>(null)
+  const [historyData, setHistoryData]       = useState<ApprovalHistoryEntry[] | null>(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   const load = async (p = page, approval = approvalFilter) => {
     setLoading(true)
@@ -108,6 +125,17 @@ export default function EventsPage() {
       setRsvpData(data)
     } catch { toast.error('Failed to load RSVPs') }
     finally { setRsvpLoading(false) }
+  }
+
+  const openHistory = async (event: Event) => {
+    setHistoryTarget(event)
+    setHistoryData(null)
+    setHistoryLoading(true)
+    try {
+      const data = await eventsAPI.getApprovalHistory(event.id)
+      setHistoryData(data)
+    } catch { toast.error('Failed to load approval history') }
+    finally { setHistoryLoading(false) }
   }
 
   const openAttendance = async (event: Event) => {
@@ -174,6 +202,11 @@ export default function EventsPage() {
               {row.rejection_reason}
             </p>
           )}
+          {row.reviewer_name && (
+            <p className="text-surface-500 text-[10px] mt-1">
+              By {row.reviewer_name}{row.reviewed_at ? ` · ${formatDateTime(row.reviewed_at)}` : ''}
+            </p>
+          )}
         </div>
       ),
     },
@@ -189,34 +222,40 @@ export default function EventsPage() {
     },
     {
       key: 'actions', label: '',
-      render: (_: any, row: Event) => (
-        <div className="flex items-center gap-2">
-          {row.approval_status === 'pending' && (
-            <>
-              <button onClick={() => handleApprove(row)} disabled={reviewLoading}
-                className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-40" title="Approve event">
-                <CheckCircle2 className="w-4 h-4" />
-              </button>
-              <button onClick={() => { setRejectTarget(row); setRejectReason('') }} disabled={reviewLoading}
-                className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40" title="Reject event">
-                <XCircle className="w-4 h-4" />
-              </button>
-            </>
-          )}
-          <button onClick={() => openRsvps(row)}
-            className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-500/10 transition-colors" title="View RSVPs">
-            <Users className="w-4 h-4" />
-          </button>
-          <button onClick={() => openAttendance(row)}
-            className="p-1.5 rounded-lg text-surface-400 hover:bg-white/10 transition-colors" title="Attendance">
-            <BarChart2 className="w-4 h-4" />
-          </button>
-          <button onClick={() => setDeleteTarget(row)}
-            className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors" title="Delete">
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
+      render: (_: any, row: Event) => {
+        const locked = isLockedPastEvent(row)
+        const lockedTitle = locked ? "This event's date has passed — approval status is locked" : undefined
+        return (
+          <div className="flex items-center gap-2">
+            <button onClick={() => handleApprove(row)} disabled={reviewLoading || locked || row.approval_status === 'approved'}
+              className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-40"
+              title={lockedTitle ?? (row.approval_status === 'approved' ? 'Already approved' : 'Approve event')}>
+              <CheckCircle2 className="w-4 h-4" />
+            </button>
+            <button onClick={() => { setRejectTarget(row); setRejectReason('') }} disabled={reviewLoading || locked || row.approval_status === 'rejected'}
+              className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+              title={lockedTitle ?? (row.approval_status === 'rejected' ? 'Already rejected' : 'Reject event')}>
+              <XCircle className="w-4 h-4" />
+            </button>
+            <button onClick={() => openHistory(row)}
+              className="p-1.5 rounded-lg text-surface-400 hover:bg-white/10 transition-colors" title="Approval history">
+              <History className="w-4 h-4" />
+            </button>
+            <button onClick={() => openRsvps(row)}
+              className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-500/10 transition-colors" title="View RSVPs">
+              <Users className="w-4 h-4" />
+            </button>
+            <button onClick={() => openAttendance(row)}
+              className="p-1.5 rounded-lg text-surface-400 hover:bg-white/10 transition-colors" title="Attendance">
+              <BarChart2 className="w-4 h-4" />
+            </button>
+            <button onClick={() => setDeleteTarget(row)}
+              className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors" title="Delete">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )
+      },
     },
   ]
 
@@ -317,6 +356,33 @@ export default function EventsPage() {
               </div>
             </div>
           ) : null}
+        </Modal>
+      )}
+
+      {/* Approval History Modal */}
+      {historyTarget && (
+        <Modal open={!!historyTarget} onClose={() => setHistoryTarget(null)}
+          title={`Approval History — ${historyTarget.title}`} size="md">
+          {historyLoading ? (
+            <div className="py-8 text-center text-surface-500 text-sm">Loading history…</div>
+          ) : !historyData || historyData.length === 0 ? (
+            <p className="text-surface-500 text-sm text-center py-6">No approval decisions recorded yet.</p>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+              {historyData.map(h => (
+                <div key={h.id} className="p-3 rounded-lg bg-surface-700/30 border border-surface-600/40">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={h.action === 'approve' ? 'badge-green' : 'badge-red'}>
+                      {h.previous_status} → {h.new_status}
+                    </span>
+                    <span className="text-surface-500 text-xs whitespace-nowrap">{formatDateTime(h.reviewed_at)}</span>
+                  </div>
+                  <p className="text-surface-400 text-xs mt-1.5">By {h.reviewed_by ?? 'Unknown admin'}</p>
+                  {h.reason && <p className="text-surface-300 text-xs mt-1">"{h.reason}"</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </Modal>
       )}
 

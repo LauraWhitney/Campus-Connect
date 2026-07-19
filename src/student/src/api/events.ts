@@ -31,9 +31,10 @@ function normaliseAttendance(a: any): EventAttendance {
 }
 
 export const eventsAPI = {
-  getAll: async (page = 1, category?: string): Promise<PaginatedResponse<Event>> => {
-    const params: Record<string, string | number> = { page }
+  getAll: async (page = 1, category?: string, mine?: boolean): Promise<PaginatedResponse<Event>> => {
+    const params: Record<string, string | number | boolean> = { page }
     if (category) params.category = category
+    if (mine) params.mine = true
     const { data } = await api.get('/events', { params })
     return { ...data, data: data.data.map(normalise) }
   },

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { ShieldCheck, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useAdminAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
@@ -73,6 +74,9 @@ export default function LoginPage() {
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              <Link to="/forgot-password" className="text-primary-400 hover:text-primary-300 text-xs transition-colors">
+                Forgot password?
+              </Link>
             </div>
             <button type="submit" disabled={loading}
               className="btn-primary w-full flex items-center justify-center gap-2 mt-2">

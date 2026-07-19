@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import Optional, List
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date as date_cls
 
 from app.core.database import get_db
 from app.core.security import get_current_user, require_admin
@@ -11,6 +11,7 @@ from app.core.notify import notify_user, notify_admins
 from app.models.user import User
 from app.models.event import Event, EventAttendance, EventRSVP, RSVPStatus, EventApprovalStatus
 from app.models.activity_log import ActivityLog
+from app.models.approval_review import ApprovalReview
 from app.schemas.schemas import EventCreate, EventOut, EventListResponse, AttendanceOut
 
 router = APIRouter(prefix="/events", tags=["events"])
@@ -51,6 +52,7 @@ def _event_out(event: Event, current_user: Optional[User]) -> dict:
         "pending_rsvp":  pending_rsvp,
         "is_creator":    is_creator,
         "creator_name":  event.creator.name if event.creator else None,
+        "reviewer_name": event.reviewer.name if event.reviewer else None,
     }
 
 
@@ -59,6 +61,7 @@ def list_events(
     page: int = Query(1, ge=1),
     category: Optional[str] = None,
     approval_status: Optional[str] = None,
+    mine: Optional[bool] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -66,7 +69,10 @@ def list_events(
     if category:
         query = query.filter(Event.category == category)
 
-    if current_user.role.value == "admin":
+    if mine:
+        # "My Events" view — every event this user created, any approval status.
+        query = query.filter(Event.created_by == current_user.id)
+    elif current_user.role.value == "admin":
         # Admins can filter by approval status; default shows everything.
         if approval_status:
             query = query.filter(Event.approval_status == approval_status)
@@ -157,12 +163,25 @@ def review_event(
     db: Session = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
-    """Admin approves or rejects an event. payload: {action: 'approve'|'reject', reason?: str}"""
+    """Admin approves or rejects an event — can be called again to reverse an
+    earlier decision. payload: {action: 'approve'|'reject', reason?: str}"""
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
+    # Lock only applies to *reversing* an existing decision — a never-reviewed
+    # submission must stay reviewable (approve or reject) even after its date
+    # passes, or it would get stuck in "pending" forever with no way out.
+    if event.approval_status != EventApprovalStatus.pending and date_cls.fromisoformat(event.date) < date_cls.today():
+        raise HTTPException(
+            status_code=400,
+            detail="This event's date has passed — its approval status can no longer be changed.",
+        )
+
     action = payload.get("action")
+    previous_status = event.approval_status.value
+    reason = None
+
     if action == "approve":
         event.approval_status  = EventApprovalStatus.approved
         event.rejection_reason = None
@@ -173,9 +192,9 @@ def review_event(
             notify_user(db, event.created_by, "event", "Event approved",
                         f"Your event '{event.title}' was approved and is now live.", link="/app/events")
     elif action == "reject":
-        reason = (payload.get("reason") or "").strip()
+        reason = (payload.get("reason") or "").strip() or None
         event.approval_status  = EventApprovalStatus.rejected
-        event.rejection_reason = reason or None
+        event.rejection_reason = reason
         event.reviewed_by      = current_admin.id
         event.reviewed_at      = datetime.now(timezone.utc)
         _log(db, "event.reject", f"Rejected event: {event.title}" + (f" — {reason}" if reason else ""), current_admin)
@@ -188,9 +207,38 @@ def review_event(
     else:
         raise HTTPException(status_code=422, detail="action must be 'approve' or 'reject'")
 
+    db.add(ApprovalReview(
+        entity_type="event", entity_id=event.id, action=action,
+        previous_status=previous_status, new_status=event.approval_status.value,
+        reason=reason, reviewed_by=current_admin.id,
+    ))
     db.commit()
     db.refresh(event)
     return _event_out(event, current_admin)
+
+
+@router.get("/{event_id}/approval-history")
+def get_event_approval_history(
+    event_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    reviews = (
+        db.query(ApprovalReview)
+        .filter(ApprovalReview.entity_type == "event", ApprovalReview.entity_id == event_id)
+        .order_by(ApprovalReview.reviewed_at.desc())
+        .all()
+    )
+    return [
+        {
+            "id": r.id, "action": r.action,
+            "previous_status": r.previous_status, "new_status": r.new_status,
+            "reason": r.reason,
+            "reviewed_by": r.reviewer.name if r.reviewer else None,
+            "reviewed_at": r.reviewed_at,
+        }
+        for r in reviews
+    ]
 
 
 @router.put("/{event_id}", response_model=EventOut)

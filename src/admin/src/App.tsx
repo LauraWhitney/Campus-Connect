@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import { AdminAuthProvider, useAdminAuth } from './context/AuthContext'
 import AdminLayout from './components/layout/AdminLayout'
 import LoginPage from './pages/auth/LoginPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import UsersPage from './pages/users/UsersPage'
 import EventsPage from './pages/events/EventsPage'
@@ -44,6 +45,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
         <Route path="dashboard"   element={<DashboardPage />} />
         <Route path="users"       element={<UsersPage />} />

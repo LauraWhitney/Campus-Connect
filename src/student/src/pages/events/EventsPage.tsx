@@ -355,6 +355,7 @@ export default function EventsPage() {
   const [events, setEvents]           = useState<Event[]>([])
   const [loading, setLoading]         = useState(true)
   const [filter, setFilter]           = useState('All')
+  const [mineOnly, setMineOnly]       = useState(false)
   const [showModal, setShowModal]     = useState(false)
   const [editTarget, setEditTarget]   = useState<Event | null>(null)
   const [query, setQuery]             = useState('')
@@ -372,13 +373,13 @@ export default function EventsPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const res = await eventsAPI.getAll(1, filter === 'All' ? undefined : filter)
+      const res = await eventsAPI.getAll(1, filter === 'All' ? undefined : filter, mineOnly)
       setEvents(res.data)
     } catch { toast.error('Unable to load events. Please try again.') }
     finally { setLoading(false) }
   }
 
-  useEffect(() => { load() }, [filter])
+  useEffect(() => { load() }, [filter, mineOnly])
 
   const handleRsvp = async (id: string) => {
     try {
@@ -421,6 +422,20 @@ export default function EventsPage() {
       <div className="relative mb-4">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
         <input className="input pl-10" placeholder="Search events by title, venue, organizer…" value={query} onChange={e => setQuery(e.target.value)} />
+      </div>
+      <div className="flex gap-2 mb-3">
+        {(['All Events', 'My Events'] as const).map(label => {
+          const active = label === 'My Events' ? mineOnly : !mineOnly
+          return (
+            <button key={label} type="button" onClick={() => setMineOnly(label === 'My Events')}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={active
+                ? { background: 'linear-gradient(90deg,#c81e45,#d4af37)', color: '#fff' }
+                : { color: '#94a3b8', border: '1px solid rgba(148,163,184,0.3)' }}>
+              {label}
+            </button>
+          )
+        })}
       </div>
       <FilterBar options={CATEGORIES} active={filter} onChange={setFilter} />
       {loading ? <LoadingGrid /> : results.length === 0 ? (

@@ -1,7 +1,7 @@
 import api from './index'
 import type {
   User, Event, MarketplaceItem, Club,
-  LostFoundItem, Feedback, DashboardStats, PaginatedResponse, ActivityLog,
+  LostFoundItem, Feedback, DashboardStats, PaginatedResponse, ActivityLog, ApprovalHistoryEntry,
 } from '../types'
 
 function normaliseEvent(e: any): Event {
@@ -93,6 +93,10 @@ export const eventsAPI = {
     const { data } = await api.patch(`/events/${eventId}/approval`, { action: 'reject', reason })
     return normaliseEvent(data)
   },
+  getApprovalHistory: async (eventId: number): Promise<ApprovalHistoryEntry[]> => {
+    const { data } = await api.get(`/events/${eventId}/approval-history`)
+    return data
+  },
   getAttendance: async (id: number) => {
     const { data } = await api.get(`/events/${id}/attendance`)
     return data
@@ -156,6 +160,10 @@ export const clubsAPI = {
     const { data } = await api.patch(`/clubs/${clubId}/approval`, { action: 'reject', reason })
     return normaliseClub(data)
   },
+  getApprovalHistory: async (clubId: number): Promise<ApprovalHistoryEntry[]> => {
+    const { data } = await api.get(`/clubs/${clubId}/approval-history`)
+    return data
+  },
   delete: async (id: number) => {
     await api.delete(`/clubs/${id}`)
   },
@@ -193,11 +201,22 @@ export const feedbackAPI = {
 }
 
 // ── Activity Logs ─────────────────────────────────────
+export interface ActivitySummary {
+  total: number
+  accounts: number
+  system: number
+  by_module: Record<string, number>
+}
+
 export const activityAPI = {
-  getAll: async (page = 1, action = ''): Promise<PaginatedResponse<ActivityLog>> => {
+  getAll: async (page = 1, action = '', category = ''): Promise<PaginatedResponse<ActivityLog>> => {
     const { data } = await api.get('/admin/activity', {
-      params: { page, action: action || undefined },
+      params: { page, action: action || undefined, category: category || undefined },
     })
+    return data
+  },
+  getSummary: async (): Promise<ActivitySummary> => {
+    const { data } = await api.get('/admin/activity/summary')
     return data
   },
 }

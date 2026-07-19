@@ -2,8 +2,9 @@ import { useEffect, useState, useMemo } from 'react'
 import {
   Activity, Search, User, LogIn, UserPlus, Trash2, Edit3,
   AlertCircle, Calendar, ShoppingBag, Users, MessageSquare, MapPin,
+  CheckCircle2, XCircle, RotateCcw, UserCheck, UserX, ShieldCheck,
 } from 'lucide-react'
-import { activityAPI } from '../../api/admin'
+import { activityAPI, type ActivitySummary } from '../../api/admin'
 import type { ActivityLog } from '../../types'
 import { PageHeader, Table, TableSkeleton, EmptyState, Pagination } from '../../components/ui/index'
 import toast from 'react-hot-toast'
@@ -25,7 +26,14 @@ const ACTION_META: Record<string, {
   'event.delete':           { icon: <Trash2      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Event Deleted',     gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
   'event.rsvp_add':         { icon: <Calendar    className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'RSVP\'d',           gradient: 'linear-gradient(135deg,#10b981,#3b82f6)' },
   'event.rsvp_cancel':      { icon: <Calendar    className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'RSVP Cancelled',    gradient: 'linear-gradient(135deg,#f59e0b,#ef4444)' },
+  'event.rsvp_request':     { icon: <Calendar    className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'RSVP Requested',    gradient: 'linear-gradient(135deg,#f59e0b,#d4af37)' },
+  'event.rsvp_approve':     { icon: <UserCheck   className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'RSVP Approved',     gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
+  'event.rsvp_reject':      { icon: <UserX       className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'RSVP Rejected',     gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
   'event.checkin':          { icon: <Calendar    className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Checked In',        gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
+  'event.approve':          { icon: <CheckCircle2 className="w-3.5 h-3.5" />, badgeCls: 'badge-green',  label: 'Event Approved',    gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
+  'event.reject':           { icon: <XCircle      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',    label: 'Event Rejected',    gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
+  'event.resubmit':         { icon: <RotateCcw    className="w-3.5 h-3.5" />, badgeCls: 'badge-brand',  label: 'Event Resubmitted', gradient: 'linear-gradient(135deg,#c81e45,#d4af37)' },
+  'event.update':           { icon: <Edit3        className="w-3.5 h-3.5" />, badgeCls: 'badge-purple', label: 'Event Updated',     gradient: 'linear-gradient(135deg,#d4af37,#a855f7)' },
   // Marketplace
   'marketplace.list':       { icon: <ShoppingBag className="w-3.5 h-3.5" />, badgeCls: 'badge-brand',   label: 'Listed Item',       gradient: 'linear-gradient(135deg,#c81e45,#d4af37)' },
   'marketplace.sold':       { icon: <ShoppingBag className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Item Sold',         gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
@@ -34,8 +42,13 @@ const ACTION_META: Record<string, {
   // Clubs
   'club.create':            { icon: <Users       className="w-3.5 h-3.5" />, badgeCls: 'badge-brand',   label: 'Club Created',      gradient: 'linear-gradient(135deg,#d4af37,#a855f7)' },
   'club.join':              { icon: <Users       className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Joined Club',       gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
+  'club.join_request':      { icon: <Users       className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'Membership Requested', gradient: 'linear-gradient(135deg,#f59e0b,#d4af37)' },
   'club.leave':             { icon: <Users       className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'Left Club',         gradient: 'linear-gradient(135deg,#f59e0b,#ef4444)' },
   'club.delete':            { icon: <Trash2      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Club Deleted',      gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
+  'club.approve':           { icon: <CheckCircle2 className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Club Approved',     gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
+  'club.reject':            { icon: <XCircle      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Club Rejected',     gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
+  'club.approve_member':    { icon: <UserCheck    className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Member Approved',   gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
+  'club.reject_member':     { icon: <UserX        className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Member Rejected',   gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
   // Lost & Found
   'lostfound.report':       { icon: <MapPin      className="w-3.5 h-3.5" />, badgeCls: 'badge-yellow',  label: 'Item Reported',     gradient: 'linear-gradient(135deg,#f59e0b,#ef4444)' },
   'lostfound.claim':        { icon: <MapPin      className="w-3.5 h-3.5" />, badgeCls: 'badge-green',   label: 'Item Claimed',      gradient: 'linear-gradient(135deg,#10b981,#06b6d4)' },
@@ -45,6 +58,8 @@ const ACTION_META: Record<string, {
   'feedback.submit':        { icon: <MessageSquare className="w-3.5 h-3.5" />, badgeCls: 'badge-brand', label: 'Feedback Submitted', gradient: 'linear-gradient(135deg,#c81e45,#d4af37)' },
   'feedback.status_update': { icon: <Edit3       className="w-3.5 h-3.5" />, badgeCls: 'badge-purple',  label: 'Status Updated',    gradient: 'linear-gradient(135deg,#d4af37,#a855f7)' },
   'feedback.delete':        { icon: <Trash2      className="w-3.5 h-3.5" />, badgeCls: 'badge-red',     label: 'Feedback Deleted',  gradient: 'linear-gradient(135deg,#ef4444,#f59e0b)' },
+  // Admin / roles
+  'admin.test_data_cleanup': { icon: <ShieldCheck className="w-3.5 h-3.5" />, badgeCls: 'badge-purple',  label: 'Test Data Cleaned Up', gradient: 'linear-gradient(135deg,#a855f7,#6366f1)' },
 }
 
 function getMeta(action: string) {
@@ -62,14 +77,19 @@ function formatTime(d: string) {
 }
 
 // ── Filter options ─────────────────────────────────────
-const ACTION_GROUPS = [
-  { label: 'All Actions',    value: '' },
-  { label: 'Auth',           value: 'user' },
+// "System" tab modules — everything that isn't an account/auth action.
+const SYSTEM_GROUPS = [
+  { label: 'All System',     value: '' },
   { label: 'Events',         value: 'event' },
   { label: 'Marketplace',    value: 'marketplace' },
   { label: 'Clubs',          value: 'club' },
   { label: 'Lost & Found',   value: 'lostfound' },
   { label: 'Feedback',       value: 'feedback' },
+]
+
+const MAIN_TABS = [
+  { label: 'Accounts', value: 'accounts' as const },
+  { label: 'System',   value: 'system'   as const },
 ]
 
 export default function ActivityPage() {
@@ -78,20 +98,26 @@ export default function ActivityPage() {
   const [page, setPage]                 = useState(1)
   const [pages, setPages]               = useState(1)
   const [total, setTotal]               = useState(0)
+  const [mainTab, setMainTab]           = useState<'accounts' | 'system'>('accounts')
   const [groupFilter, setGroupFilter]   = useState('')
   const [query, setQuery]               = useState('')
+  const [summary, setSummary]           = useState<ActivitySummary | null>(null)
 
-  const load = async (p: number, group: string) => {
+  const load = async (p: number, category: 'accounts' | 'system', group: string) => {
     setLoading(true)
     try {
-      const res = await activityAPI.getAll(p, group)
+      const res = await activityAPI.getAll(p, category === 'system' ? group : '', category)
       setLogs(res.data); setPages(res.pages); setTotal(res.total)
     } catch { toast.error('Unable to load activity logs.') }
     finally { setLoading(false) }
   }
 
-  useEffect(() => { setPage(1); load(1, groupFilter) }, [groupFilter])
-  useEffect(() => { load(page, groupFilter) }, [page])
+  useEffect(() => {
+    activityAPI.getSummary().then(setSummary).catch(() => {})
+  }, [])
+
+  useEffect(() => { setPage(1); load(1, mainTab, groupFilter) }, [mainTab, groupFilter])
+  useEffect(() => { load(page, mainTab, groupFilter) }, [page])
 
   const results = useMemo(() => {
     if (!query.trim()) return logs
@@ -107,7 +133,41 @@ export default function ActivityPage() {
   return (
     <div className="max-w-6xl mx-auto animate-fade-in">
       <PageHeader title="Activity Logs"
-        subtitle={`${total} transaction${total !== 1 ? 's' : ''} recorded across all modules`} />
+        subtitle={`${total} transaction${total !== 1 ? 's' : ''} in this view`} />
+
+      {/* Summary cards */}
+      {summary && (
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="card p-4">
+            <p className="text-surface-500 text-xs">Total Logged</p>
+            <p className="text-2xl font-bold text-white mt-1">{summary.total}</p>
+          </div>
+          <div className="card p-4">
+            <p className="text-surface-500 text-xs">Account Activity</p>
+            <p className="text-2xl font-bold text-emerald-400 mt-1">{summary.accounts}</p>
+          </div>
+          <div className="card p-4">
+            <p className="text-surface-500 text-xs">System Activity</p>
+            <p className="text-2xl font-bold text-primary-400 mt-1">{summary.system}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Accounts vs System tabs */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {MAIN_TABS.map(tab => (
+          <button key={tab.value} type="button"
+            onClick={() => { setMainTab(tab.value); setGroupFilter('') }}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              mainTab === tab.value
+                ? 'text-white'
+                : 'text-surface-400 border border-surface-600/40 hover:border-primary-500/40 hover:text-primary-400'
+            }`}
+            style={mainTab === tab.value ? { background: 'linear-gradient(90deg,#c81e45,#d4af37)' } : {}}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {/* Filters row */}
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
@@ -116,15 +176,17 @@ export default function ActivityPage() {
           <input className="input pl-10" placeholder="Search by email, action or detail…"
             value={query} onChange={e => setQuery(e.target.value)} />
         </div>
-        <div className="sm:w-52">
-          <label htmlFor="groupFilter" className="sr-only">Filter by module</label>
-          <select id="groupFilter" className="input" value={groupFilter}
-            onChange={e => { setGroupFilter(e.target.value); setQuery('') }}>
-            {ACTION_GROUPS.map(g => (
-              <option key={g.value} value={g.value}>{g.label}</option>
-            ))}
-          </select>
-        </div>
+        {mainTab === 'system' && (
+          <div className="sm:w-52">
+            <label htmlFor="groupFilter" className="sr-only">Filter by module</label>
+            <select id="groupFilter" className="input" value={groupFilter}
+              onChange={e => { setGroupFilter(e.target.value); setQuery('') }}>
+              {SYSTEM_GROUPS.map(g => (
+                <option key={g.value} value={g.value}>{g.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="card">

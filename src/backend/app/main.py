@@ -19,6 +19,7 @@ from app.models.event import EventAttendance, EventRSVP  # noqa: F401
 from app.models.club import ClubMembershipRequest  # noqa: F401
 from app.models import activity_log  # noqa: F401
 from app.models import notification, contact_message  # noqa: F401
+from app.models import password_reset_token, approval_review  # noqa: F401
 
 from app.routers import (
     auth,
